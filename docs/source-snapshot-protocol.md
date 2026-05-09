@@ -59,3 +59,11 @@ The strict execution gate is:
 ```powershell
 python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
 ```
+
+The first approved source snapshot builder is limited to HotpotQA dev distractor:
+
+```powershell
+python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev_distractor
+```
+
+It writes dataset files under ignored `datasets/` storage and updates only tracked snapshot metadata.

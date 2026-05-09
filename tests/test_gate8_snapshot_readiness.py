@@ -45,8 +45,8 @@ def test_pending_records_are_valid_but_not_gate8_eligible():
 
     assert validation_errors == []
     assert blockers
-    assert all(record["status"] == "pending" for record in registry["snapshots"])
-    assert any(blocker["field"] == "source_snapshot_id" for blocker in blockers)
+    assert {record["status"] for record in registry["snapshots"]} <= {"pending", "source_ready"}
+    assert any(blocker["field"] in {"source_snapshot_id", "retrieval_index_path"} for blocker in blockers)
 
 
 def test_hash_and_snapshot_id_helpers_are_deterministic():
@@ -102,6 +102,8 @@ def test_cli_default_mode_exits_zero_and_reports_not_ready():
 
     assert payload["gate8_ready"] is False
     assert payload["snapshot_count"] == 3
+    assert payload["source_ready_count"] == 1
+    assert payload["source_ready_datasets"] == ["hotpotqa"]
     assert payload["validation_errors"] == []
     assert payload["blockers"]
 

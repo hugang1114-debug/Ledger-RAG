@@ -80,6 +80,14 @@ python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/so
 
 Strict mode is expected to fail until license notes, source snapshot ids, data hashes, split hashes, build command records, and retrieval index paths are locked.
 
+Gate 8B starts source snapshot locking with HotpotQA dev distractor only:
+
+```powershell
+python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev_distractor
+```
+
+This command may set HotpotQA to `source_ready`, but it does not build a retrieval index and does not pass Gate 8.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets

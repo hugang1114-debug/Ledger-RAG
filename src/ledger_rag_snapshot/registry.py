@@ -32,9 +32,19 @@ READINESS_FIELDS = [
     "retrieval_index_path",
 ]
 
+SOURCE_READINESS_FIELDS = [
+    "license_note",
+    "source_snapshot_id",
+    "dataset_path",
+    "raw_data_hash",
+    "processed_corpus_hash",
+    "split_hash",
+    "build_command_record",
+]
+
 EXPECTED_MAIN_V1_DATASETS = {"hotpotqa", "2wikimultihopqa", "musique"}
 ALLOWED_STORAGE_CLASSES = {"small", "medium", "large", "unknown"}
-ALLOWED_STATUSES = {"pending", "ready"}
+ALLOWED_STATUSES = {"pending", "source_ready", "ready"}
 UNSET_VALUES = {"", "unset", "not_recorded", "not_applicable_for_ready_check"}
 
 
@@ -123,10 +133,31 @@ def find_gate8_blockers(registry):
     return blockers
 
 
+def find_source_blockers(record):
+    blockers = []
+    dataset_id = record.get("dataset_id", "unknown")
+    for field in SOURCE_READINESS_FIELDS:
+        if _is_unset(record.get(field)):
+            blockers.append(
+                {
+                    "dataset_id": dataset_id,
+                    "field": field,
+                    "message": f"{field} is not locked",
+                }
+            )
+    return blockers
+
+
 def build_readiness_summary(registry, registry_path):
     validation_errors = validate_registry(registry)
     blockers = find_gate8_blockers(registry) if not validation_errors else []
     snapshots = registry.get("snapshots", [])
+    source_blockers = [blocker for record in snapshots if isinstance(record, dict) for blocker in find_source_blockers(record)]
+    source_ready_datasets = [
+        record.get("dataset_id")
+        for record in snapshots
+        if isinstance(record, dict) and not find_source_blockers(record)
+    ]
 
     return {
         "registry_path": str(Path(registry_path)),
@@ -134,6 +165,9 @@ def build_readiness_summary(registry, registry_path):
         "status": registry.get("status", "unknown"),
         "snapshot_count": len(snapshots) if isinstance(snapshots, list) else 0,
         "datasets": [record.get("dataset_id") for record in snapshots if isinstance(record, dict)],
+        "source_ready_count": len(source_ready_datasets),
+        "source_ready_datasets": source_ready_datasets,
+        "source_blockers": source_blockers if not validation_errors else [],
         "validation_errors": validation_errors,
         "blockers": blockers,
         "gate8_ready": not validation_errors and not blockers,

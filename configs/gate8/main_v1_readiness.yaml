@@ -8,6 +8,12 @@ readiness_check:
   command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
   strict_command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
   strict_mode_expected_exit_before_snapshots: 1
+source_snapshot_builds:
+  hotpotqa_dev_distractor:
+    command: python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev_distractor
+    authorized_scope: source_snapshot_only
+    builds_retrieval_index: false
+    runs_baselines: false
 
 datasets:
   - id: hotpotqa
