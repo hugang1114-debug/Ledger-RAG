@@ -17,9 +17,10 @@ This repository is not yet an experiment runner or model implementation.
 - Gate 1: Project Base Ready - completed
 - Gate 2: Literature Verified - completed for the 19-paper core pack
 - Gate 3: Research Claim Locked - completed
-- Gate 4: Dataset Feasibility Locked - in progress
+- Gate 4: Dataset Feasibility Locked - completed
+- Gate 5: Baseline Protocol Locked - in progress
 
-The next work item is to lock the dataset shortlist, deferrals, and exclusion rules before any dataset files, baselines, or model runs are added.
+The next work item is to lock the baseline families and shared run contract before implementation code, datasets, or model runs are added.
 
 ## Current Structure
 
@@ -30,6 +31,8 @@ The next work item is to lock the dataset shortlist, deferrals, and exclusion ru
 - `docs/claim-to-experiments.md` - mapping from claim components to experiment families
 - `docs/dataset-feasibility.md` - dataset shortlist, deferrals, exclusions, and source notes
 - `docs/dataset-decision-matrix.yaml` - structured dataset feasibility decisions
+- `docs/baseline-protocol.md` - baseline family definitions and comparison rules
+- `docs/baseline-contract.yaml` - shared run input/output contract for future baselines
 - `literature/manifest.yaml` - verified paper metadata and download records
 - `literature/papers/` - local downloaded PDFs, ignored by git
 - `experiments/README.md` - experiment card requirements
