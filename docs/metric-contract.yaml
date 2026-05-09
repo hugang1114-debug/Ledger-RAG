@@ -1,0 +1,98 @@
+version: 1
+gate: "Gate 6: Metric Protocol Locked"
+contract_name: "ledger_rag_metric_record"
+description: "Structured metric output contract for future Ledger-RAG baseline runs."
+
+metric_record:
+  run_id:
+    type: string
+    required: true
+    description: "Run id from docs/baseline-contract.yaml."
+  dataset_id:
+    type: string
+    required: true
+  baseline_family:
+    type: string
+    required: true
+    allowed_values:
+      - vanilla_rag
+      - hybrid_rag
+      - citation_only
+      - validator_only
+      - ledger_only
+      - ledger_validator
+  split:
+    type: string
+    required: true
+  question_count:
+    type: integer
+    required: true
+  refusal_count:
+    type: integer
+    required: true
+  refusal_rate:
+    type: number
+    required: true
+
+retrieval:
+  required_when: "gold evidence or supporting facts are available"
+  fields:
+    recall_at_k: "number or not_available"
+    precision_at_k: "number or not_available"
+    mrr: "number or not_available"
+    ndcg: "number or not_available"
+    k: integer
+    oracle_retrieval: boolean
+    missing_reason: "string or null"
+
+answer_quality:
+  required: true
+  fields:
+    exact_match: "number or not_applicable"
+    f1: "number or not_applicable"
+    rouge_l: "number or not_applicable"
+    claim_level_correctness: "number or not_available"
+    factscore: "number or not_available"
+    missing_reason: "string or null"
+
+attribution:
+  required: true
+  fields:
+    citation_precision: "number or not_applicable"
+    citation_recall: "number or not_applicable"
+    support_rate: "number or not_available"
+    unsupported_claim_rate: "number or not_available"
+    overclaim_rate: "number or not_available"
+    claim_to_span_mapping_completeness: "number or not_applicable"
+    span_replay_success: "number or not_applicable"
+    verifier_name: "string or null"
+    missing_reason: "string or null"
+
+system:
+  required: true
+  fields:
+    p50_latency_ms: "number or not_available"
+    p95_latency_ms: "number or not_available"
+    cost_per_query_usd: "number or not_available"
+    peak_memory_mb: "number or not_available"
+    index_size_mb: "number or not_applicable"
+    ledger_size_mb: "number or not_applicable"
+    missing_reason: "string or null"
+
+aggregation:
+  required: true
+  fields:
+    aggregation_level: "question | dataset | run_group"
+    macro_average: boolean
+    confidence_interval_method: "none | bootstrap | other"
+    includes_refusals_in_denominator: boolean
+    notes: string
+
+non_comparable_conditions:
+  - "metric computed on a different question list"
+  - "refusals omitted from denominator without an explicit metric rule"
+  - "oracle retrieval mixed into main results"
+  - "missing run_id or baseline_family"
+  - "missing attribution metrics for citation-capable baselines"
+  - "system metrics omitted for cost comparisons"
+

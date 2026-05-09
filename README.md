@@ -18,9 +18,10 @@ This repository is not yet an experiment runner or model implementation.
 - Gate 2: Literature Verified - completed for the 19-paper core pack
 - Gate 3: Research Claim Locked - completed
 - Gate 4: Dataset Feasibility Locked - completed
-- Gate 5: Baseline Protocol Locked - in progress
+- Gate 5: Baseline Protocol Locked - completed
+- Gate 6: Metric Protocol Locked - in progress
 
-The next work item is to lock the baseline families and shared run contract before implementation code, datasets, or model runs are added.
+The next work item is to lock retrieval, answer-quality, attribution, and system-cost metrics before implementation code, datasets, or model runs are added.
 
 ## Current Structure
 
@@ -33,6 +34,8 @@ The next work item is to lock the baseline families and shared run contract befo
 - `docs/dataset-decision-matrix.yaml` - structured dataset feasibility decisions
 - `docs/baseline-protocol.md` - baseline family definitions and comparison rules
 - `docs/baseline-contract.yaml` - shared run input/output contract for future baselines
+- `docs/metric-protocol.md` - metric definitions, applicability, aggregation, and reporting rules
+- `docs/metric-contract.yaml` - structured metric output contract for future runs
 - `literature/manifest.yaml` - verified paper metadata and download records
 - `literature/papers/` - local downloaded PDFs, ignored by git
 - `experiments/README.md` - experiment card requirements
