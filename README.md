@@ -12,11 +12,21 @@ The current phase is project foundation only:
 
 This repository is not yet an experiment runner or model implementation.
 
+## Gate Status
+
+- Gate 1: Project Base Ready - completed
+- Gate 2: Literature Verified - completed for the 19-paper core pack
+- Gate 3: Research Claim Locked - in progress
+
+The next work item is to lock the falsifiable research claim and map each claim component to concrete experiment families before any datasets, baselines, or model runs are added.
+
 ## Current Structure
 
 - `AGENTS.md` - rules for future agents and contributors
 - `docs/project-boundary.md` - research scope and reality corrections
 - `docs/experiment-flow.md` - progress-gated experiment flow
+- `docs/research-claim.md` - falsifiable main claim and negative scope
+- `docs/claim-to-experiments.md` - mapping from claim components to experiment families
 - `literature/manifest.yaml` - verified paper metadata and download records
 - `literature/papers/` - local downloaded PDFs, ignored by git
 - `experiments/README.md` - experiment card requirements
@@ -25,4 +35,3 @@ This repository is not yet an experiment runner or model implementation.
 ## Core Principle
 
 The feasibility report is an input, not a source of truth. Every paper, dataset, benchmark, price, API, and experimental claim must be independently verified before it can support the paper.
-
