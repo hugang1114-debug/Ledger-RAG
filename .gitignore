@@ -1,0 +1,24 @@
+# Large local artifacts
+/data/
+/datasets/
+/models/
+/artifacts/
+/runs/
+/cache/
+/.cache/
+
+# Downloaded papers are local artifacts; track metadata in literature/manifest.yaml.
+/literature/papers/*.pdf
+
+# Python / notebook noise
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
