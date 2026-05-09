@@ -1,0 +1,76 @@
+{
+  "dataset_id": "gate7_offline",
+  "split": "pilot",
+  "corpus_snapshot_id": "gate7_offline_v1",
+  "documents": [
+    {
+      "source_doc_id": "doc_ledger_arch",
+      "source_uri": "fixture://gate7/doc_ledger_arch",
+      "text": "Ledger-RAG stores source evidence as replayable ledger spans with stable identifiers and hashes. The ledger links atomic claims to cited spans."
+    },
+    {
+      "source_doc_id": "doc_verifier",
+      "source_uri": "fixture://gate7/doc_verifier",
+      "text": "The verifier labels claims as support, refute, or insufficient by comparing each claim with cited spans."
+    },
+    {
+      "source_doc_id": "doc_cost",
+      "source_uri": "fixture://gate7/doc_cost",
+      "text": "The offline pilot reports p50 latency, p95 latency, cost per query, index size, and ledger size as system metrics."
+    },
+    {
+      "source_doc_id": "doc_noise",
+      "source_uri": "fixture://gate7/doc_noise",
+      "text": "A blue notebook was placed beside the research workstation. This distractor note is unrelated to Ledger-RAG evidence tracking."
+    },
+    {
+      "source_doc_id": "doc_dataset_policy",
+      "source_uri": "fixture://gate7/doc_dataset_policy",
+      "text": "Gate 7 uses synthetic fixtures only and does not download external datasets or call model APIs."
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "q_traceability",
+      "question_text": "What does Ledger-RAG store source evidence as?",
+      "expected_answer": "Ledger-RAG stores source evidence as replayable ledger spans with stable identifiers and hashes.",
+      "expected_claims": [
+        "Ledger-RAG stores source evidence as replayable ledger spans with stable identifiers and hashes."
+      ],
+      "support_doc_ids": ["doc_ledger_arch"],
+      "distractor_doc_ids": ["doc_noise"],
+      "case_type": "answerable"
+    },
+    {
+      "question_id": "q_verifier_labels",
+      "question_text": "Which labels can the verifier assign to claims?",
+      "expected_answer": "The verifier labels claims as support, refute, or insufficient.",
+      "expected_claims": [
+        "The verifier labels claims as support, refute, or insufficient."
+      ],
+      "support_doc_ids": ["doc_verifier"],
+      "distractor_doc_ids": [],
+      "case_type": "answerable"
+    },
+    {
+      "question_id": "q_offline_policy",
+      "question_text": "Does Gate 7 download external datasets or call model APIs?",
+      "expected_answer": "Gate 7 uses synthetic fixtures only and does not download external datasets or call model APIs.",
+      "expected_claims": [
+        "Gate 7 uses synthetic fixtures only and does not download external datasets or call model APIs."
+      ],
+      "support_doc_ids": ["doc_dataset_policy"],
+      "distractor_doc_ids": ["doc_noise"],
+      "case_type": "answerable"
+    },
+    {
+      "question_id": "q_missing_gpu",
+      "question_text": "Which GPU model does Gate 7 require?",
+      "expected_answer": "INSUFFICIENT_EVIDENCE",
+      "expected_claims": [],
+      "support_doc_ids": [],
+      "distractor_doc_ids": ["doc_cost"],
+      "case_type": "insufficient"
+    }
+  ]
+}

@@ -19,9 +19,10 @@ This repository is not yet an experiment runner or model implementation.
 - Gate 3: Research Claim Locked - completed
 - Gate 4: Dataset Feasibility Locked - completed
 - Gate 5: Baseline Protocol Locked - completed
-- Gate 6: Metric Protocol Locked - in progress
+- Gate 6: Metric Protocol Locked - completed
+- Gate 7: Pilot Experiment Passed - in progress
 
-The next work item is to lock retrieval, answer-quality, attribution, and system-cost metrics before implementation code, datasets, or model runs are added.
+The next work item is to validate an offline synthetic pilot that produces inspectable run, ledger, retrieval, claim, verdict, and metric artifacts. This pilot is not a paper result.
 
 ## Current Structure
 
@@ -36,6 +37,8 @@ The next work item is to lock retrieval, answer-quality, attribution, and system
 - `docs/baseline-contract.yaml` - shared run input/output contract for future baselines
 - `docs/metric-protocol.md` - metric definitions, applicability, aggregation, and reporting rules
 - `docs/metric-contract.yaml` - structured metric output contract for future runs
+- `fixtures/gate7_offline/pilot.json` - tracked synthetic fixture for the offline pilot
+- `src/ledger_rag_pilot/` - standard-library-only offline pilot modules
 - `literature/manifest.yaml` - verified paper metadata and download records
 - `literature/papers/` - local downloaded PDFs, ignored by git
 - `experiments/README.md` - experiment card requirements
