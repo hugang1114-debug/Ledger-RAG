@@ -2,15 +2,17 @@
 
 This repository is the project base for a Ledger-RAG research paper. The goal is to evaluate whether an external deterministic evidence ledger can improve evidence traceability, auditability, and long-task stability in deep-research agents.
 
-The current phase is project foundation only:
+The current phase is project foundation plus readiness planning:
 
 - verify and collect core papers
 - define the research boundary
 - define experiment progress gates
 - create agent rules for future work
 - prepare literature metadata
+- validate a synthetic offline pilot for artifact shape
+- prepare Gate 8 readiness without running main baselines
 
-This repository is not yet an experiment runner or model implementation.
+This repository is not yet a main experiment runner or model implementation. The Gate 7 pilot is synthetic and offline; it validates contract-shaped artifacts only.
 
 ## Gate Status
 
@@ -20,9 +22,10 @@ This repository is not yet an experiment runner or model implementation.
 - Gate 4: Dataset Feasibility Locked - completed
 - Gate 5: Baseline Protocol Locked - completed
 - Gate 6: Metric Protocol Locked - completed
-- Gate 7: Pilot Experiment Passed - in progress
+- Gate 7: Pilot Experiment Passed - completed
+- Gate 8: Main Comparison Passed - readiness in progress
 
-The next work item is to validate an offline synthetic pilot that produces inspectable run, ledger, retrieval, claim, verdict, and metric artifacts. This pilot is not a paper result.
+The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
 
 ## Current Structure
 
@@ -37,6 +40,9 @@ The next work item is to validate an offline synthetic pilot that produces inspe
 - `docs/baseline-contract.yaml` - shared run input/output contract for future baselines
 - `docs/metric-protocol.md` - metric definitions, applicability, aggregation, and reporting rules
 - `docs/metric-contract.yaml` - structured metric output contract for future runs
+- `docs/main-comparison-readiness.md` - Gate 8 readiness requirements and blockers
+- `docs/source-snapshot-protocol.md` - immutable source snapshot rules for main comparisons
+- `configs/gate8/main_v1_readiness.yaml` - non-executable Gate 8 readiness matrix
 - `fixtures/gate7_offline/pilot.json` - tracked synthetic fixture for the offline pilot
 - `src/ledger_rag_pilot/` - standard-library-only offline pilot modules
 - `literature/manifest.yaml` - verified paper metadata and download records

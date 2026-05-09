@@ -1,0 +1,87 @@
+version: 1
+gate: gate8_main_comparison
+status: readiness_in_progress
+authorized_to_run: false
+purpose: non_executable_readiness_matrix
+
+datasets:
+  - id: hotpotqa
+    name: HotpotQA
+    decision: main_v1
+    dataset_path: unset
+    source_snapshot_id: unset
+    raw_data_hash: unset
+    processed_corpus_hash: unset
+    split_hash: unset
+    retrieval_index_path: unset
+    license_note: unset
+  - id: 2wikimultihopqa
+    name: 2WikiMultihopQA
+    decision: main_v1
+    dataset_path: unset
+    source_snapshot_id: unset
+    raw_data_hash: unset
+    processed_corpus_hash: unset
+    split_hash: unset
+    retrieval_index_path: unset
+    license_note: unset
+  - id: musique
+    name: MuSiQue
+    decision: main_v1
+    dataset_path: unset
+    source_snapshot_id: unset
+    raw_data_hash: unset
+    processed_corpus_hash: unset
+    split_hash: unset
+    retrieval_index_path: unset
+    license_note: unset
+
+baseline_families:
+  - id: vanilla_rag
+    name: Vanilla RAG
+  - id: hybrid_rag
+    name: Hybrid RAG
+  - id: citation_only
+    name: Citation-only
+  - id: validator_only
+    name: Validator-only
+  - id: ledger_only
+    name: Ledger-only
+  - id: ledger_validator
+    name: Ledger + Validator
+
+metric_groups:
+  - retrieval
+  - answer_quality
+  - attribution
+  - system
+  - aggregation
+
+model_provider:
+  selected: false
+  provider: unset
+  model: unset
+  pricing_checked_at: unset
+  pricing_source: unset
+
+artifact_paths:
+  root: artifacts/gate8/main_v1
+  run_records: artifacts/gate8/main_v1/runs
+  metric_records: artifacts/gate8/main_v1/metrics
+  indexes: artifacts/gate8/main_v1/indexes
+  created_by_this_config: false
+
+not_ready:
+  - dataset_paths_unset
+  - source_snapshot_ids_unset
+  - raw_data_hashes_unset
+  - processed_corpus_hashes_unset
+  - split_hashes_unset
+  - retrieval_indexes_unbuilt
+  - model_provider_unselected
+  - cost_budget_unapproved
+  - prompt_versions_unlocked
+  - run_commands_unauthorized
+  - reproducibility_review_unfinished
+
+authorization_rule: main comparison commands are unauthorized until all not_ready blockers are cleared in tracked protocol metadata.
