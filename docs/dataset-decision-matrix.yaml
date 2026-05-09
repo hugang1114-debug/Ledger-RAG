@@ -1,0 +1,227 @@
+version: 1
+updated: "2026-05-09"
+gate: "Gate 4: Dataset Feasibility Locked"
+storage_classes:
+  small: "under 1 GB"
+  medium: "1-10 GB"
+  large: "over 10 GB"
+  unknown: "must be checked before download"
+datasets:
+  - id: hotpotqa
+    name: "HotpotQA"
+    task_family: "multi_hop_qa_with_supporting_facts"
+    decision: main_v1
+    official_url: "https://hotpotqa.github.io/"
+    license_status: "CC BY-SA 4.0 per official homepage"
+    download_method: "Download train/dev/test JSON and optional processed Wikipedia from official homepage"
+    estimated_storage_class: "small for distractor QA files; medium if fullwiki corpus is included"
+    eval_script_status: "official hotpot_evaluate_v1.py linked from homepage"
+    reproduction_risks:
+      - "CC BY-SA obligations must be carried into dataset notes"
+      - "fullwiki corpus can make retrieval quality dominate ledger effects"
+    claim_components:
+      - evidence traceability
+      - retrieval isolation
+      - verifier contribution
+  - id: 2wikimultihopqa
+    name: "2WikiMultihopQA"
+    task_family: "multi_hop_qa_with_reasoning_evidence"
+    decision: main_v1
+    official_url: "https://github.com/Alab-NII/2wikimultihop"
+    license_status: "Apache-2.0 per official repository"
+    download_method: "Use official repository data links after local path check"
+    estimated_storage_class: "small"
+    eval_script_status: "official 2wikimultihop_evaluation_v1.1.py available in repository"
+    reproduction_risks:
+      - "download path and split names must be rechecked before run"
+      - "evidence id fields must be preserved in any conversion"
+    claim_components:
+      - evidence traceability
+      - retrieval isolation
+      - verifier contribution
+  - id: musique
+    name: "MuSiQue"
+    task_family: "multi_hop_qa_with_support_metrics"
+    decision: main_v1
+    official_url: "https://github.com/StonyBrookNLP/musique"
+    license_status: "CC BY 4.0 per official repository"
+    download_method: "Run bash download_data.sh or use manual Google Drive link from repository"
+    estimated_storage_class: "small"
+    eval_script_status: "official evaluate_v1.0.py available in repository"
+    reproduction_risks:
+      - "seed dataset leakage caution must be recorded"
+      - "older dependency assumptions should not drive v1 baseline implementation"
+    claim_components:
+      - evidence traceability
+      - retrieval isolation
+      - robustness
+  - id: hagrid
+    name: "HAGRID"
+    task_family: "attributed_generative_information_seeking"
+    decision: attribution_pilot
+    official_url: "https://github.com/project-miracl/hagrid"
+    license_status: "Apache-2.0 per official repository"
+    download_method: "Load Hugging Face dataset miracl/hagrid"
+    estimated_storage_class: "small"
+    eval_script_status: "baselines not released; define local attribution metrics before use"
+    reproduction_risks:
+      - "small dataset size limits statistical power"
+      - "baseline availability is incomplete"
+    claim_components:
+      - evidence traceability
+      - auditability
+      - verifier contribution
+  - id: expertqa
+    name: "ExpertQA"
+    task_family: "expert_attributed_qa_and_lfqa"
+    decision: attribution_pilot
+    official_url: "https://github.com/chaitanyamalaviya/ExpertQA"
+    license_status: "MIT per official repository"
+    download_method: "Use repository data files and Hugging Face mirror only after snapshot decision"
+    estimated_storage_class: "small"
+    eval_script_status: "repository includes evaluation scripts for attribution, factuality, and LFQA"
+    reproduction_risks:
+      - "some evidence entries may be URL-only"
+      - "QAFactEval and external retrieval paths add dependencies"
+    claim_components:
+      - auditability
+      - evidence traceability
+      - verifier contribution
+  - id: longbench
+    name: "LongBench"
+    task_family: "long_context_understanding"
+    decision: long_context_defer_until_tooling_check
+    official_url: "https://github.com/THUDM/LongBench"
+    license_status: "repository license present; dataset component licenses must be checked"
+    download_method: "Load Hugging Face dataset THUDM/LongBench or THUDM/LongBench-v2 after storage check"
+    estimated_storage_class: "unknown"
+    eval_script_status: "repository includes evaluation scripts"
+    reproduction_risks:
+      - "not citation-specific by default"
+      - "v2 contexts can be very long and cost-heavy"
+    claim_components:
+      - long-task stability
+      - engineering cost
+  - id: longbench_cite
+    name: "LongBench-Cite"
+    task_family: "long_context_qa_with_citations"
+    decision: long_context_defer_until_tooling_check
+    official_url: "https://github.com/THUDM/LongCite"
+    license_status: "Apache-2.0 for repository; dataset license details require check before download"
+    download_method: "Use LongCite repository LongBench-Cite data/code after toolchain check"
+    estimated_storage_class: "unknown"
+    eval_script_status: "LongCite repo includes eval_cite.py and eval_correct.py; GPT-4o judge dependency noted"
+    reproduction_risks:
+      - "judge-model cost and versioning can affect reproducibility"
+      - "data derives from LongBench and LongBench-Chat"
+    claim_components:
+      - evidence traceability
+      - long-task stability
+      - engineering cost
+  - id: l_citeeval
+    name: "L-CiteEval"
+    task_family: "long_context_citation_fidelity"
+    decision: long_context_defer_until_tooling_check
+    official_url: "https://github.com/LCM-Lab/L-CITEEVAL"
+    license_status: "repository license present; dataset component licenses require check"
+    download_method: "Load Hugging Face dataset Jonaszky123/L-CiteEval after storage/toolchain check"
+    estimated_storage_class: "unknown"
+    eval_script_status: "official repo includes citation and correctness evaluation scripts"
+    reproduction_risks:
+      - "multi-task dataset combines underlying sources with separate license assumptions"
+      - "long-context inference cost must be profiled"
+    claim_components:
+      - evidence traceability
+      - long-task stability
+      - engineering cost
+  - id: sunset
+    name: "SUnsET"
+    task_family: "unstructured_evidence_attribution_for_long_context_summarization"
+    decision: long_context_defer_until_tooling_check
+    official_url: "https://github.com/dwright37/unstructured-evidence-sunset"
+    license_status: "MIT per official repository"
+    download_method: "Load Hugging Face dataset dwright37/SUnsET after toolchain check"
+    estimated_storage_class: "unknown"
+    eval_script_status: "repository includes generation, inference, training, and evaluation scripts"
+    reproduction_risks:
+      - "synthetic dataset may not transfer cleanly to deep-research QA"
+      - "unstructured evidence scoring must be aligned with Ledger-RAG span identity"
+    claim_components:
+      - evidence traceability
+      - long-task stability
+      - robustness
+  - id: asqa
+    name: "ASQA"
+    task_family: "ambiguous_long_form_qa"
+    decision: license_or_repro_defer
+    official_url: "https://github.com/google-research/language/tree/master/language/asqa"
+    license_status: "Google Research code repository license is present; dataset content license needs explicit project note before use"
+    download_method: "Use gsutil copy from gs://gresearch/ASQA/data/ASQA.json"
+    estimated_storage_class: "small"
+    eval_script_status: "official evaluation code available; TensorFlow Datasets also provides builder metadata"
+    reproduction_risks:
+      - "not primarily attribution or span-replay focused"
+      - "evaluation requires QA model path and may add model-version dependency"
+    claim_components:
+      - evidence traceability
+      - engineering cost
+  - id: qampari
+    name: "QAMPARI"
+    task_family: "many_answer_open_domain_qa"
+    decision: license_or_repro_defer
+    official_url: "https://github.com/samsam3232/qampari"
+    license_status: "CC0-1.0 per official repository"
+    download_method: "Use official repository data after confirming file layout and split paths"
+    estimated_storage_class: "small"
+    eval_script_status: "repository reports F1, recall, precision, recall>=0.8, and F1>=0.5 metrics"
+    reproduction_risks:
+      - "many-answer metrics do not directly test claim-to-span support"
+      - "needs mapping from answer-set recall to Ledger-RAG attribution goals"
+    claim_components:
+      - retrieval isolation
+      - engineering cost
+  - id: common_crawl
+    name: "Common Crawl"
+    task_family: "open_web_corpus"
+    decision: exclude_v1
+    official_url: "https://commoncrawl.org/"
+    license_status: "open crawl access does not resolve per-page reuse and redistribution constraints"
+    download_method: "not authorized for v1"
+    estimated_storage_class: "large"
+    eval_script_status: "not applicable"
+    reproduction_risks:
+      - "page-level licensing and replayability are out of scope"
+      - "too broad for first-version static source hashes"
+    claim_components:
+      - auditability
+  - id: dynamic_web_browsing
+    name: "Dynamic web browsing"
+    task_family: "live_web_agent_source"
+    decision: exclude_v1
+    official_url: "not_applicable"
+    license_status: "not applicable"
+    download_method: "not authorized for v1"
+    estimated_storage_class: "unknown"
+    eval_script_status: "not applicable"
+    reproduction_risks:
+      - "live pages break source hash and span replay guarantees"
+      - "robots, terms, and page drift require a separate policy"
+    claim_components:
+      - auditability
+      - long-task stability
+  - id: high_risk_domains
+    name: "Medical, legal, and financial datasets"
+    task_family: "high_risk_domain_qa"
+    decision: exclude_v1
+    official_url: "not_applicable"
+    license_status: "requires domain-specific compliance review"
+    download_method: "not authorized for v1"
+    estimated_storage_class: "unknown"
+    eval_script_status: "not applicable"
+    reproduction_risks:
+      - "source trust, professional standard, and compliance requirements exceed v1 scope"
+      - "results would be easy to overclaim"
+    claim_components:
+      - auditability
+      - verifier contribution
+

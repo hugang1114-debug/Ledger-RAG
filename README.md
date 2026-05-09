@@ -16,9 +16,10 @@ This repository is not yet an experiment runner or model implementation.
 
 - Gate 1: Project Base Ready - completed
 - Gate 2: Literature Verified - completed for the 19-paper core pack
-- Gate 3: Research Claim Locked - in progress
+- Gate 3: Research Claim Locked - completed
+- Gate 4: Dataset Feasibility Locked - in progress
 
-The next work item is to lock the falsifiable research claim and map each claim component to concrete experiment families before any datasets, baselines, or model runs are added.
+The next work item is to lock the dataset shortlist, deferrals, and exclusion rules before any dataset files, baselines, or model runs are added.
 
 ## Current Structure
 
@@ -27,6 +28,8 @@ The next work item is to lock the falsifiable research claim and map each claim 
 - `docs/experiment-flow.md` - progress-gated experiment flow
 - `docs/research-claim.md` - falsifiable main claim and negative scope
 - `docs/claim-to-experiments.md` - mapping from claim components to experiment families
+- `docs/dataset-feasibility.md` - dataset shortlist, deferrals, exclusions, and source notes
+- `docs/dataset-decision-matrix.yaml` - structured dataset feasibility decisions
 - `literature/manifest.yaml` - verified paper metadata and download records
 - `literature/papers/` - local downloaded PDFs, ignored by git
 - `experiments/README.md` - experiment card requirements
