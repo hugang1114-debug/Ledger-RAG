@@ -19,6 +19,8 @@ Each dataset split used in a main comparison must have a source snapshot record 
 - `storage_class`: expected local storage class: `small`, `medium`, `large`, or `unknown`
 - `notes`: reproduction risks, source quirks, or evaluation-script constraints
 
+Gate 8A stores pending main v1 records in `snapshots/main_v1/source_snapshots.json`. Pending records may use `unset` for fields that require an actual dataset snapshot, but those fields block main comparison execution.
+
 ## Hash Rules
 
 Raw data hashing must happen before normalization. If the raw source contains multiple files, the project records a deterministic manifest containing path, byte size, and SHA256 for each file, then hashes the manifest.
@@ -45,3 +47,15 @@ The build command record must be sufficient for another agent to recreate the pr
 Main comparisons may reference only `source_snapshot_id` values that resolve to complete snapshot records. If a snapshot has an unset hash, unclear license note, missing build command, or mutable source dependency, it is not eligible for Gate 8 execution.
 
 Downloaded data files, processed corpora, indexes, and run outputs remain outside git unless explicitly approved. Git tracks the snapshot metadata and protocol, not the large data.
+
+The local metadata check is:
+
+```powershell
+python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
+```
+
+The strict execution gate is:
+
+```powershell
+python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
+```

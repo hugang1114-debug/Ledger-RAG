@@ -62,6 +62,24 @@ Before authorizing main baseline execution, the project must have:
 - one cost budget note based on current provider pricing
 - one execution card that names the exact command and output paths
 
+## Snapshot Readiness Check
+
+Gate 8A adds a tracked source snapshot registry at `snapshots/main_v1/source_snapshots.json`. The registry is allowed to contain pending records while datasets have not been downloaded or processed, but the metadata shape must stay valid.
+
+Run the local readiness check before any Gate 8 execution card is written:
+
+```powershell
+python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
+```
+
+Use strict mode only when deciding whether main baseline execution is authorized:
+
+```powershell
+python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
+```
+
+Strict mode is expected to fail until license notes, source snapshot ids, data hashes, split hashes, build command records, and retrieval index paths are locked.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets

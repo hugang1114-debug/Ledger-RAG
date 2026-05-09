@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "gate": "gate8_main_comparison",
+  "status": "readiness_in_progress",
+  "snapshots": [
+    {
+      "dataset_id": "hotpotqa",
+      "dataset_name": "HotpotQA",
+      "decision": "main_v1",
+      "split": "dev",
+      "official_url": "https://hotpotqa.github.io/",
+      "license_note": "unset",
+      "source_snapshot_id": "unset",
+      "dataset_path": "unset",
+      "raw_data_hash": "unset",
+      "processed_corpus_hash": "unset",
+      "split_hash": "unset",
+      "build_command_record": "unset",
+      "retrieval_index_path": "unset",
+      "storage_class": "unknown",
+      "status": "pending",
+      "notes": [
+        "Official source and CC BY-SA 4.0 note are recorded in Gate 4, but the executable snapshot license note is not locked here.",
+        "No raw files, processed corpus, split manifest, or retrieval index are created by Gate 8A."
+      ]
+    },
+    {
+      "dataset_id": "2wikimultihopqa",
+      "dataset_name": "2WikiMultihopQA",
+      "decision": "main_v1",
+      "split": "dev",
+      "official_url": "https://github.com/Alab-NII/2wikimultihop",
+      "license_note": "unset",
+      "source_snapshot_id": "unset",
+      "dataset_path": "unset",
+      "raw_data_hash": "unset",
+      "processed_corpus_hash": "unset",
+      "split_hash": "unset",
+      "build_command_record": "unset",
+      "retrieval_index_path": "unset",
+      "storage_class": "unknown",
+      "status": "pending",
+      "notes": [
+        "Official source and Apache-2.0 repository note are recorded in Gate 4, but the executable snapshot license note is not locked here.",
+        "No raw files, processed corpus, split manifest, or retrieval index are created by Gate 8A."
+      ]
+    },
+    {
+      "dataset_id": "musique",
+      "dataset_name": "MuSiQue",
+      "decision": "main_v1",
+      "split": "dev",
+      "official_url": "https://github.com/StonyBrookNLP/musique",
+      "license_note": "unset",
+      "source_snapshot_id": "unset",
+      "dataset_path": "unset",
+      "raw_data_hash": "unset",
+      "processed_corpus_hash": "unset",
+      "split_hash": "unset",
+      "build_command_record": "unset",
+      "retrieval_index_path": "unset",
+      "storage_class": "unknown",
+      "status": "pending",
+      "notes": [
+        "Official source and CC BY 4.0 repository note are recorded in Gate 4, but the executable snapshot license note is not locked here.",
+        "No raw files, processed corpus, split manifest, or retrieval index are created by Gate 8A."
+      ]
+    }
+  ]
+}

@@ -3,6 +3,11 @@ gate: gate8_main_comparison
 status: readiness_in_progress
 authorized_to_run: false
 purpose: non_executable_readiness_matrix
+snapshot_registry: snapshots/main_v1/source_snapshots.json
+readiness_check:
+  command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
+  strict_command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
+  strict_mode_expected_exit_before_snapshots: 1
 
 datasets:
   - id: hotpotqa
