@@ -48,6 +48,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
 - `scripts/build_2wiki_source_snapshot.py` - official-source 2WikiMultihopQA dev snapshot builder
 - `scripts/build_musique_source_snapshot.py` - official-source MuSiQue answerable dev snapshot builder
+- `scripts/build_gate8_lexical_indexes.py` - local deterministic lexical index builder for Gate 8E readiness
 - `fixtures/gate7_offline/pilot.json` - tracked synthetic fixture for the offline pilot
 - `src/ledger_rag_pilot/` - standard-library-only offline pilot modules
 - `literature/manifest.yaml` - verified paper metadata and download records

@@ -104,10 +104,18 @@ python scripts/build_musique_source_snapshot.py --registry snapshots/main_v1/sou
 
 This command may set MuSiQue to `source_ready`, but it does not build a retrieval index and does not pass Gate 8.
 
+Gate 8E builds local lexical retrieval index artifacts for all three source-ready datasets:
+
+```powershell
+python scripts/build_gate8_lexical_indexes.py --registry snapshots/main_v1/source_snapshots.json --index-root datasets/retrieval_indexes/main_v1
+```
+
+This command may set `retrieval_index_path` for HotpotQA, 2WikiMultihopQA, and MuSiQue, but it does not run retrieval evaluation, does not run baselines, and does not pass Gate 8.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets except through explicitly authorized source snapshot builders
-- do not build retrieval indexes
+- do not build retrieval indexes except through the approved Gate 8E local lexical index builder
 - do not call model or embedding providers
 - do not run main baselines
 - do not create result files

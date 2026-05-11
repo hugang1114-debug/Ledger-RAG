@@ -24,6 +24,15 @@ source_snapshot_builds:
     authorized_scope: source_snapshot_only
     builds_retrieval_index: false
     runs_baselines: false
+retrieval_index_builds:
+  main_v1_lexical:
+    command: python scripts/build_gate8_lexical_indexes.py --registry snapshots/main_v1/source_snapshots.json --index-root datasets/retrieval_indexes/main_v1
+    authorized_scope: lexical_index_artifacts_only
+    index_root: datasets/retrieval_indexes/main_v1
+    retriever_family: lexical
+    calls_models: false
+    runs_baselines: false
+    runs_retrieval_evaluation: false
 
 datasets:
   - id: hotpotqa

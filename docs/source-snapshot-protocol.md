@@ -83,3 +83,11 @@ python scripts/build_musique_source_snapshot.py --registry snapshots/main_v1/sou
 ```
 
 It writes dataset files under ignored `datasets/` storage, preserves support paragraph and question decomposition metadata, and updates only tracked snapshot metadata.
+
+The approved Gate 8E retrieval index builder is limited to local lexical index artifacts:
+
+```powershell
+python scripts/build_gate8_lexical_indexes.py --registry snapshots/main_v1/source_snapshots.json --index-root datasets/retrieval_indexes/main_v1
+```
+
+It reads locked `processed/corpus.jsonl` files, writes ignored index artifacts under `datasets/retrieval_indexes/main_v1/`, and updates only `retrieval_index_path` in the tracked registry.
