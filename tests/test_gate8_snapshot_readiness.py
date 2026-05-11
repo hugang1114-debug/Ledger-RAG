@@ -46,7 +46,8 @@ def test_pending_records_are_valid_but_not_gate8_eligible():
     assert validation_errors == []
     assert blockers
     assert {record["status"] for record in registry["snapshots"]} <= {"pending", "source_ready"}
-    assert any(blocker["field"] in {"source_snapshot_id", "retrieval_index_path"} for blocker in blockers)
+    assert all(record["retrieval_index_path"] != "unset" for record in registry["snapshots"])
+    assert any(blocker["field"] == "status" for blocker in blockers)
 
 
 def test_hash_and_snapshot_id_helpers_are_deterministic():
