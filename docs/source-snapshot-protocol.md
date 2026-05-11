@@ -67,3 +67,11 @@ python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/so
 ```
 
 It writes dataset files under ignored `datasets/` storage and updates only tracked snapshot metadata.
+
+The second approved source snapshot builder is limited to 2WikiMultihopQA dev from the official `data_ids_april7.zip` release:
+
+```powershell
+python scripts/build_2wiki_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev
+```
+
+It writes dataset files under ignored `datasets/` storage and updates only tracked snapshot metadata.

@@ -88,6 +88,14 @@ python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/so
 
 This command may set HotpotQA to `source_ready`, but it does not build a retrieval index and does not pass Gate 8.
 
+Gate 8C adds the 2WikiMultihopQA dev source snapshot builder:
+
+```powershell
+python scripts/build_2wiki_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev
+```
+
+This command may set 2WikiMultihopQA to `source_ready`, but it also does not build a retrieval index and does not pass Gate 8.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets

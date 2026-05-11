@@ -46,6 +46,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `snapshots/main_v1/source_snapshots.json` - pending source snapshot registry for main v1 datasets
 - `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
+- `scripts/build_2wiki_source_snapshot.py` - official-source 2WikiMultihopQA dev snapshot builder
 - `fixtures/gate7_offline/pilot.json` - tracked synthetic fixture for the offline pilot
 - `src/ledger_rag_pilot/` - standard-library-only offline pilot modules
 - `literature/manifest.yaml` - verified paper metadata and download records
