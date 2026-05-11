@@ -102,8 +102,8 @@ def test_cli_default_mode_exits_zero_and_reports_not_ready():
 
     assert payload["gate8_ready"] is False
     assert payload["snapshot_count"] == 3
-    assert payload["source_ready_count"] == 2
-    assert payload["source_ready_datasets"] == ["hotpotqa", "2wikimultihopqa"]
+    assert payload["source_ready_count"] == 3
+    assert payload["source_ready_datasets"] == ["hotpotqa", "2wikimultihopqa", "musique"]
     assert payload["validation_errors"] == []
     assert payload["blockers"]
 

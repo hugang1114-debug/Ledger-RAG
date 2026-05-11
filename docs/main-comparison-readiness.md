@@ -96,9 +96,17 @@ python scripts/build_2wiki_source_snapshot.py --registry snapshots/main_v1/sourc
 
 This command may set 2WikiMultihopQA to `source_ready`, but it also does not build a retrieval index and does not pass Gate 8.
 
+Gate 8D adds the MuSiQue answerable dev source snapshot builder:
+
+```powershell
+python scripts/build_musique_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev
+```
+
+This command may set MuSiQue to `source_ready`, but it does not build a retrieval index and does not pass Gate 8.
+
 ## Prohibited Actions In This Layer
 
-- do not download datasets
+- do not download datasets except through explicitly authorized source snapshot builders
 - do not build retrieval indexes
 - do not call model or embedding providers
 - do not run main baselines

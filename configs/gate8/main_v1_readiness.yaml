@@ -19,6 +19,11 @@ source_snapshot_builds:
     authorized_scope: source_snapshot_only
     builds_retrieval_index: false
     runs_baselines: false
+  musique_dev:
+    command: python scripts/build_musique_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev
+    authorized_scope: source_snapshot_only
+    builds_retrieval_index: false
+    runs_baselines: false
 
 datasets:
   - id: hotpotqa

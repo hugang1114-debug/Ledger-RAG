@@ -75,3 +75,11 @@ python scripts/build_2wiki_source_snapshot.py --registry snapshots/main_v1/sourc
 ```
 
 It writes dataset files under ignored `datasets/` storage and updates only tracked snapshot metadata.
+
+The third approved source snapshot builder is limited to MuSiQue answerable dev from the official StonyBrookNLP/MuSiQue release:
+
+```powershell
+python scripts/build_musique_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev
+```
+
+It writes dataset files under ignored `datasets/` storage, preserves support paragraph and question decomposition metadata, and updates only tracked snapshot metadata.

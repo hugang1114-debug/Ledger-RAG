@@ -57,25 +57,33 @@
       "storage_class": "small"
     },
     {
-      "build_command_record": "unset",
+      "build_command_record": {
+        "command": "python scripts/build_musique_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev",
+        "eval_script_url": "https://raw.githubusercontent.com/StonyBrookNLP/musique/main/evaluate_v1.0.py",
+        "license_url": "https://raw.githubusercontent.com/StonyBrookNLP/musique/main/LICENSE",
+        "python": "3.12.4",
+        "script_path": "scripts/build_musique_source_snapshot.py",
+        "source_url": "https://drive.google.com/uc?export=download&id=1tGdADlNjWFaHLeZZGShh2IRcpO6Lv24h"
+      },
       "dataset_id": "musique",
       "dataset_name": "MuSiQue",
-      "dataset_path": "unset",
+      "dataset_path": "datasets/source_snapshots/musique/dev",
       "decision": "main_v1",
-      "license_note": "unset",
+      "license_note": "CC BY 4.0 per official StonyBrookNLP/musique LICENSE checked for this source snapshot.",
       "notes": [
-        "Official source and CC BY 4.0 repository note are recorded in Gate 4, but the executable snapshot license note is not locked here.",
-        "No raw files, processed corpus, split manifest, or retrieval index are created by Gate 8A."
+        "MuSiQue-Answerable dev source snapshot only; retrieval index is not built in Gate 8D.",
+        "Dataset files are local artifacts under ignored datasets/ storage.",
+        "MuSiQue seed-dataset leakage caution is preserved through the extracted dev_test_singlehop_questions file when present."
       ],
       "official_url": "https://github.com/StonyBrookNLP/musique",
-      "processed_corpus_hash": "unset",
-      "raw_data_hash": "unset",
+      "processed_corpus_hash": "4b485a716c1a4fc65e2dc225321cbcc35e23e7f276017e5a93b69c99255e980e",
+      "raw_data_hash": "5bda2833f7d26578d7ada2fdd79cdf72f11ba3955bb70f5d47899237c1791d05",
       "retrieval_index_path": "unset",
-      "source_snapshot_id": "unset",
+      "source_snapshot_id": "musique_dev_official_4b485a716c1a4fc6",
       "split": "dev",
-      "split_hash": "unset",
-      "status": "pending",
-      "storage_class": "unknown"
+      "split_hash": "34223e709831f9cfad9fe84e50ce63a3facf2578192525009da85cd57618a76a",
+      "status": "source_ready",
+      "storage_class": "small"
     }
   ],
   "status": "readiness_in_progress",
