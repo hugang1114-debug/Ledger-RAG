@@ -78,6 +78,37 @@ def fixture_registry(tmp_path, corpus_hash):
     }
 
 
+def minimal_main_v1_registry(tmp_path):
+    snapshots = []
+    for dataset_id in ("hotpotqa", "2wikimultihopqa", "musique"):
+        snapshots.append(
+            {
+                "dataset_id": dataset_id,
+                "dataset_name": dataset_id,
+                "decision": "main_v1",
+                "split": "dev",
+                "official_url": f"https://example.invalid/{dataset_id}",
+                "license_note": "test license note",
+                "source_snapshot_id": f"{dataset_id}_dev_official_1234567890abcdef",
+                "dataset_path": (tmp_path / "source_snapshots" / dataset_id / "dev").as_posix(),
+                "raw_data_hash": "1" * 64,
+                "processed_corpus_hash": "2" * 64,
+                "split_hash": "3" * 64,
+                "build_command_record": {"command": "test source build"},
+                "retrieval_index_path": "unset",
+                "storage_class": "small",
+                "status": "source_ready",
+                "notes": [],
+            }
+        )
+    return {
+        "version": 1,
+        "gate": "gate8_main_comparison",
+        "status": "readiness_in_progress",
+        "snapshots": snapshots,
+    }
+
+
 def test_tokenize_is_deterministic_and_simple():
     assert tokenize("Alpha-beta, ALPHA 2026!") == ["alpha", "beta", "alpha", "2026"]
     assert TOKENIZER_VERSION == "lexical_v1_ascii_word"
@@ -177,7 +208,7 @@ def test_cli_builds_fixture_index_and_keeps_gate8_not_ready(tmp_path):
 def test_cli_refuses_unknown_dataset(tmp_path):
     registry_path = tmp_path / "registry.json"
     registry_path.write_text(
-        json.dumps({"version": 1, "gate": "gate8_main_comparison", "status": "readiness_in_progress", "snapshots": []}),
+        json.dumps(minimal_main_v1_registry(tmp_path)),
         encoding="utf-8",
     )
 
@@ -200,3 +231,33 @@ def test_cli_refuses_unknown_dataset(tmp_path):
 
     assert result.returncode == 2
     assert "unknown dataset id" in (result.stdout + result.stderr)
+
+
+def test_cli_validates_registry_before_dataset_selection(tmp_path):
+    registry_path = tmp_path / "registry.json"
+    registry_path.write_text(
+        json.dumps({"version": 1, "gate": "gate8_main_comparison", "status": "readiness_in_progress", "snapshots": []}),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(CLI),
+            "--registry",
+            str(registry_path),
+            "--index-root",
+            str(tmp_path / "indexes"),
+            "--dataset",
+            "missing",
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    payload = json.loads(result.stdout)
+
+    assert result.returncode == 2
+    assert payload["status"] == "registry_invalid"
+    assert "unknown dataset id" not in (result.stdout + result.stderr)
