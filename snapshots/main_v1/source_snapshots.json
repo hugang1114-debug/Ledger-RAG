@@ -25,7 +25,7 @@
       "source_snapshot_id": "hotpotqa_dev_distractor_official_78487b5e57e5423c",
       "split": "dev_distractor",
       "split_hash": "f57ae5989f529466a1d7785637e9fc1b0c913bf9d21baa53f6c134b2b8be46cd",
-      "status": "source_ready",
+      "status": "ready",
       "storage_class": "small"
     },
     {
@@ -53,7 +53,7 @@
       "source_snapshot_id": "2wikimultihopqa_dev_official_4ad66154ea407847",
       "split": "dev",
       "split_hash": "1634e91324a6d71aee77f5779d501bc8f757f73392c219422828c6c4fa3688de",
-      "status": "source_ready",
+      "status": "ready",
       "storage_class": "small"
     },
     {
@@ -82,7 +82,7 @@
       "source_snapshot_id": "musique_dev_official_4b485a716c1a4fc6",
       "split": "dev",
       "split_hash": "34223e709831f9cfad9fe84e50ce63a3facf2578192525009da85cd57618a76a",
-      "status": "source_ready",
+      "status": "ready",
       "storage_class": "small"
     }
   ],

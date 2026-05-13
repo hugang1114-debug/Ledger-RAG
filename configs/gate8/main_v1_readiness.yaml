@@ -56,33 +56,33 @@ datasets:
   - id: hotpotqa
     name: HotpotQA
     decision: main_v1
-    dataset_path: unset
-    source_snapshot_id: unset
-    raw_data_hash: unset
-    processed_corpus_hash: unset
-    split_hash: unset
-    retrieval_index_path: unset
-    license_note: unset
+    dataset_path: datasets/source_snapshots/hotpotqa/dev_distractor
+    source_snapshot_id: hotpotqa_dev_distractor_official_78487b5e57e5423c
+    raw_data_hash: 0e2d7abbc276a013a0a4903faa3c6c3812c9f3d2d5cd888946c586cf5d01970a
+    processed_corpus_hash: 78487b5e57e5423c9ba92afdcac3e0b4c40777aac2ba19123bca0a13d8ab74b6
+    split_hash: f57ae5989f529466a1d7785637e9fc1b0c913bf9d21baa53f6c134b2b8be46cd
+    retrieval_index_path: datasets/retrieval_indexes/main_v1/hotpotqa/dev_distractor/index_manifest.json
+    license_note: CC BY-SA 4.0 per official HotpotQA homepage checked for Gate 4 and used for this source snapshot.
   - id: 2wikimultihopqa
     name: 2WikiMultihopQA
     decision: main_v1
-    dataset_path: unset
-    source_snapshot_id: unset
-    raw_data_hash: unset
-    processed_corpus_hash: unset
-    split_hash: unset
-    retrieval_index_path: unset
-    license_note: unset
+    dataset_path: datasets/source_snapshots/2wikimultihopqa/dev
+    source_snapshot_id: 2wikimultihopqa_dev_official_4ad66154ea407847
+    raw_data_hash: 67f133222b2e59d78dbb6ed5ba31bb148274c9cd865ee8b733753c6e372d53c7
+    processed_corpus_hash: 4ad66154ea407847829032d395e3acd48e88e42936c0cfe0ec98c4d725610f9e
+    split_hash: 1634e91324a6d71aee77f5779d501bc8f757f73392c219422828c6c4fa3688de
+    retrieval_index_path: datasets/retrieval_indexes/main_v1/2wikimultihopqa/dev/index_manifest.json
+    license_note: Apache-2.0 per official Alab-NII/2wikimultihop repository LICENSE checked for this source snapshot.
   - id: musique
     name: MuSiQue
     decision: main_v1
-    dataset_path: unset
-    source_snapshot_id: unset
-    raw_data_hash: unset
-    processed_corpus_hash: unset
-    split_hash: unset
-    retrieval_index_path: unset
-    license_note: unset
+    dataset_path: datasets/source_snapshots/musique/dev
+    source_snapshot_id: musique_dev_official_4b485a716c1a4fc6
+    raw_data_hash: 5bda2833f7d26578d7ada2fdd79cdf72f11ba3955bb70f5d47899237c1791d05
+    processed_corpus_hash: 4b485a716c1a4fc65e2dc225321cbcc35e23e7f276017e5a93b69c99255e980e
+    split_hash: 34223e709831f9cfad9fe84e50ce63a3facf2578192525009da85cd57618a76a
+    retrieval_index_path: datasets/retrieval_indexes/main_v1/musique/dev/index_manifest.json
+    license_note: CC BY 4.0 per official StonyBrookNLP/musique LICENSE checked for this source snapshot.
 
 baseline_families:
   - id: vanilla_rag
@@ -120,12 +120,6 @@ artifact_paths:
   created_by_this_config: false
 
 not_ready:
-  - dataset_paths_unset
-  - source_snapshot_ids_unset
-  - raw_data_hashes_unset
-  - processed_corpus_hashes_unset
-  - split_hashes_unset
-  - retrieval_indexes_unbuilt
   - model_provider_unselected
   - cost_budget_unapproved
   - prompt_versions_unlocked
