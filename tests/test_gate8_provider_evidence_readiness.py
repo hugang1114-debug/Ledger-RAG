@@ -17,6 +17,48 @@ PROVIDER_DECISION = ROOT / "configs" / "gate8" / "provider_decision.yaml"
 CLI = ROOT / "scripts" / "check_gate8_provider_evidence_readiness.py"
 
 
+def _write_ready_registry(path, provider="openai", model="gpt-4.1"):
+    lines = [
+        "gate: gate8_main_comparison",
+        "stage: gate8i_provider_evidence_readiness",
+        "status: ready",
+        "authorized_to_run: true",
+        "provider_evidence_locked: true",
+        "provider_selected: true",
+        f"provider: {provider}",
+        f"model: {model}",
+        "evidence_slots:",
+    ]
+    for evidence_id in sorted(EXPECTED_EVIDENCE_IDS):
+        lines.extend(
+            [
+                f"  - evidence_id: {evidence_id}",
+                f"    official_source_url: https://example.test/{evidence_id}",
+                "    checked_at: 2026-05-14",
+                "    evidence_status: reviewed",
+                "    reviewer: qa-review",
+            ]
+        )
+    lines.append("blockers:")
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _write_provider_decision(path, provider, model):
+    path.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8i_provider_decision",
+                "selected: true",
+                f"provider: {provider}",
+                f"model: {model}",
+                "run_authorized: true",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_registry_contains_all_required_evidence_slots():
     inputs = load_provider_evidence_inputs(REGISTRY, PROVIDER_DECISION)
 
@@ -136,6 +178,36 @@ def test_provider_decision_references_registry_but_remains_unselected():
     assert summary["provider_decision_authorized"] is False
     assert "provider_decision_unselected" in summary["blockers"]
     assert "provider_decision_not_authorized" in summary["blockers"]
+
+
+def test_provider_decision_requires_concrete_provider_and_model_when_selected(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_ready_registry(registry)
+    _write_provider_decision(provider_decision, provider="unset", model="unset")
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_evidence_ready"] is False
+    assert "provider_decision_provider_unset" in summary["blockers"]
+    assert "provider_decision_model_unset" in summary["blockers"]
+
+
+def test_provider_decision_must_match_locked_registry_provider_and_model(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_ready_registry(registry, provider="openai", model="gpt-4.1")
+    _write_provider_decision(provider_decision, provider="anthropic", model="claude-3-7-sonnet")
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_evidence_ready"] is False
+    assert "provider_decision_provider_mismatch" in summary["blockers"]
+    assert "provider_decision_model_mismatch" in summary["blockers"]
 
 
 def test_cli_default_mode_exits_zero_and_reports_not_ready():

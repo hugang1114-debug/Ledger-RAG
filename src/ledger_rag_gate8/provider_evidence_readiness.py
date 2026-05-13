@@ -124,6 +124,10 @@ def _slot_by_id(slots):
 def build_provider_evidence_readiness_summary(inputs):
     registry = inputs.registry
     provider_decision = inputs.provider_decision
+    registry_provider = registry.get("provider")
+    registry_model = registry.get("model")
+    decision_provider = provider_decision.get("provider")
+    decision_model = provider_decision.get("model")
     slots_by_id = _slot_by_id(inputs.evidence_slots)
     absent_evidence_ids = sorted(EXPECTED_EVIDENCE_IDS - set(slots_by_id))
 
@@ -173,6 +177,16 @@ def build_provider_evidence_readiness_summary(inputs):
         blockers.append("provider_decision_unselected")
     if provider_decision.get("run_authorized") is not True:
         blockers.append("provider_decision_not_authorized")
+    if _is_unset(decision_provider):
+        blockers.append("provider_decision_provider_unset")
+    if _is_unset(decision_model):
+        blockers.append("provider_decision_model_unset")
+    if not _is_unset(registry_provider) and not _is_unset(decision_provider):
+        if registry_provider != decision_provider:
+            blockers.append("provider_decision_provider_mismatch")
+    if not _is_unset(registry_model) and not _is_unset(decision_model):
+        if registry_model != decision_model:
+            blockers.append("provider_decision_model_mismatch")
     blockers = _dedupe(blockers)
 
     provider_evidence_ready = not validation_errors and not blockers
@@ -184,8 +198,8 @@ def build_provider_evidence_readiness_summary(inputs):
         "provider_evidence_ready": provider_evidence_ready,
         "authorized_to_run": registry.get("authorized_to_run") is True,
         "provider_selected": registry.get("provider_selected") is True,
-        "provider": registry.get("provider"),
-        "model": registry.get("model"),
+        "provider": registry_provider,
+        "model": registry_model,
         "provider_decision_selected": provider_decision.get("selected") is True,
         "provider_decision_authorized": provider_decision.get("run_authorized") is True,
         "missing_evidence_ids": missing_evidence_ids,
