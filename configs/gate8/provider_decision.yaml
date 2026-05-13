@@ -22,6 +22,7 @@ prompt_versions_locked: false
 generation_config_locked: false
 cost_budget_approved: false
 run_authorized: false
+provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
 
 required_future_evidence:
   - official_pricing_url_checked_on_run_date
@@ -35,6 +36,7 @@ required_future_evidence:
   - data_retention_or_privacy_note
   - api_key_or_local_runtime_availability_note
   - approved_cost_budget_note
+  - provider_evidence_registry_locked_and_reviewed
 
 disallowed_evidence:
   - stale_prices_from_reports_or_old_notes

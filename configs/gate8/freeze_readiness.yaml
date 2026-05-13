@@ -6,6 +6,7 @@ authorized_to_run: false
 purpose: execution_preflight_readiness
 run_matrix: configs/gate8/main_v1_run_matrix.yaml
 provider_decision: configs/gate8/provider_decision.yaml
+provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
 prompt_registry: configs/gate8/prompt_registry.yaml
 generation_config_registry: configs/gate8/generation_config_registry.yaml
 source_snapshot_registry: snapshots/main_v1/source_snapshots.json
@@ -39,6 +40,8 @@ blockers:
   - reproducibility_review_unfinished
   - run_matrix_non_executable
   - provider_decision_non_executable
+  - provider_evidence_not_locked
+  - provider_evidence_registry_non_executable
   - prompt_registry_not_locked
   - generation_config_registry_not_locked
   - source_snapshots_not_promoted

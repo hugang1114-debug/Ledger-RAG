@@ -12,6 +12,7 @@ REQUIRED_FREEZE_FIELDS = {
     "authorized_to_run",
     "run_matrix",
     "provider_decision",
+    "provider_evidence_registry",
     "prompt_registry",
     "generation_config_registry",
     "provider_freeze_selected",
@@ -30,6 +31,15 @@ REQUIRED_FREEZE_FIELDS = {
 
 REQUIRED_RUN_MATRIX_FIELDS = {"gate", "stage", "authorized_to_run"}
 REQUIRED_PROVIDER_FIELDS = {"gate", "stage", "selected", "provider", "model", "run_authorized"}
+REQUIRED_PROVIDER_EVIDENCE_FIELDS = {
+    "gate",
+    "stage",
+    "authorized_to_run",
+    "provider_evidence_locked",
+    "provider_selected",
+    "provider",
+    "model",
+}
 
 
 @dataclass(frozen=True)
@@ -37,11 +47,13 @@ class FreezeInputs:
     freeze_path: Path
     run_matrix_path: Path
     provider_decision_path: Path
+    provider_evidence_registry_path: Path
     prompt_registry_path: Path
     generation_config_registry_path: Path
     freeze_config: dict
     run_matrix: dict
     provider_decision: dict
+    provider_evidence_registry: dict
     prompt_registry: dict
     generation_config_registry: dict
 
@@ -109,6 +121,10 @@ def load_freeze_inputs(freeze_config_path):
     freeze_config = load_simple_yaml(freeze_path)
     run_matrix_path, run_matrix = _optional_referenced_config(freeze_config, "run_matrix")
     provider_path, provider_decision = _optional_referenced_config(freeze_config, "provider_decision")
+    provider_evidence_path, provider_evidence_registry = _optional_referenced_config(
+        freeze_config,
+        "provider_evidence_registry",
+    )
     prompt_registry_path, prompt_registry = _optional_referenced_config(freeze_config, "prompt_registry")
     generation_config_path, generation_config = _optional_referenced_config(
         freeze_config,
@@ -119,11 +135,13 @@ def load_freeze_inputs(freeze_config_path):
         freeze_path=freeze_path,
         run_matrix_path=run_matrix_path,
         provider_decision_path=provider_path,
+        provider_evidence_registry_path=provider_evidence_path,
         prompt_registry_path=prompt_registry_path,
         generation_config_registry_path=generation_config_path,
         freeze_config=freeze_config,
         run_matrix=run_matrix,
         provider_decision=provider_decision,
+        provider_evidence_registry=provider_evidence_registry,
         prompt_registry=prompt_registry,
         generation_config_registry=generation_config,
     )
@@ -172,12 +190,20 @@ def build_freeze_readiness_summary(inputs):
     freeze_config = inputs.freeze_config
     run_matrix = inputs.run_matrix
     provider_decision = inputs.provider_decision
+    provider_evidence_registry = inputs.provider_evidence_registry
     prompt_registry = inputs.prompt_registry
     generation_config_registry = inputs.generation_config_registry
     validation_errors = []
     validation_errors.extend(_missing_fields(freeze_config, REQUIRED_FREEZE_FIELDS, "freeze_config"))
     validation_errors.extend(_missing_fields(run_matrix, REQUIRED_RUN_MATRIX_FIELDS, "run_matrix"))
     validation_errors.extend(_missing_fields(provider_decision, REQUIRED_PROVIDER_FIELDS, "provider_decision"))
+    validation_errors.extend(
+        _missing_fields(
+            provider_evidence_registry,
+            REQUIRED_PROVIDER_EVIDENCE_FIELDS,
+            "provider_evidence_registry",
+        )
+    )
 
     blockers = list(freeze_config.get("blockers", []))
     _add_blocker(blockers, freeze_config.get("authorized_to_run") is not True, "freeze_authorization_disabled")
@@ -205,6 +231,36 @@ def build_freeze_readiness_summary(inputs):
         blockers,
         _has_items(provider_decision, "disallowed_evidence"),
         "provider_decision_has_disallowed_evidence",
+    )
+    _add_blocker(
+        blockers,
+        provider_evidence_registry.get("authorized_to_run") is not True,
+        "provider_evidence_registry_not_authorized",
+    )
+    _add_blocker(
+        blockers,
+        provider_evidence_registry.get("provider_evidence_locked") is not True,
+        "provider_evidence_not_locked",
+    )
+    _add_blocker(
+        blockers,
+        provider_evidence_registry.get("provider_selected") is not True,
+        "provider_evidence_provider_unselected",
+    )
+    _add_blocker(
+        blockers,
+        provider_evidence_registry.get("provider") == "unset",
+        "provider_evidence_provider_unset",
+    )
+    _add_blocker(
+        blockers,
+        provider_evidence_registry.get("model") == "unset",
+        "provider_evidence_model_unset",
+    )
+    _add_blocker(
+        blockers,
+        _has_items(provider_evidence_registry, "blockers"),
+        "provider_evidence_registry_has_blockers",
     )
     _add_blocker(
         blockers,
@@ -251,6 +307,7 @@ def build_freeze_readiness_summary(inputs):
             "freeze_config": _summary_path(inputs.freeze_path),
             "run_matrix": _summary_path(inputs.run_matrix_path),
             "provider_decision": _summary_path(inputs.provider_decision_path),
+            "provider_evidence_registry": _summary_path(inputs.provider_evidence_registry_path),
             "prompt_registry": _summary_path(inputs.prompt_registry_path),
             "generation_config_registry": _summary_path(inputs.generation_config_registry_path),
         },
