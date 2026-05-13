@@ -88,6 +88,12 @@ def _write_ready_fixture(tmp_path, bad_manifest=None):
     manifest = bad_manifest(record) if bad_manifest else _index_manifest(record)
     _write_json(registry_path, registry)
     _write_json(index_path, manifest)
+    paths = manifest.get("paths", {})
+    for path_name in ("documents", "postings"):
+        if path_name in paths:
+            artifact_path = repo_root / paths[path_name]
+            artifact_path.parent.mkdir(parents=True, exist_ok=True)
+            artifact_path.write_text("{}\n", encoding="utf-8")
     readiness_path.parent.mkdir(parents=True)
     readiness_path.write_text(
         "\n".join(
