@@ -1,0 +1,54 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8h_generation_config_readiness
+status: readiness_in_progress
+authorized_to_run: false
+purpose: non_executable_generation_config_registry
+generation_config_locked: false
+shared_answer_style_locked: false
+shared_evidence_budget_locked: false
+
+shared_constraints:
+  answer_style: unset
+  max_evidence_budget: unset
+  temperature: unset
+  seed: unset
+  max_output_tokens: unset
+
+baseline_generation_slots:
+  - baseline_family: vanilla_rag
+    generation_config_version: unset
+    config_status: slot_reserved
+    requires_provider_freeze: true
+    notes: final_generation_config_required_later
+  - baseline_family: hybrid_rag
+    generation_config_version: unset
+    config_status: slot_reserved
+    requires_provider_freeze: true
+    notes: final_generation_config_required_later
+  - baseline_family: citation_only
+    generation_config_version: unset
+    config_status: slot_reserved
+    requires_provider_freeze: true
+    notes: final_generation_config_required_later
+  - baseline_family: validator_only
+    generation_config_version: unset
+    config_status: slot_reserved
+    requires_provider_freeze: true
+    notes: final_generation_config_required_later
+  - baseline_family: ledger_only
+    generation_config_version: unset
+    config_status: slot_reserved
+    requires_provider_freeze: true
+    notes: final_generation_config_required_later
+  - baseline_family: ledger_validator
+    generation_config_version: unset
+    config_status: slot_reserved
+    requires_provider_freeze: true
+    notes: final_generation_config_required_later
+
+blockers:
+  - generation_config_unlocked
+  - shared_answer_style_unlocked
+  - shared_evidence_budget_unlocked
+  - provider_not_selected

@@ -1,0 +1,52 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8h_prompt_registry_readiness
+status: readiness_in_progress
+authorized_to_run: false
+purpose: non_executable_prompt_registry
+prompt_versions_locked: false
+prompt_text_frozen: false
+
+baseline_prompt_slots:
+  - baseline_family: vanilla_rag
+    prompt_version: unset
+    prompt_status: slot_reserved
+    prompt_file: unset
+    requires_provider_freeze: true
+    notes: final_prompt_required_later
+  - baseline_family: hybrid_rag
+    prompt_version: unset
+    prompt_status: slot_reserved
+    prompt_file: unset
+    requires_provider_freeze: true
+    notes: final_prompt_required_later
+  - baseline_family: citation_only
+    prompt_version: unset
+    prompt_status: slot_reserved
+    prompt_file: unset
+    requires_provider_freeze: true
+    notes: final_prompt_required_later
+  - baseline_family: validator_only
+    prompt_version: unset
+    prompt_status: slot_reserved
+    prompt_file: unset
+    requires_provider_freeze: true
+    notes: final_prompt_required_later
+  - baseline_family: ledger_only
+    prompt_version: unset
+    prompt_status: slot_reserved
+    prompt_file: unset
+    requires_provider_freeze: true
+    notes: final_prompt_required_later
+  - baseline_family: ledger_validator
+    prompt_version: unset
+    prompt_status: slot_reserved
+    prompt_file: unset
+    requires_provider_freeze: true
+    notes: final_prompt_required_later
+
+blockers:
+  - prompt_versions_unlocked
+  - prompt_text_not_frozen
+  - provider_not_selected
+  - final_prompt_files_unset
