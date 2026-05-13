@@ -1,6 +1,6 @@
 # Gate 8 Prompt Config Readiness
 
-Gate 8H reserves prompt and generation config slots for the future main comparison. It does not write final prompt text, select a provider, check live prices, call models, run baselines, compute metrics, create result artifacts, or pass Gate 8.
+Gate 8H reserves prompt and generation config slots for the future main comparison. It does not write final prompt text, select a provider, check live prices, call models, run baselines, compute metrics, create result artifacts, promote source snapshots, or pass Gate 8.
 
 ## Current State
 
