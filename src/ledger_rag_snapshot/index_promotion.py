@@ -189,6 +189,17 @@ def validate_snapshot_index_record(record, repo_root=ROOT):
                 blockers.append(_blocker(dataset_id, path_field, f"index {path_field} path is unset"))
             elif not _repo_path(repo_root, path_value).exists():
                 blockers.append(_blocker(dataset_id, path_field, f"index {path_field} path does not exist"))
+        if (
+            not _is_unset(paths.get("index_manifest"))
+            and str(paths.get("index_manifest")) != str(record.get("retrieval_index_path"))
+        ):
+            blockers.append(
+                _blocker(
+                    dataset_id,
+                    "retrieval_index_path",
+                    "index manifest path does not match snapshot record",
+                )
+            )
 
     for numeric_field in ("document_count", "term_count"):
         value = manifest.get(numeric_field)

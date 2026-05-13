@@ -181,6 +181,31 @@ def test_directory_index_manifest_path_blocks_promotion_without_traceback(tmp_pa
     } in summary["promotion_blockers"]
 
 
+def test_mismatched_index_manifest_path_blocks_promotion(tmp_path):
+    alternate_index_manifest = (
+        "datasets/retrieval_indexes/main_v1/fixtureqa/dev/alternate_index_manifest.json"
+    )
+
+    def bad_manifest(record):
+        manifest = _index_manifest(record)
+        manifest["paths"]["index_manifest"] = alternate_index_manifest
+        return manifest
+
+    repo_root, registry_path, readiness_path = _write_ready_fixture(tmp_path, bad_manifest)
+    alternate_path = repo_root / alternate_index_manifest
+    alternate_path.parent.mkdir(parents=True, exist_ok=True)
+    alternate_path.write_text("{}\n", encoding="utf-8")
+
+    summary = build_snapshot_index_promotion_summary(registry_path, readiness_path, repo_root)
+
+    assert summary["promotable"] is False
+    assert {
+        "dataset_id": "fixtureqa",
+        "field": "retrieval_index_path",
+        "message": "index manifest path does not match snapshot record",
+    } in summary["promotion_blockers"]
+
+
 def test_mismatched_index_manifest_identity_blocks_promotion(tmp_path):
     cases = [
         ("dataset_id", lambda record: _index_manifest(record, dataset_id="otherqa"), "index dataset id mismatch"),
