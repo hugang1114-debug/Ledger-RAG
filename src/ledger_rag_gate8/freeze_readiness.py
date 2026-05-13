@@ -89,19 +89,28 @@ def _resolve_repo_path(base_path, candidate):
     return (ROOT / candidate_path).resolve()
 
 
+def _optional_referenced_config(freeze_config, field):
+    value = freeze_config.get(field)
+    if value is None or str(value).strip() == "":
+        return ROOT, {}
+
+    path = _resolve_repo_path(ROOT, value)
+    return path, load_simple_yaml(path)
+
+
 def load_freeze_inputs(freeze_config_path):
     freeze_path = Path(freeze_config_path).resolve()
     freeze_config = load_simple_yaml(freeze_path)
-    run_matrix_path = _resolve_repo_path(freeze_path, freeze_config.get("run_matrix", ""))
-    provider_path = _resolve_repo_path(freeze_path, freeze_config.get("provider_decision", ""))
+    run_matrix_path, run_matrix = _optional_referenced_config(freeze_config, "run_matrix")
+    provider_path, provider_decision = _optional_referenced_config(freeze_config, "provider_decision")
 
     return FreezeInputs(
         freeze_path=freeze_path,
         run_matrix_path=run_matrix_path,
         provider_decision_path=provider_path,
         freeze_config=freeze_config,
-        run_matrix=load_simple_yaml(run_matrix_path),
-        provider_decision=load_simple_yaml(provider_path),
+        run_matrix=run_matrix,
+        provider_decision=provider_decision,
     )
 
 
@@ -132,6 +141,18 @@ def _add_blocker(blockers, condition, blocker):
         blockers.append(blocker)
 
 
+def _has_items(record, field):
+    value = record.get(field)
+    return isinstance(value, list) and len(value) > 0
+
+
+def _summary_path(path):
+    path = Path(path)
+    if path.is_relative_to(ROOT):
+        return path.relative_to(ROOT).as_posix()
+    return path.as_posix()
+
+
 def build_freeze_readiness_summary(inputs):
     freeze_config = inputs.freeze_config
     run_matrix = inputs.run_matrix
@@ -155,8 +176,19 @@ def build_freeze_readiness_summary(inputs):
     _add_blocker(blockers, freeze_config.get("reproducibility_review_complete") is not True, "reproducibility_review_unfinished")
     _add_blocker(blockers, freeze_config.get("execution_authorized") is not True, "execution_not_authorized")
     _add_blocker(blockers, run_matrix.get("authorized_to_run") is not True, "run_matrix_not_authorized")
+    _add_blocker(blockers, _has_items(run_matrix, "blocked_reasons"), "run_matrix_has_blocked_reasons")
     _add_blocker(blockers, provider_decision.get("selected") is not True, "provider_decision_unselected")
     _add_blocker(blockers, provider_decision.get("run_authorized") is not True, "provider_decision_not_authorized")
+    _add_blocker(
+        blockers,
+        _has_items(provider_decision, "required_future_evidence"),
+        "provider_decision_has_required_future_evidence",
+    )
+    _add_blocker(
+        blockers,
+        _has_items(provider_decision, "disallowed_evidence"),
+        "provider_decision_has_disallowed_evidence",
+    )
     blockers = _dedupe(blockers)
 
     freeze_ready = not validation_errors and not blockers
@@ -169,9 +201,9 @@ def build_freeze_readiness_summary(inputs):
         "authorized_to_run": freeze_config.get("authorized_to_run") is True,
         "blockers": blockers,
         "checked_configs": {
-            "freeze_config": inputs.freeze_path.relative_to(ROOT).as_posix(),
-            "run_matrix": inputs.run_matrix_path.relative_to(ROOT).as_posix(),
-            "provider_decision": inputs.provider_decision_path.relative_to(ROOT).as_posix(),
+            "freeze_config": _summary_path(inputs.freeze_path),
+            "run_matrix": _summary_path(inputs.run_matrix_path),
+            "provider_decision": _summary_path(inputs.provider_decision_path),
         },
         "validation_errors": validation_errors,
     }

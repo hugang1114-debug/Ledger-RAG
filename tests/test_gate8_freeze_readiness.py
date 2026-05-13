@@ -64,6 +64,108 @@ def test_summary_reports_checked_config_paths():
     assert summary["checked_configs"]["provider_decision"].endswith("configs/gate8/provider_decision.yaml")
 
 
+def test_referenced_metadata_lists_keep_strict_readiness_blocked(tmp_path):
+    freeze_config = tmp_path / "freeze.yaml"
+    run_matrix = tmp_path / "run_matrix.yaml"
+    provider_decision = tmp_path / "provider.yaml"
+
+    freeze_config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "gate: gate8_main_comparison",
+                "stage: gate8g_freeze_readiness",
+                "status: readiness_in_progress",
+                "authorized_to_run: true",
+                f"run_matrix: {run_matrix}",
+                f"provider_decision: {provider_decision}",
+                "provider_freeze_selected: true",
+                "provider_pricing_checked_on_run_date: true",
+                "provider_docs_checked_on_run_date: true",
+                "terms_checked_on_run_date: true",
+                "api_key_or_runtime_available: true",
+                "prompt_versions_locked: true",
+                "generation_config_locked: true",
+                "cost_budget_approved: true",
+                "execution_card: experiments/cards/future.md",
+                "reproducibility_review_complete: true",
+                "execution_authorized: true",
+                "blockers:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    run_matrix.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8f_run_config_readiness",
+                "authorized_to_run: true",
+                "blocked_reasons:",
+                "  - provider_unselected",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    provider_decision.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8f_provider_readiness",
+                "selected: true",
+                "provider: example",
+                "model: example-model",
+                "run_authorized: true",
+                "required_future_evidence:",
+                "  - official_pricing_url_checked_on_run_date",
+                "disallowed_evidence:",
+                "  - stale_prices_from_reports_or_old_notes",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_freeze_readiness_summary(load_freeze_inputs(freeze_config))
+
+    assert summary["freeze_ready"] is False
+    assert "run_matrix_has_blocked_reasons" in summary["blockers"]
+    assert "provider_decision_has_required_future_evidence" in summary["blockers"]
+    assert "provider_decision_has_disallowed_evidence" in summary["blockers"]
+
+
+def test_missing_reference_paths_report_validation_errors(tmp_path):
+    freeze_config = tmp_path / "freeze.yaml"
+    freeze_config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "gate: gate8_main_comparison",
+                "stage: gate8g_freeze_readiness",
+                "status: readiness_in_progress",
+                "authorized_to_run: false",
+                "provider_freeze_selected: false",
+                "provider_pricing_checked_on_run_date: false",
+                "provider_docs_checked_on_run_date: false",
+                "terms_checked_on_run_date: false",
+                "api_key_or_runtime_available: false",
+                "prompt_versions_locked: false",
+                "generation_config_locked: false",
+                "cost_budget_approved: false",
+                "execution_card: unset",
+                "reproducibility_review_complete: false",
+                "execution_authorized: false",
+                "blockers:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_freeze_readiness_summary(load_freeze_inputs(freeze_config))
+
+    assert summary["freeze_ready"] is False
+    assert {error["field"] for error in summary["validation_errors"]} >= {"run_matrix", "provider_decision"}
+
+
 def test_simple_yaml_parser_reads_top_level_scalars_and_lists(tmp_path):
     config = tmp_path / "sample.yaml"
     config.write_text(
