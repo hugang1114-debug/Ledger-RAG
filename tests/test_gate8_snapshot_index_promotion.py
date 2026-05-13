@@ -12,8 +12,6 @@ from ledger_rag_snapshot.index_promotion import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY = ROOT / "snapshots" / "main_v1" / "source_snapshots.json"
-READINESS_CONFIG = ROOT / "configs" / "gate8" / "main_v1_readiness.yaml"
 CHECK_CLI = ROOT / "scripts" / "check_gate8_snapshot_index_promotion.py"
 PROMOTE_CLI = ROOT / "scripts" / "promote_gate8_snapshot_indexes.py"
 
@@ -134,13 +132,14 @@ def _write_ready_fixture(tmp_path, bad_manifest=None):
     return repo_root, registry_path, readiness_path
 
 
-def test_current_local_registry_is_promotable_for_snapshot_index_metadata():
-    summary = build_snapshot_index_promotion_summary(REGISTRY, READINESS_CONFIG, ROOT)
+def test_fixture_registry_is_promotable_for_snapshot_index_metadata(tmp_path):
+    repo_root, registry_path, readiness_path = _write_ready_fixture(tmp_path)
+    summary = build_snapshot_index_promotion_summary(registry_path, readiness_path, repo_root)
 
     assert summary["promotable"] is True
-    assert summary["dataset_count"] == 3
+    assert summary["dataset_count"] == 1
     assert summary["promotion_blockers"] == []
-    assert summary["datasets"] == ["hotpotqa", "2wikimultihopqa", "musique"]
+    assert summary["datasets"] == ["fixtureqa"]
 
 
 def test_missing_index_manifest_blocks_promotion(tmp_path):
@@ -210,15 +209,19 @@ def test_promotion_refuses_to_write_when_blocked(tmp_path):
     assert readiness_path.read_text(encoding="utf-8") == readiness_before
 
 
-def test_check_cli_default_mode_reports_promotable():
+def test_check_cli_default_mode_reports_promotable(tmp_path):
+    repo_root, registry_path, readiness_path = _write_ready_fixture(tmp_path)
+
     result = subprocess.run(
         [
             sys.executable,
             str(CHECK_CLI),
             "--registry",
-            str(REGISTRY),
+            str(registry_path),
             "--readiness-config",
-            str(READINESS_CONFIG),
+            str(readiness_path),
+            "--repo-root",
+            str(repo_root),
         ],
         cwd=ROOT,
         text=True,
