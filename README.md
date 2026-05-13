@@ -42,7 +42,11 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `docs/metric-contract.yaml` - structured metric output contract for future runs
 - `docs/main-comparison-readiness.md` - Gate 8 readiness requirements and blockers
 - `docs/source-snapshot-protocol.md` - immutable source snapshot rules for main comparisons
+- `docs/gate8-run-config-readiness.md` - non-executable Gate 8 run matrix rules
+- `docs/model-provider-readiness.md` - provider selection and current-price evidence rules
 - `configs/gate8/main_v1_readiness.yaml` - non-executable Gate 8 readiness matrix
+- `configs/gate8/main_v1_run_matrix.yaml` - non-executable main v1 dataset/baseline matrix
+- `configs/gate8/provider_decision.yaml` - provider decision metadata with execution fields unset
 - `snapshots/main_v1/source_snapshots.json` - pending source snapshot registry for main v1 datasets
 - `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder

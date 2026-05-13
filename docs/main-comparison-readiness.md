@@ -112,6 +112,15 @@ python scripts/build_gate8_lexical_indexes.py --registry snapshots/main_v1/sourc
 
 This command may set `retrieval_index_path` for HotpotQA, 2WikiMultihopQA, and MuSiQue, but it does not run retrieval evaluation, does not run baselines, and does not pass Gate 8.
 
+Gate 8F locks non-executable run matrix and provider-readiness metadata:
+
+```powershell
+configs/gate8/main_v1_run_matrix.yaml
+configs/gate8/provider_decision.yaml
+```
+
+These files may define the future dataset/baseline matrix and provider evidence requirements, but they do not select a provider, freeze prompts, approve budget, run baselines, or pass Gate 8.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets except through explicitly authorized source snapshot builders
