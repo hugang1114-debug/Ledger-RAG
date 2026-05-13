@@ -135,6 +135,20 @@ python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/fre
 
 This check is metadata-only. It does not select a provider, check live prices, write prompts, run baselines, compute metrics, create result artifacts, or pass Gate 8.
 
+Gate 8H adds prompt and generation config registry readiness checks:
+
+```powershell
+python scripts/check_gate8_prompt_config_readiness.py --prompt-registry configs/gate8/prompt_registry.yaml --generation-config configs/gate8/generation_config_registry.yaml
+```
+
+Strict mode remains blocked until prompt versions, prompt files, shared generation config, provider assumptions, and execution metadata are locked:
+
+```powershell
+python scripts/check_gate8_prompt_config_readiness.py --prompt-registry configs/gate8/prompt_registry.yaml --generation-config configs/gate8/generation_config_registry.yaml --require-ready
+```
+
+This check reserves prompt/config slots only. It does not write final prompt text, select a provider, check live prices, run baselines, compute metrics, create result artifacts, or pass Gate 8.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets except through explicitly authorized source snapshot builders
