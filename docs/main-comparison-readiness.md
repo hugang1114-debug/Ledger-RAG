@@ -149,6 +149,24 @@ python scripts/check_gate8_prompt_config_readiness.py --prompt-registry configs/
 
 This check reserves prompt/config slots only. It does not write final prompt text, select a provider, check live prices, run baselines, compute metrics, create result artifacts, or pass Gate 8.
 
+## Provider Evidence Registry
+
+Gate 8I adds `configs/gate8/provider_evidence_registry.yaml` as the tracked registry for official provider evidence. Gate 8 cannot run until this registry is locked with reviewed official evidence for pricing, model docs, terms/privacy, model id/version, context window, output limits, rate limits/throughput, runtime availability, and approved budget.
+
+Default mode is metadata inspection only:
+
+```powershell
+python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml
+```
+
+Strict mode is for future execution authorization checks:
+
+```powershell
+python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --require-ready
+```
+
+Strict mode fails until a future execution gate records reviewed official evidence and authorizes model calls.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets except through explicitly authorized source snapshot builders

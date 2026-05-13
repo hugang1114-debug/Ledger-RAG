@@ -12,6 +12,7 @@ The current Gate 8G metadata keeps execution locked:
 - `generation_config_locked: false`
 - `cost_budget_approved: false`
 - `execution_authorized: false`
+- provider evidence registry is not locked or reviewed
 
 This is intentional. The project now has source snapshots and local lexical indexes, but main execution still needs provider, prompt, budget, and reproducibility decisions.
 
@@ -23,6 +24,7 @@ Before any main baseline command can run, the project must record:
 - official pricing source checked on the run date
 - official model documentation checked on the run date
 - terms or data-retention note checked on the run date
+- locked provider evidence registry with reviewed official evidence
 - API key or local runtime availability note
 - prompt version ids for all comparable baselines
 - generation config version id
@@ -51,6 +53,14 @@ python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/fre
 ```
 
 Strict mode is expected to fail until provider, prompt, budget, execution card, and reproducibility metadata are locked.
+
+Provider evidence strict mode is also required before freeze can authorize execution:
+
+```powershell
+python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --require-ready
+```
+
+This strict provider evidence check is expected to fail until official provider evidence is reviewed, the registry is locked, and model calls are authorized by a future execution gate.
 
 ## Prohibited In Gate 8G
 

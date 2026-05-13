@@ -9,6 +9,7 @@ provider_decision: configs/gate8/provider_decision.yaml
 freeze_readiness: configs/gate8/freeze_readiness.yaml
 prompt_registry: configs/gate8/prompt_registry.yaml
 generation_config_registry: configs/gate8/generation_config_registry.yaml
+provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
 readiness_check:
   command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
   strict_command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
@@ -21,6 +22,7 @@ prompt_config_readiness_check:
   command: python scripts/check_gate8_prompt_config_readiness.py --prompt-registry configs/gate8/prompt_registry.yaml --generation-config configs/gate8/generation_config_registry.yaml
   strict_command: python scripts/check_gate8_prompt_config_readiness.py --prompt-registry configs/gate8/prompt_registry.yaml --generation-config configs/gate8/generation_config_registry.yaml --require-ready
   strict_mode_expected_exit_before_prompt_config_freeze: 1
+provider_evidence_readiness_check: python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml
 source_snapshot_builds:
   hotpotqa_dev_distractor:
     command: python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev_distractor
@@ -127,6 +129,8 @@ not_ready:
   - prompt_registry_unlocked
   - generation_config_registry_unlocked
   - provider_decision_unlocked
+  - provider_evidence_not_locked
+  - provider_evidence_registry_non_executable
   - freeze_readiness_unlocked
   - provider_prompt_budget_not_frozen
   - run_matrix_non_executable

@@ -13,6 +13,8 @@ Provider selection is not complete:
 
 This is intentional. A later provider and prompt freeze gate must make the selection explicitly.
 
+Gate 8I adds `configs/gate8/provider_evidence_registry.yaml` as the tracked place for official provider evidence. Provider selection remains unset, and the registry starts incomplete and non-executable until a future execution gate reviews official sources and authorizes model calls.
+
 ## Required Future Evidence
 
 Before any main baseline can run, the provider decision record must include:

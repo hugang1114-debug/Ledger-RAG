@@ -46,9 +46,11 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `docs/model-provider-readiness.md` - provider selection and current-price evidence rules
 - `docs/gate8-freeze-readiness.md` - Gate 8G provider, prompt, budget, and execution freeze rules
 - `docs/gate8-prompt-config-readiness.md` - Gate 8H prompt/config registry rules
+- `docs/gate8-provider-evidence-readiness.md` - Gate 8I provider evidence registry readiness rules
 - `configs/gate8/main_v1_readiness.yaml` - non-executable Gate 8 readiness matrix
 - `configs/gate8/main_v1_run_matrix.yaml` - non-executable main v1 dataset/baseline matrix
 - `configs/gate8/provider_decision.yaml` - provider decision metadata with execution fields unset
+- `configs/gate8/provider_evidence_registry.yaml` - non-executable provider evidence registry
 - `configs/gate8/freeze_readiness.yaml` - non-executable freeze readiness metadata
 - `configs/gate8/prompt_registry.yaml` - non-executable prompt slot registry
 - `configs/gate8/generation_config_registry.yaml` - non-executable generation config slot registry
@@ -56,6 +58,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
 - `scripts/check_gate8_freeze_readiness.py` - local execution-preflight readiness checker
 - `scripts/check_gate8_prompt_config_readiness.py` - local prompt/config registry readiness checker
+- `scripts/check_gate8_provider_evidence_readiness.py` - local provider evidence registry readiness checker
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
 - `scripts/build_2wiki_source_snapshot.py` - official-source 2WikiMultihopQA dev snapshot builder
 - `scripts/build_musique_source_snapshot.py` - official-source MuSiQue answerable dev snapshot builder
