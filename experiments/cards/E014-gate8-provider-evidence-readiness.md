@@ -12,17 +12,21 @@ Create a non-running provider evidence readiness registry for the future Gate 8 
 
 ## Authorized Commands
 
-Only these metadata validation commands are authorized by this card:
+This card records the planned local validation contract only. The checker is implemented in a later task, so these command strings are not authorized to run under this card until `scripts/check_gate8_provider_evidence_readiness.py` exists.
+
+Planned inspect-only command:
 
 ```powershell
 python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml
 ```
 
+Planned strict readiness command:
+
 ```powershell
 python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --require-ready
 ```
 
-The default command is inspect-only. The strict command must fail until all official provider evidence is recorded and reviewed under a later authorized gate.
+After the checker exists, the default command is inspect-only. The strict command must fail until all official provider evidence is recorded and reviewed under a later authorized gate.
 
 ## Prohibited Actions
 
@@ -35,6 +39,7 @@ The default command is inspect-only. The strict command must fail until all offi
 - baseline execution
 - metric computation
 - result artifacts
+- running the planned checker before it is implemented
 
 ## Expected Outputs
 

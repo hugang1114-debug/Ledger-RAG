@@ -34,20 +34,22 @@ Official evidence must come from provider documentation, provider pricing pages,
 
 ## CLI Contract
 
-Default mode is inspect-only:
+These exact command forms define the planned local validation contract for the future checker. They are not runnable under Gate 8I until `scripts/check_gate8_provider_evidence_readiness.py` is implemented in a later task.
+
+Planned default mode is inspect-only:
 
 ```powershell
 python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml
 ```
 
-Strict mode is for execution authorization checks:
+Planned strict mode is for execution authorization checks:
 
 ```powershell
 python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --require-ready
 ```
 
-Strict mode must fail until all official evidence slots are recorded, reviewed, linked to a concrete provider/model decision, and the registry explicitly locks `provider_evidence_locked: true` under an authorized later gate.
+After the checker exists, strict mode must fail until all official evidence slots are recorded, reviewed, linked to a concrete provider/model decision, and the registry explicitly locks `provider_evidence_locked: true` under an authorized later gate.
 
 ## Execution Boundary
 
-Gate 8I does not authorize live provider lookup, live pricing lookup, provider/model selection, API key storage, model calls, embedding calls, reranker calls, baseline execution, metric computation, or result artifacts.
+Gate 8I does not authorize running the planned checker before it exists. It also does not authorize live provider lookup, live pricing lookup, provider/model selection, API key storage, model calls, embedding calls, reranker calls, baseline execution, metric computation, or result artifacts.

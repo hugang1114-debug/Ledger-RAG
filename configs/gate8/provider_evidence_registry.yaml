@@ -14,54 +14,63 @@ evidence_slots:
     required_for: provider_cost_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: official_pricing_source_required_later
   - evidence_id: official_model_docs_source
     required_for: provider_model_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: official_model_docs_source_required_later
   - evidence_id: official_terms_privacy_source
     required_for: provider_terms_privacy_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: official_terms_privacy_source_required_later
   - evidence_id: model_id_version_source
     required_for: model_identity_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: model_id_version_source_required_later
   - evidence_id: context_window_source
     required_for: context_window_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: context_window_source_required_later
   - evidence_id: output_limit_source
     required_for: output_limit_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: output_limit_source_required_later
   - evidence_id: rate_limit_or_throughput_source
     required_for: run_feasibility_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: rate_limit_or_throughput_source_required_later
   - evidence_id: api_key_or_runtime_availability_note
     required_for: runtime_availability_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: api_key_or_runtime_availability_note_required_later
   - evidence_id: cost_budget_approval_note
     required_for: cost_budget_validation
     official_source_url: unset
     checked_at: unset
+    evidence_status: missing
     reviewer: unset
     notes: cost_budget_approval_note_required_later
 
