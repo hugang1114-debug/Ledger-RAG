@@ -34,9 +34,13 @@ def test_load_freeze_inputs_uses_config_references():
 
     assert inputs.freeze_config["run_matrix"] == "configs/gate8/main_v1_run_matrix.yaml"
     assert inputs.freeze_config["provider_decision"] == "configs/gate8/provider_decision.yaml"
+    assert inputs.freeze_config["prompt_registry"] == "configs/gate8/prompt_registry.yaml"
+    assert inputs.freeze_config["generation_config_registry"] == "configs/gate8/generation_config_registry.yaml"
     assert inputs.run_matrix["authorized_to_run"] is False
     assert inputs.provider_decision["selected"] is False
     assert inputs.provider_decision["run_authorized"] is False
+    assert inputs.prompt_registry["authorized_to_run"] is False
+    assert inputs.generation_config_registry["authorized_to_run"] is False
 
 
 def test_default_summary_is_valid_but_not_ready():
@@ -53,6 +57,10 @@ def test_default_summary_is_valid_but_not_ready():
     assert "cost_budget_unapproved" in summary["blockers"]
     assert "run_matrix_not_authorized" in summary["blockers"]
     assert "provider_decision_not_authorized" in summary["blockers"]
+    assert "prompt_registry_not_locked" in summary["blockers"]
+    assert "generation_config_registry_not_locked" in summary["blockers"]
+    assert "prompt_registry_has_blockers" in summary["blockers"]
+    assert "generation_config_registry_has_blockers" in summary["blockers"]
 
 
 def test_summary_reports_checked_config_paths():
@@ -62,6 +70,8 @@ def test_summary_reports_checked_config_paths():
     assert summary["checked_configs"]["freeze_config"].endswith("configs/gate8/freeze_readiness.yaml")
     assert summary["checked_configs"]["run_matrix"].endswith("configs/gate8/main_v1_run_matrix.yaml")
     assert summary["checked_configs"]["provider_decision"].endswith("configs/gate8/provider_decision.yaml")
+    assert summary["checked_configs"]["prompt_registry"].endswith("configs/gate8/prompt_registry.yaml")
+    assert summary["checked_configs"]["generation_config_registry"].endswith("configs/gate8/generation_config_registry.yaml")
 
 
 def test_referenced_metadata_lists_keep_strict_readiness_blocked(tmp_path):
@@ -163,7 +173,12 @@ def test_missing_reference_paths_report_validation_errors(tmp_path):
     summary = build_freeze_readiness_summary(load_freeze_inputs(freeze_config))
 
     assert summary["freeze_ready"] is False
-    assert {error["field"] for error in summary["validation_errors"]} >= {"run_matrix", "provider_decision"}
+    assert {error["field"] for error in summary["validation_errors"]} >= {
+        "run_matrix",
+        "provider_decision",
+        "prompt_registry",
+        "generation_config_registry",
+    }
 
 
 def test_simple_yaml_parser_reads_top_level_scalars_and_lists(tmp_path):

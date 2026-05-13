@@ -12,6 +12,8 @@ REQUIRED_FREEZE_FIELDS = {
     "authorized_to_run",
     "run_matrix",
     "provider_decision",
+    "prompt_registry",
+    "generation_config_registry",
     "provider_freeze_selected",
     "provider_pricing_checked_on_run_date",
     "provider_docs_checked_on_run_date",
@@ -35,9 +37,13 @@ class FreezeInputs:
     freeze_path: Path
     run_matrix_path: Path
     provider_decision_path: Path
+    prompt_registry_path: Path
+    generation_config_registry_path: Path
     freeze_config: dict
     run_matrix: dict
     provider_decision: dict
+    prompt_registry: dict
+    generation_config_registry: dict
 
 
 def _parse_scalar(value):
@@ -103,14 +109,23 @@ def load_freeze_inputs(freeze_config_path):
     freeze_config = load_simple_yaml(freeze_path)
     run_matrix_path, run_matrix = _optional_referenced_config(freeze_config, "run_matrix")
     provider_path, provider_decision = _optional_referenced_config(freeze_config, "provider_decision")
+    prompt_registry_path, prompt_registry = _optional_referenced_config(freeze_config, "prompt_registry")
+    generation_config_path, generation_config = _optional_referenced_config(
+        freeze_config,
+        "generation_config_registry",
+    )
 
     return FreezeInputs(
         freeze_path=freeze_path,
         run_matrix_path=run_matrix_path,
         provider_decision_path=provider_path,
+        prompt_registry_path=prompt_registry_path,
+        generation_config_registry_path=generation_config_path,
         freeze_config=freeze_config,
         run_matrix=run_matrix,
         provider_decision=provider_decision,
+        prompt_registry=prompt_registry,
+        generation_config_registry=generation_config,
     )
 
 
@@ -157,6 +172,8 @@ def build_freeze_readiness_summary(inputs):
     freeze_config = inputs.freeze_config
     run_matrix = inputs.run_matrix
     provider_decision = inputs.provider_decision
+    prompt_registry = inputs.prompt_registry
+    generation_config_registry = inputs.generation_config_registry
     validation_errors = []
     validation_errors.extend(_missing_fields(freeze_config, REQUIRED_FREEZE_FIELDS, "freeze_config"))
     validation_errors.extend(_missing_fields(run_matrix, REQUIRED_RUN_MATRIX_FIELDS, "run_matrix"))
@@ -189,6 +206,36 @@ def build_freeze_readiness_summary(inputs):
         _has_items(provider_decision, "disallowed_evidence"),
         "provider_decision_has_disallowed_evidence",
     )
+    _add_blocker(
+        blockers,
+        prompt_registry.get("authorized_to_run") is not True,
+        "prompt_registry_not_authorized",
+    )
+    _add_blocker(
+        blockers,
+        prompt_registry.get("prompt_versions_locked") is not True,
+        "prompt_registry_not_locked",
+    )
+    _add_blocker(
+        blockers,
+        _has_items(prompt_registry, "blockers"),
+        "prompt_registry_has_blockers",
+    )
+    _add_blocker(
+        blockers,
+        generation_config_registry.get("authorized_to_run") is not True,
+        "generation_config_registry_not_authorized",
+    )
+    _add_blocker(
+        blockers,
+        generation_config_registry.get("generation_config_locked") is not True,
+        "generation_config_registry_not_locked",
+    )
+    _add_blocker(
+        blockers,
+        _has_items(generation_config_registry, "blockers"),
+        "generation_config_registry_has_blockers",
+    )
     blockers = _dedupe(blockers)
 
     freeze_ready = not validation_errors and not blockers
@@ -204,6 +251,8 @@ def build_freeze_readiness_summary(inputs):
             "freeze_config": _summary_path(inputs.freeze_path),
             "run_matrix": _summary_path(inputs.run_matrix_path),
             "provider_decision": _summary_path(inputs.provider_decision_path),
+            "prompt_registry": _summary_path(inputs.prompt_registry_path),
+            "generation_config_registry": _summary_path(inputs.generation_config_registry_path),
         },
         "validation_errors": validation_errors,
     }
