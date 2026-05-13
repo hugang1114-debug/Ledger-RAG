@@ -13,7 +13,7 @@ provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
 readiness_check:
   command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
   strict_command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
-  strict_mode_expected_exit_before_snapshots: 1
+  strict_mode_expected_exit_after_snapshot_index_promotion: 0
 freeze_readiness_check:
   command: python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml
   strict_command: python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml --require-ready
