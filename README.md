@@ -44,11 +44,14 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `docs/source-snapshot-protocol.md` - immutable source snapshot rules for main comparisons
 - `docs/gate8-run-config-readiness.md` - non-executable Gate 8 run matrix rules
 - `docs/model-provider-readiness.md` - provider selection and current-price evidence rules
+- `docs/gate8-freeze-readiness.md` - Gate 8G provider, prompt, budget, and execution freeze rules
 - `configs/gate8/main_v1_readiness.yaml` - non-executable Gate 8 readiness matrix
 - `configs/gate8/main_v1_run_matrix.yaml` - non-executable main v1 dataset/baseline matrix
 - `configs/gate8/provider_decision.yaml` - provider decision metadata with execution fields unset
+- `configs/gate8/freeze_readiness.yaml` - non-executable freeze readiness metadata
 - `snapshots/main_v1/source_snapshots.json` - pending source snapshot registry for main v1 datasets
 - `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
+- `scripts/check_gate8_freeze_readiness.py` - local execution-preflight readiness checker
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
 - `scripts/build_2wiki_source_snapshot.py` - official-source 2WikiMultihopQA dev snapshot builder
 - `scripts/build_musique_source_snapshot.py` - official-source MuSiQue answerable dev snapshot builder

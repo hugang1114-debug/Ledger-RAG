@@ -121,6 +121,20 @@ configs/gate8/provider_decision.yaml
 
 These files may define the future dataset/baseline matrix and provider evidence requirements, but they do not select a provider, freeze prompts, approve budget, run baselines, or pass Gate 8.
 
+Gate 8G adds an execution-preflight freeze readiness check:
+
+```powershell
+python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml
+```
+
+Strict mode remains blocked until provider, prompt, budget, execution card, and reproducibility metadata are locked:
+
+```powershell
+python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml --require-ready
+```
+
+This check is metadata-only. It does not select a provider, check live prices, write prompts, run baselines, compute metrics, create result artifacts, or pass Gate 8.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets except through explicitly authorized source snapshot builders

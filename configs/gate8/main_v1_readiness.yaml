@@ -6,10 +6,15 @@ purpose: non_executable_readiness_matrix
 snapshot_registry: snapshots/main_v1/source_snapshots.json
 run_matrix: configs/gate8/main_v1_run_matrix.yaml
 provider_decision: configs/gate8/provider_decision.yaml
+freeze_readiness: configs/gate8/freeze_readiness.yaml
 readiness_check:
   command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
   strict_command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
   strict_mode_expected_exit_before_snapshots: 1
+freeze_readiness_check:
+  command: python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml
+  strict_command: python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml --require-ready
+  strict_mode_expected_exit_before_freeze: 1
 source_snapshot_builds:
   hotpotqa_dev_distractor:
     command: python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev_distractor
@@ -114,6 +119,8 @@ not_ready:
   - cost_budget_unapproved
   - prompt_versions_unlocked
   - provider_decision_unlocked
+  - freeze_readiness_unlocked
+  - provider_prompt_budget_not_frozen
   - run_matrix_non_executable
   - run_commands_unauthorized
   - reproducibility_review_unfinished
