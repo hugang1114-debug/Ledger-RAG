@@ -117,9 +117,13 @@ def _load_index_manifest(record, repo_root):
     index_path = _repo_path(repo_root, index_path_value)
     if not index_path.exists():
         return None, [_blocker(dataset_id, "retrieval_index_path", "retrieval index manifest does not exist")]
+    if not index_path.is_file():
+        return None, [_blocker(dataset_id, "retrieval_index_path", "retrieval index manifest is not a file")]
 
     try:
         return load_json(index_path), []
+    except OSError:
+        return None, [_blocker(dataset_id, "retrieval_index_path", "retrieval index manifest cannot be read")]
     except json.JSONDecodeError as exc:
         return None, [
             _blocker(dataset_id, "retrieval_index_path", f"retrieval index manifest is invalid JSON: {exc.msg}")

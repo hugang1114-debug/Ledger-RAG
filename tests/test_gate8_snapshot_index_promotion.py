@@ -164,6 +164,23 @@ def test_missing_index_manifest_blocks_promotion(tmp_path):
     } in summary["promotion_blockers"]
 
 
+def test_directory_index_manifest_path_blocks_promotion_without_traceback(tmp_path):
+    repo_root, registry_path, readiness_path = _write_ready_fixture(tmp_path)
+    registry = load_json(registry_path)
+    index_path = repo_root / registry["snapshots"][0]["retrieval_index_path"]
+    index_path.unlink()
+    index_path.mkdir()
+
+    summary = build_snapshot_index_promotion_summary(registry_path, readiness_path, repo_root)
+
+    assert summary["promotable"] is False
+    assert {
+        "dataset_id": "fixtureqa",
+        "field": "retrieval_index_path",
+        "message": "retrieval index manifest is not a file",
+    } in summary["promotion_blockers"]
+
+
 def test_mismatched_index_manifest_identity_blocks_promotion(tmp_path):
     cases = [
         ("dataset_id", lambda record: _index_manifest(record, dataset_id="otherqa"), "index dataset id mismatch"),
@@ -242,6 +259,11 @@ def test_check_cli_default_mode_reports_promotable(tmp_path):
 
 
 def test_promote_cli_updates_temp_metadata_and_keeps_execution_locked(tmp_path):
+    if not PROMOTE_CLI.exists():
+        import pytest
+
+        pytest.skip("promote CLI is introduced in Gate 8J Task 3")
+
     repo_root, registry_path, readiness_path = _write_ready_fixture(tmp_path)
 
     result = subprocess.run(
