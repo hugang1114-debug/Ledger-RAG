@@ -1,0 +1,53 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8f_provider_readiness
+status: readiness_in_progress
+selected: false
+provider: unset
+model: unset
+model_version_or_date: unset
+pricing_checked_at: unset
+pricing_source: unset
+model_docs_checked_at: unset
+model_docs_source: unset
+terms_checked_at: unset
+terms_source: unset
+context_window: unset
+max_output_tokens: unset
+rate_limit_note: unset
+data_retention_note: unset
+api_key_required: true
+api_key_present: false
+prompt_versions_locked: false
+generation_config_locked: false
+cost_budget_approved: false
+run_authorized: false
+
+required_future_evidence:
+  - official_pricing_url_checked_on_run_date
+  - official_model_docs_url_checked_on_run_date
+  - provider_name
+  - model_id_and_version_or_date
+  - context_window
+  - max_output_limit
+  - deterministic_generation_settings
+  - rate_limit_or_throughput_note
+  - data_retention_or_privacy_note
+  - api_key_or_local_runtime_availability_note
+  - approved_cost_budget_note
+
+disallowed_evidence:
+  - stale_prices_from_reports_or_old_notes
+  - undocumented_model_aliases
+  - provider_claims_without_official_urls
+  - tracked_api_keys_or_secrets
+  - prompt_versions_described_only_in_prose
+  - runs_without_reproducible_model_config_prompt_and_cost_assumptions
+
+prompt_config_requirements:
+  prompt_version_per_baseline_family: required_later
+  generation_config_version: required_later
+  deterministic_settings: required_later
+  shared_answer_style: required_later
+  shared_max_evidence_budget: required_later
+  refusal_behavior: must_match_docs_baseline_protocol

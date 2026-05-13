@@ -1,0 +1,112 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8f_run_config_readiness
+status: readiness_in_progress
+authorized_to_run: false
+purpose: non_executable_run_matrix
+source_snapshot_registry: snapshots/main_v1/source_snapshots.json
+baseline_contract: docs/baseline-contract.yaml
+metric_contract: docs/metric-contract.yaml
+provider_decision: configs/gate8/provider_decision.yaml
+
+datasets:
+  - dataset_id: hotpotqa
+    name: HotpotQA
+    split: dev_distractor
+    source_snapshot_id: hotpotqa_dev_distractor_official_78487b5e57e5423c
+    source_snapshot_registry_path: snapshots/main_v1/source_snapshots.json
+    retrieval_index_path: datasets/retrieval_indexes/main_v1/hotpotqa/dev_distractor/index_manifest.json
+    question_source: datasets/source_snapshots/hotpotqa/dev_distractor/processed/questions.jsonl
+    artifact_root: artifacts/gate8/main_v1/hotpotqa/dev_distractor
+  - dataset_id: 2wikimultihopqa
+    name: 2WikiMultihopQA
+    split: dev
+    source_snapshot_id: 2wikimultihopqa_dev_official_4ad66154ea407847
+    source_snapshot_registry_path: snapshots/main_v1/source_snapshots.json
+    retrieval_index_path: datasets/retrieval_indexes/main_v1/2wikimultihopqa/dev/index_manifest.json
+    question_source: datasets/source_snapshots/2wikimultihopqa/dev/processed/questions.jsonl
+    artifact_root: artifacts/gate8/main_v1/2wikimultihopqa/dev
+  - dataset_id: musique
+    name: MuSiQue
+    split: dev
+    source_snapshot_id: musique_dev_official_4b485a716c1a4fc6
+    source_snapshot_registry_path: snapshots/main_v1/source_snapshots.json
+    retrieval_index_path: datasets/retrieval_indexes/main_v1/musique/dev/index_manifest.json
+    question_source: datasets/source_snapshots/musique/dev/processed/questions.jsonl
+    artifact_root: artifacts/gate8/main_v1/musique/dev
+
+baseline_families:
+  - baseline_family: vanilla_rag
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: false
+    requires_ledger: false
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+  - baseline_family: hybrid_rag
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: false
+    requires_ledger: false
+    retrieval_dependency: blocked_until_hybrid_retrieval_locked
+    authorized_to_run: false
+  - baseline_family: citation_only
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: false
+    requires_ledger: false
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+  - baseline_family: validator_only
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: true
+    requires_ledger: false
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+  - baseline_family: ledger_only
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: false
+    requires_ledger: true
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+  - baseline_family: ledger_validator
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: true
+    requires_ledger: true
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+
+metric_groups:
+  - retrieval
+  - answer_quality
+  - attribution
+  - system
+  - aggregation
+
+shared_run_constraints:
+  same_question_list: required
+  same_source_snapshot: required
+  same_evidence_budget: required
+  same_answer_style: required
+  same_metric_contract: required
+  prompt_versions_locked: false
+  provider_selected: false
+
+artifact_paths:
+  root: artifacts/gate8/main_v1
+  runs: artifacts/gate8/main_v1/runs
+  metrics: artifacts/gate8/main_v1/metrics
+  logs: artifacts/gate8/main_v1/logs
+  reports: artifacts/gate8/main_v1/reports
+  created_by_this_config: false
+
+blocked_reasons:
+  - provider_unselected
+  - prompt_versions_unlocked
+  - cost_budget_unapproved
+  - hybrid_retrieval_not_locked
+  - execution_card_missing
+  - reproducibility_review_unfinished
