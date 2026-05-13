@@ -187,12 +187,30 @@ def _summary_path(path):
 
 
 def build_freeze_readiness_summary(inputs):
+    from ledger_rag_gate8.provider_evidence_readiness import (
+        ProviderEvidenceInputs,
+        build_provider_evidence_readiness_summary,
+        parse_evidence_slots,
+    )
+
     freeze_config = inputs.freeze_config
     run_matrix = inputs.run_matrix
     provider_decision = inputs.provider_decision
     provider_evidence_registry = inputs.provider_evidence_registry
     prompt_registry = inputs.prompt_registry
     generation_config_registry = inputs.generation_config_registry
+    provider_evidence_slots = []
+    if Path(inputs.provider_evidence_registry_path).is_file():
+        provider_evidence_slots = parse_evidence_slots(inputs.provider_evidence_registry_path)
+    provider_evidence_summary = build_provider_evidence_readiness_summary(
+        ProviderEvidenceInputs(
+            registry_path=inputs.provider_evidence_registry_path,
+            provider_decision_path=inputs.provider_decision_path,
+            registry=provider_evidence_registry,
+            provider_decision=provider_decision,
+            evidence_slots=provider_evidence_slots,
+        )
+    )
     validation_errors = []
     validation_errors.extend(_missing_fields(freeze_config, REQUIRED_FREEZE_FIELDS, "freeze_config"))
     validation_errors.extend(_missing_fields(run_matrix, REQUIRED_RUN_MATRIX_FIELDS, "run_matrix"))
@@ -262,6 +280,9 @@ def build_freeze_readiness_summary(inputs):
         _has_items(provider_evidence_registry, "blockers"),
         "provider_evidence_registry_has_blockers",
     )
+    if provider_evidence_summary["provider_evidence_ready"] is not True:
+        blockers.append("provider_evidence_not_ready")
+        blockers.extend(provider_evidence_summary["blockers"])
     _add_blocker(
         blockers,
         prompt_registry.get("authorized_to_run") is not True,

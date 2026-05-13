@@ -150,6 +150,119 @@ def test_referenced_metadata_lists_keep_strict_readiness_blocked(tmp_path):
     assert "provider_decision_has_disallowed_evidence" in summary["blockers"]
 
 
+def test_missing_provider_evidence_slots_block_freeze_readiness(tmp_path):
+    freeze_config = tmp_path / "freeze.yaml"
+    run_matrix = tmp_path / "run_matrix.yaml"
+    provider_decision = tmp_path / "provider.yaml"
+    provider_evidence_registry = tmp_path / "provider_evidence.yaml"
+    prompt_registry = tmp_path / "prompt_registry.yaml"
+    generation_config_registry = tmp_path / "generation_config.yaml"
+
+    freeze_config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "gate: gate8_main_comparison",
+                "stage: gate8g_freeze_readiness",
+                "status: ready",
+                "authorized_to_run: true",
+                f"run_matrix: {run_matrix}",
+                f"provider_decision: {provider_decision}",
+                f"provider_evidence_registry: {provider_evidence_registry}",
+                f"prompt_registry: {prompt_registry}",
+                f"generation_config_registry: {generation_config_registry}",
+                "provider_freeze_selected: true",
+                "provider_pricing_checked_on_run_date: true",
+                "provider_docs_checked_on_run_date: true",
+                "terms_checked_on_run_date: true",
+                "api_key_or_runtime_available: true",
+                "prompt_versions_locked: true",
+                "generation_config_locked: true",
+                "cost_budget_approved: true",
+                "execution_card: experiments/cards/future.md",
+                "reproducibility_review_complete: true",
+                "execution_authorized: true",
+                "blockers:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    run_matrix.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8f_run_config_readiness",
+                "authorized_to_run: true",
+                "blocked_reasons:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    provider_decision.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8i_provider_decision",
+                "selected: true",
+                "provider: example_provider",
+                "model: example_model",
+                "run_authorized: true",
+                "required_future_evidence:",
+                "disallowed_evidence:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    provider_evidence_registry.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8i_provider_evidence_readiness",
+                "authorized_to_run: true",
+                "provider_evidence_locked: true",
+                "provider_selected: true",
+                "provider: example_provider",
+                "model: example_model",
+                "blockers:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    prompt_registry.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8h_prompt_config_readiness",
+                "authorized_to_run: true",
+                "prompt_versions_locked: true",
+                "blockers:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    generation_config_registry.write_text(
+        "\n".join(
+            [
+                "gate: gate8_main_comparison",
+                "stage: gate8h_generation_config_readiness",
+                "authorized_to_run: true",
+                "generation_config_locked: true",
+                "blockers:",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_freeze_readiness_summary(load_freeze_inputs(freeze_config))
+
+    assert summary["freeze_ready"] is False
+    assert "provider_evidence_not_ready" in summary["blockers"]
+    assert (
+        "provider_evidence_missing_slots" in summary["blockers"]
+        or "provider_evidence_missing_sources" in summary["blockers"]
+    )
+
+
 def test_missing_reference_paths_report_validation_errors(tmp_path):
     freeze_config = tmp_path / "freeze.yaml"
     freeze_config.write_text(
