@@ -47,6 +47,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `docs/gate8-freeze-readiness.md` - Gate 8G provider, prompt, budget, and execution freeze rules
 - `docs/gate8-prompt-config-readiness.md` - Gate 8H prompt/config registry rules
 - `docs/gate8-provider-evidence-readiness.md` - Gate 8I provider evidence registry readiness rules
+- `docs/gate8-snapshot-index-promotion.md` - Gate 8J source snapshot and local index promotion rules
 - `configs/gate8/main_v1_readiness.yaml` - non-executable Gate 8 readiness matrix
 - `configs/gate8/main_v1_run_matrix.yaml` - non-executable main v1 dataset/baseline matrix
 - `configs/gate8/provider_decision.yaml` - provider decision metadata with execution fields unset
@@ -59,6 +60,8 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `scripts/check_gate8_freeze_readiness.py` - local execution-preflight readiness checker
 - `scripts/check_gate8_prompt_config_readiness.py` - local prompt/config registry readiness checker
 - `scripts/check_gate8_provider_evidence_readiness.py` - local provider evidence registry readiness checker
+- `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
+- `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
 - `scripts/build_2wiki_source_snapshot.py` - official-source 2WikiMultihopQA dev snapshot builder
 - `scripts/build_musique_source_snapshot.py` - official-source MuSiQue answerable dev snapshot builder

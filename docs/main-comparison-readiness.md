@@ -112,6 +112,15 @@ python scripts/build_gate8_lexical_indexes.py --registry snapshots/main_v1/sourc
 
 This command may set `retrieval_index_path` for HotpotQA, 2WikiMultihopQA, and MuSiQue, but it does not run retrieval evaluation, does not run baselines, and does not pass Gate 8.
 
+Gate 8J promotes snapshot/index metadata after local validation:
+
+```powershell
+python scripts/check_gate8_snapshot_index_promotion.py --registry snapshots/main_v1/source_snapshots.json --readiness-config configs/gate8/main_v1_readiness.yaml
+python scripts/promote_gate8_snapshot_indexes.py --registry snapshots/main_v1/source_snapshots.json --readiness-config configs/gate8/main_v1_readiness.yaml
+```
+
+This promotion may make strict snapshot readiness pass, but it does not run baselines, call models, compute metrics, create result artifacts, or pass Gate 8.
+
 Gate 8F locks non-executable run matrix and provider-readiness metadata:
 
 ```powershell

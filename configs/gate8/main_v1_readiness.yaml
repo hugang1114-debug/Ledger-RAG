@@ -14,6 +14,13 @@ readiness_check:
   command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json
   strict_command: python scripts/check_gate8_snapshot_readiness.py --registry snapshots/main_v1/source_snapshots.json --require-ready
   strict_mode_expected_exit_after_snapshot_index_promotion: 0
+snapshot_index_promotion_check:
+  command: python scripts/check_gate8_snapshot_index_promotion.py --registry snapshots/main_v1/source_snapshots.json --readiness-config configs/gate8/main_v1_readiness.yaml
+  promote_command: python scripts/promote_gate8_snapshot_indexes.py --registry snapshots/main_v1/source_snapshots.json --readiness-config configs/gate8/main_v1_readiness.yaml
+  authorized_scope: metadata_promotion_only
+  runs_baselines: false
+  calls_models: false
+  creates_result_artifacts: false
 freeze_readiness_check:
   command: python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml
   strict_command: python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml --require-ready
