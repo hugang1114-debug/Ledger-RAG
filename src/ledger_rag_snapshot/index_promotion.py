@@ -130,6 +130,25 @@ def _load_index_manifest(record, repo_root):
         ]
 
 
+def _validate_readiness_config_path(readiness_config_path, repo_root):
+    readiness_path = _repo_path(repo_root, readiness_config_path)
+    if not readiness_path.exists():
+        return [
+            _blocker("readiness_config", "readiness_config_path", "readiness config does not exist")
+        ]
+    if not readiness_path.is_file():
+        return [
+            _blocker("readiness_config", "readiness_config_path", "readiness config is not a file")
+        ]
+    try:
+        readiness_path.read_text(encoding="utf-8")
+    except OSError:
+        return [
+            _blocker("readiness_config", "readiness_config_path", "readiness config cannot be read")
+        ]
+    return []
+
+
 def validate_snapshot_index_record(record, repo_root=ROOT):
     dataset_id = record.get("dataset_id", "unknown")
     blockers = []
@@ -213,7 +232,7 @@ def build_snapshot_index_promotion_summary(registry_path, readiness_config_path,
     registry = load_json(registry_path)
     validation_errors = _registry_validation_errors(registry)
     snapshots = registry.get("snapshots", [])
-    promotion_blockers = []
+    promotion_blockers = _validate_readiness_config_path(readiness_config_path, repo_root)
     datasets = []
 
     if not validation_errors and isinstance(snapshots, list):
@@ -326,7 +345,7 @@ def promote_snapshot_index_metadata(registry_path, readiness_config_path, repo_r
 
     registry = load_json(registry_path)
     updated_registry = promoted_registry(registry)
-    readiness_path = Path(readiness_config_path)
+    readiness_path = _repo_path(repo_root, readiness_config_path)
     updated_readiness = sync_readiness_config_text(readiness_path.read_text(encoding="utf-8"), updated_registry)
 
     write_json_atomic(registry_path, updated_registry)

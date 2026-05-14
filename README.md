@@ -55,7 +55,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `configs/gate8/freeze_readiness.yaml` - non-executable freeze readiness metadata
 - `configs/gate8/prompt_registry.yaml` - non-executable prompt slot registry
 - `configs/gate8/generation_config_registry.yaml` - non-executable generation config slot registry
-- `snapshots/main_v1/source_snapshots.json` - pending source snapshot registry for main v1 datasets
+- `snapshots/main_v1/source_snapshots.json` - source snapshot and local retrieval index registry for main v1 datasets
 - `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
 - `scripts/check_gate8_freeze_readiness.py` - local execution-preflight readiness checker
 - `scripts/check_gate8_prompt_config_readiness.py` - local prompt/config registry readiness checker

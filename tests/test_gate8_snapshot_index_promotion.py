@@ -283,6 +283,38 @@ def test_check_cli_default_mode_reports_promotable(tmp_path):
     assert payload["promotion_blockers"] == []
 
 
+def test_check_cli_require_promotable_rejects_missing_readiness_config(tmp_path):
+    repo_root, registry_path, readiness_path = _write_ready_fixture(tmp_path)
+    missing_readiness_path = readiness_path.parent / "missing_main_v1_readiness.yaml"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(CHECK_CLI),
+            "--registry",
+            str(registry_path),
+            "--readiness-config",
+            str(missing_readiness_path),
+            "--repo-root",
+            str(repo_root),
+            "--require-promotable",
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    payload = json.loads(result.stdout)
+
+    assert result.returncode == 1
+    assert payload["promotable"] is False
+    assert {
+        "dataset_id": "readiness_config",
+        "field": "readiness_config_path",
+        "message": "readiness config does not exist",
+    } in payload["promotion_blockers"]
+
+
 def test_promote_cli_updates_temp_metadata_and_keeps_execution_locked(tmp_path):
     if not PROMOTE_CLI.exists():
         import pytest
