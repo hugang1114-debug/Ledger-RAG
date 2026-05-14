@@ -323,6 +323,10 @@ def test_execution_ready_registry_does_not_require_candidate_fields(tmp_path):
 
     assert summary["provider_evidence_ready"] is True
     assert summary["provider_candidate_ready"] is False
+    assert "provider_decision_candidate_provider_unset" not in summary["blockers"]
+    assert "provider_decision_candidate_model_unset" not in summary["blockers"]
+    assert "provider_decision_candidate_snapshot_unset" not in summary["blockers"]
+    assert summary["candidate_blockers"] == []
     assert summary["candidate_provider"] == "unset"
     assert summary["candidate_model"] == "unset"
     assert summary["candidate_model_snapshot"] == "unset"
@@ -359,6 +363,10 @@ def test_execution_ready_registry_ignores_stale_decision_candidate_fields(tmp_pa
 
     assert summary["provider_evidence_ready"] is True
     assert summary["provider_candidate_ready"] is False
+    assert "provider_decision_candidate_provider_unset" not in summary["blockers"]
+    assert "provider_decision_candidate_model_unset" not in summary["blockers"]
+    assert "provider_decision_candidate_snapshot_unset" not in summary["blockers"]
+    assert summary["candidate_blockers"] == []
     assert "provider_evidence_candidate_not_locked" not in summary["blockers"]
     assert "provider_candidate_not_selected" not in summary["blockers"]
     assert "candidate_provider_unset" not in summary["blockers"]
@@ -367,6 +375,34 @@ def test_execution_ready_registry_ignores_stale_decision_candidate_fields(tmp_pa
     assert "provider_decision_candidate_provider_mismatch" not in summary["blockers"]
     assert "provider_decision_candidate_model_mismatch" not in summary["blockers"]
     assert "provider_decision_candidate_snapshot_mismatch" not in summary["blockers"]
+
+
+def test_execution_ready_registry_with_retained_candidate_metadata_stays_ready(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_ready_registry(registry, provider="openai", model="gpt-4.1")
+    _write_provider_decision(provider_decision, provider="openai", model="gpt-4.1")
+    registry.write_text(
+        registry.read_text(encoding="utf-8")
+        + "\n"
+        + "\n".join(
+            [
+                "provider_evidence_candidate_locked: true",
+                "provider_candidate_selected: true",
+                "candidate_provider: openai",
+                "candidate_model: gpt-5.4-mini",
+                "candidate_model_snapshot: gpt-5.4-mini-2026-03-17",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_evidence_ready"] is True
+    assert summary["provider_candidate_ready"] is False
 
 
 def test_candidate_locked_registry_reports_candidate_ready_but_not_execution_ready(tmp_path):
@@ -419,9 +455,12 @@ def test_candidate_decision_must_include_candidate_fields(tmp_path):
     )
 
     assert summary["provider_candidate_ready"] is False
-    assert "provider_decision_candidate_provider_unset" in summary["blockers"]
-    assert "provider_decision_candidate_model_unset" in summary["blockers"]
-    assert "provider_decision_candidate_snapshot_unset" in summary["blockers"]
+    assert "provider_decision_candidate_provider_unset" not in summary["blockers"]
+    assert "provider_decision_candidate_model_unset" not in summary["blockers"]
+    assert "provider_decision_candidate_snapshot_unset" not in summary["blockers"]
+    assert "provider_decision_candidate_provider_unset" in summary["candidate_blockers"]
+    assert "provider_decision_candidate_model_unset" in summary["candidate_blockers"]
+    assert "provider_decision_candidate_snapshot_unset" in summary["candidate_blockers"]
 
 
 def test_candidate_decision_must_match_registry_candidate(tmp_path):
@@ -442,7 +481,8 @@ def test_candidate_decision_must_match_registry_candidate(tmp_path):
     )
 
     assert summary["provider_candidate_ready"] is False
-    assert "provider_decision_candidate_model_mismatch" in summary["blockers"]
+    assert "provider_decision_candidate_model_mismatch" not in summary["blockers"]
+    assert "provider_decision_candidate_model_mismatch" in summary["candidate_blockers"]
 
 
 def test_cli_default_mode_exits_zero_and_reports_not_ready():

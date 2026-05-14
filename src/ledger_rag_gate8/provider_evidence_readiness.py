@@ -254,8 +254,9 @@ def build_provider_evidence_readiness_summary(inputs):
     validation_errors.extend(
         _missing_fields(provider_decision, REQUIRED_PROVIDER_DECISION_FIELDS, "provider_decision")
     )
+    candidate_validation_errors = []
     if candidate_path_active and registry.get("provider_evidence_candidate_locked") is True:
-        validation_errors.extend(
+        candidate_validation_errors.extend(
             _missing_fields(
                 registry,
                 REQUIRED_CANDIDATE_REGISTRY_FIELDS,
@@ -295,12 +296,13 @@ def build_provider_evidence_readiness_summary(inputs):
     if not _is_unset(registry_model) and not _is_unset(decision_model):
         if registry_model != decision_model:
             blockers.append("provider_decision_model_mismatch")
-    blockers.extend(candidate_blockers)
     blockers = _dedupe(blockers)
+    candidate_blockers = _dedupe(candidate_blockers)
 
     provider_evidence_ready = not validation_errors and not blockers
     provider_candidate_ready = (
         not validation_errors
+        and not candidate_validation_errors
         and registry.get("provider_evidence_candidate_locked") is True
         and registry.get("provider_candidate_selected") is True
         and not candidate_blockers
@@ -329,9 +331,11 @@ def build_provider_evidence_readiness_summary(inputs):
         "unreviewed_candidate_evidence_ids": unreviewed_candidate_ids,
         "evidence_slot_count": len(inputs.evidence_slots),
         "blockers": blockers,
+        "candidate_blockers": candidate_blockers,
         "checked_configs": {
             "provider_evidence_registry": _summary_path(inputs.registry_path),
             "provider_decision": _summary_path(inputs.provider_decision_path),
         },
         "validation_errors": validation_errors,
+        "candidate_validation_errors": candidate_validation_errors,
     }
