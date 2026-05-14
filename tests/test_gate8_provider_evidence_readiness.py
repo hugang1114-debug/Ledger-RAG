@@ -17,6 +17,17 @@ PROVIDER_DECISION = ROOT / "configs" / "gate8" / "provider_decision.yaml"
 CLI = ROOT / "scripts" / "check_gate8_provider_evidence_readiness.py"
 
 
+CANDIDATE_REVIEWED_EVIDENCE_IDS = {
+    "official_pricing_source",
+    "official_model_docs_source",
+    "official_terms_privacy_source",
+    "model_id_version_source",
+    "context_window_source",
+    "output_limit_source",
+    "rate_limit_or_throughput_source",
+}
+
+
 def _write_ready_registry(path, provider="openai", model="gpt-4.1"):
     lines = [
         "gate: gate8_main_comparison",
@@ -41,6 +52,96 @@ def _write_ready_registry(path, provider="openai", model="gpt-4.1"):
         )
     lines.append("blockers:")
     path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _write_candidate_registry(path):
+    lines = [
+        "version: 1",
+        "gate: gate8_main_comparison",
+        "stage: gate8k_openai_provider_evidence_candidate_lock",
+        "status: readiness_in_progress",
+        "authorized_to_run: false",
+        "purpose: non_executable_provider_evidence_registry",
+        "provider_evidence_candidate_locked: true",
+        "provider_candidate_selected: true",
+        "candidate_provider: openai",
+        "candidate_model: gpt-5.4-mini",
+        "candidate_model_snapshot: gpt-5.4-mini-2026-03-17",
+        "provider_evidence_locked: false",
+        "provider_selected: false",
+        "provider: unset",
+        "model: unset",
+        "candidate_checked_at: 2026-05-14",
+        "candidate_recheck_required_on_run_date: true",
+        "context_window_tokens: 400000",
+        "max_output_tokens: 128000",
+        "evidence_slots:",
+    ]
+    urls = {
+        "official_pricing_source": "https://platform.openai.com/docs/pricing/",
+        "official_model_docs_source": "https://developers.openai.com/api/docs/models/gpt-5.4-mini",
+        "official_terms_privacy_source": "https://openai.com/policies/service-terms/",
+        "model_id_version_source": "https://developers.openai.com/api/docs/models/gpt-5.4-mini",
+        "context_window_source": "https://developers.openai.com/api/docs/models/gpt-5.4-mini",
+        "output_limit_source": "https://developers.openai.com/api/docs/models/gpt-5.4-mini",
+        "rate_limit_or_throughput_source": "https://developers.openai.com/api/docs/models",
+    }
+    for evidence_id in sorted(CANDIDATE_REVIEWED_EVIDENCE_IDS):
+        lines.extend(
+            [
+                f"  - evidence_id: {evidence_id}",
+                "    required_for: provider_candidate_validation",
+                f"    official_source_url: {urls[evidence_id]}",
+                "    checked_at: 2026-05-14",
+                "    evidence_status: reviewed",
+                "    reviewer: codex",
+                "    notes: official_openai_candidate_source_checked_for_gate8k",
+            ]
+        )
+    for evidence_id in ("api_key_or_runtime_availability_note", "cost_budget_approval_note"):
+        lines.extend(
+            [
+                f"  - evidence_id: {evidence_id}",
+                "    required_for: execution_authorization",
+                "    official_source_url: unset",
+                "    checked_at: unset",
+                "    evidence_status: missing",
+                "    reviewer: unset",
+                "    notes: intentionally_unresolved_until_execution_freeze",
+            ]
+        )
+    lines.extend(
+        [
+            "blockers:",
+            "  - provider_evidence_not_locked",
+            "  - provider_not_selected",
+            "  - model_not_selected",
+            "  - api_key_or_runtime_availability_note_missing",
+            "  - cost_budget_approval_note_missing",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _write_candidate_provider_decision(path):
+    path.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "gate: gate8_main_comparison",
+                "stage: gate8k_provider_decision_candidate",
+                "status: readiness_in_progress",
+                "selected: false",
+                "provider: unset",
+                "model: unset",
+                "candidate_provider: openai",
+                "candidate_model: gpt-5.4-mini",
+                "candidate_model_snapshot: gpt-5.4-mini-2026-03-17",
+                "run_authorized: false",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 def _write_provider_decision(path, provider, model):
@@ -208,6 +309,52 @@ def test_provider_decision_must_match_locked_registry_provider_and_model(tmp_pat
     assert summary["provider_evidence_ready"] is False
     assert "provider_decision_provider_mismatch" in summary["blockers"]
     assert "provider_decision_model_mismatch" in summary["blockers"]
+
+
+def test_candidate_locked_registry_reports_candidate_ready_but_not_execution_ready(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_candidate_registry(registry)
+    _write_candidate_provider_decision(provider_decision)
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_candidate_ready"] is True
+    assert summary["provider_evidence_ready"] is False
+    assert summary["provider_candidate_selected"] is True
+    assert summary["candidate_provider"] == "openai"
+    assert summary["candidate_model"] == "gpt-5.4-mini"
+    assert summary["candidate_model_snapshot"] == "gpt-5.4-mini-2026-03-17"
+    assert summary["missing_candidate_evidence_ids"] == []
+    assert summary["missing_evidence_ids"] == [
+        "api_key_or_runtime_availability_note",
+        "cost_budget_approval_note",
+    ]
+    assert "provider_evidence_not_locked" in summary["blockers"]
+    assert "provider_decision_not_authorized" in summary["blockers"]
+
+
+def test_candidate_decision_must_match_registry_candidate(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_candidate_registry(registry)
+    _write_candidate_provider_decision(provider_decision)
+    provider_decision.write_text(
+        provider_decision.read_text(encoding="utf-8").replace(
+            "candidate_model: gpt-5.4-mini",
+            "candidate_model: gpt-5.5",
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_candidate_ready"] is False
+    assert "provider_decision_candidate_model_mismatch" in summary["blockers"]
 
 
 def test_cli_default_mode_exits_zero_and_reports_not_ready():
