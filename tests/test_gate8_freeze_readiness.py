@@ -67,6 +67,7 @@ def test_default_summary_is_valid_but_not_ready():
     assert "generation_config_registry_not_locked" in summary["blockers"]
     assert "prompt_registry_has_blockers" in summary["blockers"]
     assert "generation_config_registry_has_blockers" in summary["blockers"]
+    assert "source_snapshots_not_promoted" not in summary["blockers"]
 
 
 def test_summary_reports_checked_config_paths():

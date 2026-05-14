@@ -44,4 +44,3 @@ blockers:
   - provider_evidence_registry_non_executable
   - prompt_registry_not_locked
   - generation_config_registry_not_locked
-  - source_snapshots_not_promoted
