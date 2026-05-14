@@ -430,6 +430,54 @@ def test_candidate_locked_registry_reports_candidate_ready_but_not_execution_rea
     assert "provider_decision_not_authorized" in summary["blockers"]
 
 
+def test_candidate_ready_ignores_missing_final_execution_schema_fields(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_candidate_registry(registry)
+    _write_candidate_provider_decision(provider_decision)
+    registry.write_text(
+        "\n".join(
+            line
+            for line in registry.read_text(encoding="utf-8").splitlines()
+            if not line.startswith(
+                (
+                    "authorized_to_run:",
+                    "provider_evidence_locked:",
+                    "provider_selected:",
+                    "provider:",
+                    "model:",
+                )
+            )
+        ),
+        encoding="utf-8",
+    )
+    provider_decision.write_text(
+        "\n".join(
+            line
+            for line in provider_decision.read_text(encoding="utf-8").splitlines()
+            if not line.startswith(
+                (
+                    "selected:",
+                    "provider:",
+                    "model:",
+                    "run_authorized:",
+                )
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_candidate_ready"] is True
+    assert summary["provider_evidence_ready"] is False
+    assert summary["validation_errors"]
+    assert summary["candidate_validation_errors"] == []
+    assert summary["candidate_blockers"] == []
+
+
 def test_candidate_decision_must_include_candidate_fields(tmp_path):
     registry = tmp_path / "provider_evidence_registry.yaml"
     provider_decision = tmp_path / "provider_decision.yaml"

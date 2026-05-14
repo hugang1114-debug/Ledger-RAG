@@ -301,8 +301,7 @@ def build_provider_evidence_readiness_summary(inputs):
 
     provider_evidence_ready = not validation_errors and not blockers
     provider_candidate_ready = (
-        not validation_errors
-        and not candidate_validation_errors
+        not candidate_validation_errors
         and registry.get("provider_evidence_candidate_locked") is True
         and registry.get("provider_candidate_selected") is True
         and not candidate_blockers
