@@ -183,6 +183,10 @@ def _candidate_blockers(registry, provider_decision, missing_candidate_ids, unre
         blockers.append("provider_evidence_candidate_not_locked")
     if registry.get("provider_candidate_selected") is not True:
         blockers.append("provider_candidate_not_selected")
+    if registry.get("authorized_to_run") is True:
+        blockers.append("provider_candidate_execution_authorized")
+    if provider_decision.get("run_authorized") is True:
+        blockers.append("provider_decision_candidate_run_authorized")
     if _is_unset(candidate_provider):
         blockers.append("candidate_provider_unset")
     if _is_unset(candidate_model):

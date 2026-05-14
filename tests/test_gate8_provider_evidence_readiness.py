@@ -487,6 +487,37 @@ def test_candidate_ready_ignores_missing_final_execution_schema_fields(tmp_path)
     assert summary["candidate_blockers"] == []
 
 
+def test_candidate_ready_rejects_accidental_execution_authorization(tmp_path):
+    cases = [
+        ("registry", "authorized_to_run: false", "authorized_to_run: true", "provider_candidate_execution_authorized"),
+        ("decision", "run_authorized: false", "run_authorized: true", "provider_decision_candidate_run_authorized"),
+    ]
+
+    for target, old_text, new_text, blocker in cases:
+        registry = tmp_path / target / "provider_evidence_registry.yaml"
+        provider_decision = tmp_path / target / "provider_decision.yaml"
+        registry.parent.mkdir(parents=True)
+        _write_candidate_registry(registry)
+        _write_candidate_provider_decision(provider_decision)
+        if target == "registry":
+            registry.write_text(
+                registry.read_text(encoding="utf-8").replace(old_text, new_text),
+                encoding="utf-8",
+            )
+        else:
+            provider_decision.write_text(
+                provider_decision.read_text(encoding="utf-8").replace(old_text, new_text),
+                encoding="utf-8",
+            )
+
+        summary = build_provider_evidence_readiness_summary(
+            load_provider_evidence_inputs(registry, provider_decision)
+        )
+
+        assert summary["provider_candidate_ready"] is False
+        assert blocker in summary["candidate_blockers"]
+
+
 def test_candidate_decision_must_include_candidate_fields(tmp_path):
     registry = tmp_path / "provider_evidence_registry.yaml"
     provider_decision = tmp_path / "provider_decision.yaml"
