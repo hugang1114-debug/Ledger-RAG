@@ -192,6 +192,12 @@ def _candidate_blockers(registry, provider_decision, missing_candidate_ids, unre
         blockers.append("candidate_model_unset")
     if _is_unset(candidate_model_snapshot):
         blockers.append("candidate_snapshot_unset")
+    if _is_unset(decision_candidate_provider):
+        blockers.append("provider_decision_candidate_provider_unset")
+    if _is_unset(decision_candidate_model):
+        blockers.append("provider_decision_candidate_model_unset")
+    if _is_unset(decision_candidate_model_snapshot):
+        blockers.append("provider_decision_candidate_snapshot_unset")
     if missing_candidate_ids:
         blockers.append("provider_candidate_missing_sources")
     if unreviewed_candidate_ids:

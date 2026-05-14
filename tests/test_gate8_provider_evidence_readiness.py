@@ -360,6 +360,36 @@ def test_candidate_locked_registry_reports_candidate_ready_but_not_execution_rea
     assert "provider_decision_not_authorized" in summary["blockers"]
 
 
+def test_candidate_decision_must_include_candidate_fields(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_candidate_registry(registry)
+    _write_candidate_provider_decision(provider_decision)
+    provider_decision.write_text(
+        "\n".join(
+            line
+            for line in provider_decision.read_text(encoding="utf-8").splitlines()
+            if not line.startswith(
+                (
+                    "candidate_provider:",
+                    "candidate_model:",
+                    "candidate_model_snapshot:",
+                )
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_candidate_ready"] is False
+    assert "provider_decision_candidate_provider_unset" in summary["blockers"]
+    assert "provider_decision_candidate_model_unset" in summary["blockers"]
+    assert "provider_decision_candidate_snapshot_unset" in summary["blockers"]
+
+
 def test_candidate_decision_must_match_registry_candidate(tmp_path):
     registry = tmp_path / "provider_evidence_registry.yaml"
     provider_decision = tmp_path / "provider_decision.yaml"
