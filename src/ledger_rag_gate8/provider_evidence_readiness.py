@@ -309,7 +309,7 @@ def build_provider_evidence_readiness_summary(inputs):
 
     return {
         "gate": registry.get("gate"),
-        "stage": "gate8i_provider_evidence_readiness",
+        "stage": registry.get("stage"),
         "status": registry.get("status"),
         "provider_evidence_ready": provider_evidence_ready,
         "provider_candidate_ready": provider_candidate_ready,

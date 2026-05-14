@@ -182,7 +182,7 @@ def test_default_summary_is_valid_but_not_ready():
     )
 
     assert summary["gate"] == "gate8_main_comparison"
-    assert summary["stage"] == "gate8i_provider_evidence_readiness"
+    assert summary["stage"] == "gate8k_openai_provider_evidence_candidate_lock"
     assert summary["provider_candidate_ready"] is True
     assert summary["provider_evidence_ready"] is False
     assert summary["authorized_to_run"] is False
