@@ -25,7 +25,7 @@ This repository is not yet a main experiment runner or model implementation. The
 - Gate 7: Pilot Experiment Passed - completed
 - Gate 8: Main Comparison Passed - readiness in progress
 
-The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, but provider execution, API/runtime availability, budget, prompt/config freeze, and main baselines remain unauthorized. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
+The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, and Gate 8L freezes candidate prompt/config artifacts. Provider execution, API/runtime availability, budget, final prompt/config authorization, and main baselines remain unauthorized. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
 
 ## Current Structure
 

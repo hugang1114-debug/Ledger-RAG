@@ -4,7 +4,7 @@ Gate 8H reserves prompt and generation config slots for the future main comparis
 
 ## Current State
 
-The current registries are intentionally non-executable:
+After Gate 8L, the current registries are intentionally non-executable but candidate-locked:
 
 - `prompt_versions_locked: false`
 - `prompt_text_frozen: false`
@@ -12,6 +12,11 @@ The current registries are intentionally non-executable:
 - `shared_answer_style_locked: false`
 - `shared_evidence_budget_locked: false`
 - `authorized_to_run: false`
+- `candidate_prompt_versions_locked: true`
+- `candidate_prompt_text_frozen: true`
+- `candidate_generation_config_locked: true`
+- `candidate_shared_answer_style_locked: true`
+- `candidate_shared_evidence_budget_locked: true`
 
 Each Gate 5 baseline family has a reserved prompt slot and generation config slot:
 
@@ -34,6 +39,22 @@ Before a main baseline run can be authorized, the project must record:
 - deterministic settings where supported
 - model/provider assumptions checked on the run date
 - execution card with exact commands and output paths
+
+## Gate 8L Candidate Freeze
+
+Gate 8L adds candidate prompt files and candidate generation constraints. Candidate readiness may pass, but final prompt/config execution readiness remains blocked.
+
+Expected default checker state after Gate 8L:
+
+```json
+{
+  "prompt_config_candidate_ready": true,
+  "prompt_config_ready": false,
+  "authorized_to_run": false
+}
+```
+
+Strict mode is still expected to fail until final provider selection, run-date price and API checks, budget approval, execution card review, and explicit run authorization are recorded.
 
 ## CLI Contract
 
