@@ -15,6 +15,14 @@ This is intentional. A later provider and prompt freeze gate must make the selec
 
 Gate 8I adds `configs/gate8/provider_evidence_registry.yaml` as the tracked place for official provider evidence. Provider selection remains unset, and the registry starts incomplete and non-executable until a future execution gate reviews official sources and authorizes model calls.
 
+## Gate 8K Candidate
+
+Gate 8K records OpenAI `gpt-5.4-mini` as the first provider/model candidate. This is a candidate lock, not a final execution decision.
+
+The candidate evidence records official OpenAI URLs for pricing, model documentation, terms, context window, output limit, and throughput planning. API key availability and cost budget approval remain unresolved.
+
+`provider_decision.yaml` therefore keeps `selected: false` and `run_authorized: false`. Prices, model availability, limits, and terms must be rechecked on the actual run date before execution can be authorized.
+
 ## Required Future Evidence
 
 Before any main baseline can run, the provider decision record must include:

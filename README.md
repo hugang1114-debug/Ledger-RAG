@@ -25,7 +25,7 @@ This repository is not yet a main experiment runner or model implementation. The
 - Gate 7: Pilot Experiment Passed - completed
 - Gate 8: Main Comparison Passed - readiness in progress
 
-The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
+The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, but provider execution, API/runtime availability, budget, prompt/config freeze, and main baselines remain unauthorized. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
 
 ## Current Structure
 
@@ -56,6 +56,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `configs/gate8/prompt_registry.yaml` - non-executable prompt slot registry
 - `configs/gate8/generation_config_registry.yaml` - non-executable generation config slot registry
 - `snapshots/main_v1/source_snapshots.json` - source snapshot and local retrieval index registry for main v1 datasets
+- `experiments/cards/E016-gate8k-openai-provider-evidence-candidate-lock.md` - Gate 8K non-running provider candidate lock card
 - `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
 - `scripts/check_gate8_freeze_readiness.py` - local execution-preflight readiness checker
 - `scripts/check_gate8_prompt_config_readiness.py` - local prompt/config registry readiness checker

@@ -50,6 +50,8 @@ Gate 8 cannot run while any blocker remains:
 - run reproducibility review has not confirmed paths, seeds, commands, and artifact destinations
 - evaluation scripts or metric plans are not pinned for each dataset
 
+Gate 8K locks an OpenAI `gpt-5.4-mini` candidate, but Gate 8 remains blocked until the candidate is rechecked on the run date and promoted through the execution freeze.
+
 ## Ready-To-Run Conditions
 
 Before authorizing main baseline execution, the project must have:

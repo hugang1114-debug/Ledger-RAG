@@ -119,6 +119,16 @@ model_provider:
   pricing_checked_at: unset
   pricing_source: unset
 
+provider_candidate:
+  status: candidate_locked
+  provider: openai
+  model: gpt-5.4-mini
+  model_snapshot: gpt-5.4-mini-2026-03-17
+  evidence_registry: configs/gate8/provider_evidence_registry.yaml
+  checked_at: 2026-05-14
+  execution_authorized: false
+  recheck_required_on_run_date: true
+
 artifact_paths:
   root: artifacts/gate8/main_v1
   run_records: artifacts/gate8/main_v1/runs

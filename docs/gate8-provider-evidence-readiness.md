@@ -16,6 +16,12 @@ The provider evidence registry is intentionally locked out:
 
 Every evidence slot is present but incomplete. Source URLs, check timestamps, reviewer fields, provider, and model remain unset until a later execution-preparation gate records official evidence close to the run date.
 
+## Gate 8K Candidate State
+
+The checker now distinguishes candidate readiness from execution readiness. After Gate 8K, default inspection may report `provider_candidate_ready: true`, while strict readiness still reports `provider_evidence_ready: false`.
+
+This means official candidate evidence exists, but model calls remain blocked by unresolved runtime availability, cost budget approval, final provider selection, prompt/config freeze, and execution authorization.
+
 ## Required Evidence Slots
 
 Gate 8I requires these evidence slots before strict readiness can pass:
