@@ -1,10 +1,15 @@
 version: 1
 gate: gate8_main_comparison
-stage: gate8f_provider_readiness
+stage: gate8k_provider_candidate_decision
 status: readiness_in_progress
 selected: false
 provider: unset
 model: unset
+candidate_provider: openai
+candidate_model: gpt-5.4-mini
+candidate_model_snapshot: gpt-5.4-mini-2026-03-17
+candidate_checked_at: 2026-05-14
+candidate_recheck_required_on_run_date: true
 model_version_or_date: unset
 pricing_checked_at: unset
 pricing_source: unset

@@ -165,6 +165,11 @@ def test_registry_contains_all_required_evidence_slots():
 
     assert {slot["evidence_id"] for slot in inputs.evidence_slots} == EXPECTED_EVIDENCE_IDS
     assert inputs.registry["authorized_to_run"] is False
+    assert inputs.registry["provider_evidence_candidate_locked"] is True
+    assert inputs.registry["provider_candidate_selected"] is True
+    assert inputs.registry["candidate_provider"] == "openai"
+    assert inputs.registry["candidate_model"] == "gpt-5.4-mini"
+    assert inputs.registry["candidate_model_snapshot"] == "gpt-5.4-mini-2026-03-17"
     assert inputs.registry["provider_evidence_locked"] is False
     assert inputs.registry["provider_selected"] is False
     assert inputs.registry["provider"] == "unset"
@@ -178,17 +183,21 @@ def test_default_summary_is_valid_but_not_ready():
 
     assert summary["gate"] == "gate8_main_comparison"
     assert summary["stage"] == "gate8i_provider_evidence_readiness"
+    assert summary["provider_candidate_ready"] is True
     assert summary["provider_evidence_ready"] is False
     assert summary["authorized_to_run"] is False
     assert summary["provider_selected"] is False
-    assert summary["provider"] == "unset"
-    assert summary["model"] == "unset"
-    assert summary["missing_evidence_ids"] == sorted(EXPECTED_EVIDENCE_IDS)
-    assert summary["unreviewed_evidence_ids"] == sorted(EXPECTED_EVIDENCE_IDS)
+    assert summary["candidate_provider"] == "openai"
+    assert summary["candidate_model"] == "gpt-5.4-mini"
+    assert summary["candidate_model_snapshot"] == "gpt-5.4-mini-2026-03-17"
+    assert summary["missing_candidate_evidence_ids"] == []
+    assert summary["missing_evidence_ids"] == [
+        "api_key_or_runtime_availability_note",
+        "cost_budget_approval_note",
+    ]
     assert summary["validation_errors"] == []
     assert "provider_evidence_not_locked" in summary["blockers"]
-    assert "provider_not_selected" in summary["blockers"]
-    assert "model_not_selected" in summary["blockers"]
+    assert "provider_decision_not_authorized" in summary["blockers"]
 
 
 def test_parse_evidence_slots_reads_list_of_maps(tmp_path):
@@ -553,7 +562,12 @@ def test_cli_default_mode_exits_zero_and_reports_not_ready():
 
     assert payload["provider_evidence_ready"] is False
     assert payload["authorized_to_run"] is False
-    assert payload["missing_evidence_ids"] == sorted(EXPECTED_EVIDENCE_IDS)
+    assert payload["provider_candidate_ready"] is True
+    assert payload["missing_candidate_evidence_ids"] == []
+    assert payload["missing_evidence_ids"] == [
+        "api_key_or_runtime_availability_note",
+        "cost_budget_approval_note",
+    ]
     assert payload["blockers"]
 
 

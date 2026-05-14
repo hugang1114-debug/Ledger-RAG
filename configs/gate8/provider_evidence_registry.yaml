@@ -1,9 +1,18 @@
 version: 1
 gate: gate8_main_comparison
-stage: gate8i_provider_evidence_readiness
+stage: gate8k_openai_provider_evidence_candidate_lock
 status: readiness_in_progress
 authorized_to_run: false
 purpose: non_executable_provider_evidence_registry
+provider_evidence_candidate_locked: true
+provider_candidate_selected: true
+candidate_provider: openai
+candidate_model: gpt-5.4-mini
+candidate_model_snapshot: gpt-5.4-mini-2026-03-17
+candidate_checked_at: 2026-05-14
+candidate_recheck_required_on_run_date: true
+context_window_tokens: 400000
+max_output_tokens: 128000
 provider_evidence_locked: false
 provider_selected: false
 provider: unset
@@ -12,78 +21,71 @@ model: unset
 evidence_slots:
   - evidence_id: official_pricing_source
     required_for: provider_cost_validation
-    official_source_url: unset
-    checked_at: unset
-    evidence_status: missing
-    reviewer: unset
-    notes: official_pricing_source_required_later
+    official_source_url: https://platform.openai.com/docs/pricing/
+    checked_at: 2026-05-14
+    evidence_status: reviewed
+    reviewer: codex
+    notes: official_pricing_page_recorded_for_candidate_only_recheck_on_run_date
   - evidence_id: official_model_docs_source
     required_for: provider_model_validation
-    official_source_url: unset
-    checked_at: unset
-    evidence_status: missing
-    reviewer: unset
-    notes: official_model_docs_source_required_later
+    official_source_url: https://developers.openai.com/api/docs/models/gpt-5.4-mini
+    checked_at: 2026-05-14
+    evidence_status: reviewed
+    reviewer: codex
+    notes: official_model_page_records_candidate_model_context_and_output_limits
   - evidence_id: official_terms_privacy_source
     required_for: provider_terms_privacy_validation
-    official_source_url: unset
-    checked_at: unset
-    evidence_status: missing
-    reviewer: unset
-    notes: official_terms_privacy_source_required_later
+    official_source_url: https://openai.com/policies/service-terms/
+    checked_at: 2026-05-14
+    evidence_status: reviewed
+    reviewer: codex
+    notes: official_terms_recorded_for_candidate_only_privacy_page_also_recorded_in_docs
   - evidence_id: model_id_version_source
     required_for: model_identity_validation
-    official_source_url: unset
-    checked_at: unset
-    evidence_status: missing
-    reviewer: unset
-    notes: model_id_version_source_required_later
+    official_source_url: https://developers.openai.com/api/docs/models/gpt-5.4-mini
+    checked_at: 2026-05-14
+    evidence_status: reviewed
+    reviewer: codex
+    notes: preferred_snapshot_gpt_5_4_mini_2026_03_17_must_be_rechecked_before_run
   - evidence_id: context_window_source
     required_for: context_window_validation
-    official_source_url: unset
-    checked_at: unset
-    evidence_status: missing
-    reviewer: unset
-    notes: context_window_source_required_later
+    official_source_url: https://developers.openai.com/api/docs/models/gpt-5.4-mini
+    checked_at: 2026-05-14
+    evidence_status: reviewed
+    reviewer: codex
+    notes: candidate_context_window_tokens_400000
   - evidence_id: output_limit_source
     required_for: output_limit_validation
-    official_source_url: unset
-    checked_at: unset
-    evidence_status: missing
-    reviewer: unset
-    notes: output_limit_source_required_later
+    official_source_url: https://developers.openai.com/api/docs/models/gpt-5.4-mini
+    checked_at: 2026-05-14
+    evidence_status: reviewed
+    reviewer: codex
+    notes: candidate_max_output_tokens_128000
   - evidence_id: rate_limit_or_throughput_source
     required_for: run_feasibility_validation
-    official_source_url: unset
-    checked_at: unset
-    evidence_status: missing
-    reviewer: unset
-    notes: rate_limit_or_throughput_source_required_later
+    official_source_url: https://developers.openai.com/api/docs/models
+    checked_at: 2026-05-14
+    evidence_status: reviewed
+    reviewer: codex
+    notes: exact_account_rate_limits_and_throughput_must_be_rechecked_before_execution
   - evidence_id: api_key_or_runtime_availability_note
     required_for: runtime_availability_validation
     official_source_url: unset
     checked_at: unset
     evidence_status: missing
     reviewer: unset
-    notes: api_key_or_runtime_availability_note_required_later
+    notes: intentionally_unresolved_do_not_store_api_keys_in_repository
   - evidence_id: cost_budget_approval_note
     required_for: cost_budget_validation
     official_source_url: unset
     checked_at: unset
     evidence_status: missing
     reviewer: unset
-    notes: cost_budget_approval_note_required_later
+    notes: intentionally_unresolved_budget_must_be_approved_before_model_calls
 
 blockers:
   - provider_evidence_not_locked
   - provider_not_selected
   - model_not_selected
-  - official_pricing_source_missing
-  - official_model_docs_source_missing
-  - official_terms_privacy_source_missing
-  - model_id_version_source_missing
-  - context_window_source_missing
-  - output_limit_source_missing
-  - rate_limit_or_throughput_source_missing
   - api_key_or_runtime_availability_note_missing
   - cost_budget_approval_note_missing
