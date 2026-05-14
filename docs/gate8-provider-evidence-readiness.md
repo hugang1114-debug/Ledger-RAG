@@ -6,7 +6,7 @@ This is a non-executable readiness state. It does not choose a provider, choose 
 
 ## Current State
 
-The provider evidence registry is intentionally locked out:
+The provider evidence registry remains locked out for execution:
 
 - `provider_evidence_locked: false`
 - `provider_selected: false`
@@ -14,7 +14,9 @@ The provider evidence registry is intentionally locked out:
 - `model: unset`
 - `authorized_to_run: false`
 
-Every evidence slot is present but incomplete. Source URLs, check timestamps, reviewer fields, provider, and model remain unset until a later execution-preparation gate records official evidence close to the run date.
+Gate 8K partially records and reviews candidate evidence for OpenAI `gpt-5.4-mini` official source slots. That candidate state is metadata only: it records the first provider/model candidate and official-source evidence checked on 2026-05-14.
+
+Execution evidence remains incomplete because API/runtime availability and cost budget approval are unresolved, final provider selection is unset, and `authorized_to_run` remains `false`. The final provider/model decision fields remain unset even though candidate provider/model metadata is recorded separately as `candidate_provider` and `candidate_model`.
 
 ## Gate 8K Candidate State
 
