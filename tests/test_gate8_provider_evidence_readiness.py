@@ -311,6 +311,30 @@ def test_provider_decision_must_match_locked_registry_provider_and_model(tmp_pat
     assert "provider_decision_model_mismatch" in summary["blockers"]
 
 
+def test_execution_ready_registry_does_not_require_candidate_fields(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    _write_ready_registry(registry, provider="openai", model="gpt-4.1")
+    _write_provider_decision(provider_decision, provider="openai", model="gpt-4.1")
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_evidence_ready"] is True
+    assert summary["provider_candidate_ready"] is False
+    assert summary["candidate_provider"] == "unset"
+    assert summary["candidate_model"] == "unset"
+    assert summary["candidate_model_snapshot"] == "unset"
+    assert "provider_evidence_candidate_not_locked" not in summary["blockers"]
+    assert "provider_candidate_not_selected" not in summary["blockers"]
+    assert "candidate_provider_unset" not in summary["blockers"]
+    assert "candidate_model_unset" not in summary["blockers"]
+    assert "candidate_snapshot_unset" not in summary["blockers"]
+    assert "provider_candidate_missing_sources" not in summary["blockers"]
+    assert "provider_candidate_unreviewed" not in summary["blockers"]
+
+
 def test_candidate_locked_registry_reports_candidate_ready_but_not_execution_ready(tmp_path):
     registry = tmp_path / "provider_evidence_registry.yaml"
     provider_decision = tmp_path / "provider_decision.yaml"
