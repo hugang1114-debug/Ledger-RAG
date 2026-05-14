@@ -139,16 +139,13 @@ def _slot_by_id(slots):
     return {slot.get("evidence_id"): slot for slot in slots if slot.get("evidence_id")}
 
 
-def _candidate_path_active(registry, provider_decision):
+def _candidate_path_active(registry):
     return (
         registry.get("provider_evidence_candidate_locked") is True
         or registry.get("provider_candidate_selected") is True
         or not _is_unset(registry.get("candidate_provider"))
         or not _is_unset(registry.get("candidate_model"))
         or not _is_unset(registry.get("candidate_model_snapshot"))
-        or not _is_unset(provider_decision.get("candidate_provider"))
-        or not _is_unset(provider_decision.get("candidate_model"))
-        or not _is_unset(provider_decision.get("candidate_model_snapshot"))
     )
 
 
@@ -223,7 +220,7 @@ def build_provider_evidence_readiness_summary(inputs):
     decision_model = provider_decision.get("model")
     slots_by_id = _slot_by_id(inputs.evidence_slots)
     absent_evidence_ids = sorted(EXPECTED_EVIDENCE_IDS - set(slots_by_id))
-    candidate_path_active = _candidate_path_active(registry, provider_decision)
+    candidate_path_active = _candidate_path_active(registry)
     missing_candidate_ids, unreviewed_candidate_ids = _candidate_missing_evidence_ids(slots_by_id)
     candidate_blockers = []
     if candidate_path_active:
