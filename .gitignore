@@ -22,3 +22,7 @@ Thumbs.db
 *.tmp
 *.log
 
+# Local secrets and runtime environment
+.env
+.env.*
+!.env.example
