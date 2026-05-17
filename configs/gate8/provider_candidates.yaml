@@ -1,0 +1,55 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8m_provider_budget_preflight
+status: readiness_in_progress
+authorized_to_run: false
+purpose: non_executable_dual_provider_candidate_registry
+selected_provider: unset
+execution_authorized: false
+pricing_recheck_required_on_run_date: true
+
+provider_candidates:
+  - id: openai_gpt_5_4
+    provider: openai
+    model: gpt-5.4
+    candidate_locked: true
+    final_selected: false
+    authorized_to_run: false
+    official_model_url: https://openai.com/index/introducing-gpt-5-4/
+    official_pricing_url: https://openai.com/index/introducing-gpt-5-4/
+    pricing_checked_at: 2026-05-17
+    input_usd_per_1m_tokens: 2.50
+    cached_input_usd_per_1m_tokens: 0.25
+    output_usd_per_1m_tokens: 15.00
+    context_window_note: standard_api_context_must_be_rechecked_before_run
+    max_output_note: model_output_limit_must_be_rechecked_before_run
+    json_output_support: expected_supported_recheck_before_run
+    tool_call_support: expected_supported_recheck_before_run
+    terms_or_data_policy_note: official_terms_and_data_policy_must_be_rechecked_before_run
+    risk_notes: higher_cost_better_credibility_candidate
+    recommended_role: small_sample_credibility_comparison
+  - id: deepseek_v4_pro
+    provider: deepseek
+    model: deepseek-v4-pro
+    candidate_locked: true
+    final_selected: false
+    authorized_to_run: false
+    official_model_url: https://api-docs.deepseek.com/quick_start/pricing
+    official_pricing_url: https://api-docs.deepseek.com/quick_start/pricing
+    pricing_checked_at: 2026-05-17
+    input_usd_per_1m_tokens: 0.435
+    cached_input_usd_per_1m_tokens: 0.003625
+    output_usd_per_1m_tokens: 0.87
+    context_window_note: one_million_tokens_reported_by_official_pricing_page_recheck_before_run
+    max_output_note: three_hundred_eighty_four_thousand_tokens_reported_by_official_pricing_page_recheck_before_run
+    json_output_support: official_pricing_page_marks_supported_recheck_before_run
+    tool_call_support: official_pricing_page_marks_supported_recheck_before_run
+    terms_or_data_policy_note: official_terms_and_data_policy_must_be_rechecked_before_run
+    risk_notes: discounted_price_window_and_provider_external_validity_require_reporting
+    recommended_role: cost_controlled_smoke_and_possible_main_candidate
+
+blockers:
+  - selected_provider_unset
+  - execution_not_authorized
+  - api_key_or_runtime_unverified
+  - run_date_pricing_not_rechecked

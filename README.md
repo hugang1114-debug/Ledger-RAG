@@ -25,7 +25,7 @@ This repository is not yet a main experiment runner or model implementation. The
 - Gate 7: Pilot Experiment Passed - completed
 - Gate 8: Main Comparison Passed - readiness in progress
 
-The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, and Gate 8L freezes candidate prompt/config artifacts. Provider execution, API/runtime availability, budget, final prompt/config authorization, and main baselines remain unauthorized. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
+The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, Gate 8L freezes candidate prompt/config artifacts, and Gate 8M records GPT-5.4 and DeepSeek-V4-Pro as provider candidates with a 10 USD smoke-run budget preflight. Selected provider, API/runtime availability, run-date pricing, final prompt/config authorization, execution authorization, and main baselines remain unset. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
 
 ## Current Structure
 
@@ -48,9 +48,12 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `docs/gate8-prompt-config-readiness.md` - Gate 8H prompt/config registry rules
 - `docs/gate8-provider-evidence-readiness.md` - Gate 8I provider evidence registry readiness rules
 - `docs/gate8-snapshot-index-promotion.md` - Gate 8J source snapshot and local index promotion rules
+- `docs/gate8-provider-comparison.md` - Gate 8M provider and budget candidate comparison
 - `configs/gate8/main_v1_readiness.yaml` - non-executable Gate 8 readiness matrix
 - `configs/gate8/main_v1_run_matrix.yaml` - non-executable main v1 dataset/baseline matrix
 - `configs/gate8/provider_decision.yaml` - provider decision metadata with execution fields unset
+- `configs/gate8/provider_candidates.yaml` - non-executable GPT-5.4 and DeepSeek-V4-Pro candidate registry
+- `configs/gate8/budget_preflight.yaml` - non-executable smoke and main budget preflight scope
 - `configs/gate8/provider_evidence_registry.yaml` - non-executable provider evidence registry
 - `configs/gate8/freeze_readiness.yaml` - non-executable freeze readiness metadata
 - `configs/gate8/prompt_registry.yaml` - non-executable prompt slot registry
@@ -61,6 +64,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `scripts/check_gate8_freeze_readiness.py` - local execution-preflight readiness checker
 - `scripts/check_gate8_prompt_config_readiness.py` - local prompt/config registry readiness checker
 - `scripts/check_gate8_provider_evidence_readiness.py` - local provider evidence registry readiness checker
+- `scripts/check_gate8_provider_budget_preflight.py` - local provider/budget preflight readiness checker
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
