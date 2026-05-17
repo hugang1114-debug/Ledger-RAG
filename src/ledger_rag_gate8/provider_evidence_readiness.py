@@ -303,7 +303,35 @@ def build_provider_evidence_readiness_summary(inputs):
     blockers = _dedupe(blockers)
     candidate_blockers = _dedupe(candidate_blockers)
 
+    lock_blockers = []
+    if registry.get("provider_evidence_locked") is not True:
+        lock_blockers.append("provider_evidence_not_locked")
+    if registry.get("provider_selected") is not True or registry.get("provider") == "unset":
+        lock_blockers.append("provider_not_selected")
+    if registry.get("model") == "unset":
+        lock_blockers.append("model_not_selected")
+    if absent_evidence_ids:
+        lock_blockers.append("provider_evidence_missing_slots")
+    if missing_evidence_ids:
+        lock_blockers.append("provider_evidence_missing_sources")
+    if unreviewed_evidence_ids:
+        lock_blockers.append("provider_evidence_unreviewed")
+    if provider_decision.get("selected") is not True:
+        lock_blockers.append("provider_decision_unselected")
+    if _is_unset(decision_provider):
+        lock_blockers.append("provider_decision_provider_unset")
+    if _is_unset(decision_model):
+        lock_blockers.append("provider_decision_model_unset")
+    if not _is_unset(registry_provider) and not _is_unset(decision_provider):
+        if registry_provider != decision_provider:
+            lock_blockers.append("provider_decision_provider_mismatch")
+    if not _is_unset(registry_model) and not _is_unset(decision_model):
+        if registry_model != decision_model:
+            lock_blockers.append("provider_decision_model_mismatch")
+    lock_blockers = _dedupe(lock_blockers)
+
     provider_evidence_ready = not validation_errors and not blockers
+    provider_evidence_locked_ready = not validation_errors and not lock_blockers
     provider_candidate_ready = (
         not candidate_validation_errors
         and registry.get("provider_evidence_candidate_locked") is True
@@ -316,6 +344,7 @@ def build_provider_evidence_readiness_summary(inputs):
         "stage": registry.get("stage"),
         "status": registry.get("status"),
         "provider_evidence_ready": provider_evidence_ready,
+        "provider_evidence_locked_ready": provider_evidence_locked_ready,
         "provider_candidate_ready": provider_candidate_ready,
         "authorized_to_run": registry.get("authorized_to_run") is True,
         "provider_selected": registry.get("provider_selected") is True,
@@ -334,6 +363,7 @@ def build_provider_evidence_readiness_summary(inputs):
         "unreviewed_candidate_evidence_ids": unreviewed_candidate_ids,
         "evidence_slot_count": len(inputs.evidence_slots),
         "blockers": blockers,
+        "lock_blockers": lock_blockers,
         "candidate_blockers": candidate_blockers,
         "checked_configs": {
             "provider_evidence_registry": _summary_path(inputs.registry_path),

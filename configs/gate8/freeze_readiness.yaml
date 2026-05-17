@@ -11,11 +11,11 @@ prompt_registry: configs/gate8/prompt_registry.yaml
 generation_config_registry: configs/gate8/generation_config_registry.yaml
 source_snapshot_registry: snapshots/main_v1/source_snapshots.json
 
-provider_freeze_selected: false
+provider_freeze_selected: true
 provider_pricing_checked_on_run_date: false
 provider_docs_checked_on_run_date: false
 terms_checked_on_run_date: false
-api_key_or_runtime_available: false
+api_key_or_runtime_available: true
 
 prompt_versions_locked: false
 generation_config_locked: false
@@ -28,11 +28,9 @@ reproducibility_review_complete: false
 execution_authorized: false
 
 blockers:
-  - provider_unselected
   - provider_pricing_not_checked_on_run_date
   - provider_docs_not_checked_on_run_date
   - terms_not_checked_on_run_date
-  - api_key_or_runtime_unverified
   - prompt_versions_unlocked
   - generation_config_unlocked
   - cost_budget_unapproved
@@ -40,7 +38,6 @@ blockers:
   - reproducibility_review_unfinished
   - run_matrix_non_executable
   - provider_decision_non_executable
-  - provider_evidence_not_locked
   - provider_evidence_registry_non_executable
   - prompt_registry_not_locked
   - generation_config_registry_not_locked

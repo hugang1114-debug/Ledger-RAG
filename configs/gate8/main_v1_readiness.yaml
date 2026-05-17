@@ -37,6 +37,7 @@ provider_evidence_readiness_check:
   command: python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml
   strict_command: python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --require-ready
   strict_mode_expected_exit_before_provider_evidence_lock: 1
+  provider_evidence_locked_expected_after_gate8r: true
 provider_budget_preflight_check:
   command: python scripts/check_gate8_provider_budget_preflight.py --provider-candidates configs/gate8/provider_candidates.yaml --budget-preflight configs/gate8/budget_preflight.yaml
   strict_command: python scripts/check_gate8_provider_budget_preflight.py --provider-candidates configs/gate8/provider_candidates.yaml --budget-preflight configs/gate8/budget_preflight.yaml --require-ready
@@ -124,11 +125,12 @@ metric_groups:
   - aggregation
 
 model_provider:
-  selected: false
-  provider: unset
-  model: unset
-  pricing_checked_at: unset
-  pricing_source: unset
+  selected: true
+  provider: deepseek
+  model: deepseek-v4-pro
+  pricing_checked_at: 2026-05-17
+  pricing_source: https://api-docs.deepseek.com/quick_start/pricing
+  pricing_recheck_required_on_main_run_date: true
 
 provider_candidate:
   status: candidate_locked
@@ -143,6 +145,9 @@ provider_candidate:
 provider_selection:
   primary_provider: deepseek_v4_pro
   optional_credibility_provider: openai_gpt_5_4
+  provider_evidence_locked: true
+  provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
+  provider_decision: configs/gate8/provider_decision.yaml
   smoke_run_authorized: true
   smoke_run_scope: deepseek_v4_pro_smoke_only
   smoke_budget_ceiling_usd: 10
@@ -156,14 +161,11 @@ artifact_paths:
   created_by_this_config: false
 
 not_ready:
-  - model_provider_unselected
   - cost_budget_unapproved
   - final_prompt_versions_unlocked
   - final_generation_config_unlocked
   - prompt_config_execution_unauthorized
-  - provider_decision_unlocked
   - provider_budget_execution_unauthorized
-  - provider_evidence_not_locked
   - provider_evidence_registry_non_executable
   - freeze_readiness_unlocked
   - provider_prompt_budget_not_frozen

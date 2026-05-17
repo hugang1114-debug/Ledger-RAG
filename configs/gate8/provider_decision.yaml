@@ -1,55 +1,44 @@
 version: 1
 gate: gate8_main_comparison
-stage: gate8k_provider_candidate_decision
+stage: gate8r_deepseek_provider_evidence_lock
 status: readiness_in_progress
-selected: false
-provider: unset
-model: unset
-candidate_provider: openai
-candidate_model: gpt-5.4-mini
-candidate_model_snapshot: gpt-5.4-mini-2026-03-17
-candidate_checked_at: 2026-05-14
-candidate_recheck_required_on_run_date: true
-model_version_or_date: unset
-pricing_checked_at: unset
-pricing_source: unset
-model_docs_checked_at: unset
-model_docs_source: unset
-terms_checked_at: unset
-terms_source: unset
-context_window: unset
-max_output_tokens: unset
-rate_limit_note: unset
-data_retention_note: unset
+selected: true
+provider: deepseek
+model: deepseek-v4-pro
+model_version_or_date: 2026-05-17_pricing_page_identity
+pricing_checked_at: 2026-05-17
+pricing_source: https://api-docs.deepseek.com/quick_start/pricing
+pricing_recheck_required_on_main_run_date: true
+model_docs_checked_at: 2026-05-17
+model_docs_source: https://api-docs.deepseek.com/quick_start/pricing
+terms_checked_at: 2026-05-17
+terms_source: https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html
+context_window: 1000000
+max_output_tokens: 384000
+rate_limit_note: account_specific_rate_limits_and_throughput_remain_recheck_required_before_main_execution
+data_retention_note: official_terms_privacy_recorded_but_must_be_rechecked_before_main_execution
 api_key_required: true
-api_key_present: false
+api_key_present: true_for_local_smoke_only_not_tracked
 prompt_versions_locked: false
 generation_config_locked: false
 cost_budget_approved: false
 run_authorized: false
 provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
+smoke_result_summary: configs/gate8/deepseek_smoke_result_summary.yaml
 
 required_future_evidence:
-  - official_pricing_url_checked_on_run_date
-  - official_model_docs_url_checked_on_run_date
-  - provider_name
-  - model_id_and_version_or_date
-  - context_window
-  - max_output_limit
-  - deterministic_generation_settings
-  - rate_limit_or_throughput_note
-  - data_retention_or_privacy_note
-  - api_key_or_local_runtime_availability_note
-  - approved_cost_budget_note
-  - provider_evidence_registry_locked_and_reviewed
+  - run_date_pricing_recheck
+  - main_budget_approval
+  - final_prompt_versions_locked
+  - final_generation_config_locked
+  - execution_card_for_main_baselines
+  - reproducibility_review_for_main_runs
 
 disallowed_evidence:
-  - stale_prices_from_reports_or_old_notes
-  - undocumented_model_aliases
-  - provider_claims_without_official_urls
   - tracked_api_keys_or_secrets
-  - prompt_versions_described_only_in_prose
-  - runs_without_reproducible_model_config_prompt_and_cost_assumptions
+  - raw_provider_responses_in_git
+  - stale_prices_from_reports_or_old_notes
+  - main_baseline_runs_without_execution_card
 
 prompt_config_requirements:
   prompt_version_per_baseline_family: required_later

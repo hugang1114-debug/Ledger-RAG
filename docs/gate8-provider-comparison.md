@@ -40,6 +40,12 @@ Gate 8O authorizes only a DeepSeek-V4-Pro smoke run under the existing 10 USD ce
 
 The smoke run must still recheck official DeepSeek pricing on the actual run date, read `DEEPSEEK_API_KEY` only from local environment or `.env.local`, and produce inspectable contract-shaped artifacts before any result can support the paper.
 
+## Gate 8R Evidence Lock
+
+Gate 8R locks DeepSeek-V4-Pro provider evidence using official DeepSeek source URLs and the reviewed Gate 8Q smoke summary. This makes DeepSeek the evidence-backed primary provider for the next readiness steps.
+
+The lock is not execution authorization. Main runs still require prompt/config freeze, run-date pricing recheck, main budget approval, and an execution card.
+
 ## Execution Boundary
 
-Provider choice affects external validity and must be reported with all results. This document records smoke-only authorization, not full Gate 8 execution authorization.
+Provider choice affects external validity and must be reported with all results. This document records DeepSeek provider selection, smoke authorization, and provider evidence lock, not full Gate 8 execution authorization.

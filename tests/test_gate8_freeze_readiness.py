@@ -23,7 +23,7 @@ def test_freeze_config_has_required_fields():
 
     assert REQUIRED_FREEZE_FIELDS <= set(config)
     assert config["authorized_to_run"] is False
-    assert config["provider_freeze_selected"] is False
+    assert config["provider_freeze_selected"] is True
     assert config["prompt_versions_locked"] is False
     assert config["cost_budget_approved"] is False
     assert config["execution_authorized"] is False
@@ -38,10 +38,15 @@ def test_load_freeze_inputs_uses_config_references():
     assert inputs.freeze_config["prompt_registry"] == "configs/gate8/prompt_registry.yaml"
     assert inputs.freeze_config["generation_config_registry"] == "configs/gate8/generation_config_registry.yaml"
     assert inputs.run_matrix["authorized_to_run"] is False
-    assert inputs.provider_decision["selected"] is False
+    assert inputs.provider_decision["selected"] is True
+    assert inputs.provider_decision["provider"] == "deepseek"
+    assert inputs.provider_decision["model"] == "deepseek-v4-pro"
     assert inputs.provider_decision["run_authorized"] is False
     assert inputs.provider_evidence_registry["authorized_to_run"] is False
-    assert inputs.provider_evidence_registry["provider_evidence_locked"] is False
+    assert inputs.provider_evidence_registry["provider_evidence_locked"] is True
+    assert inputs.provider_evidence_registry["provider_selected"] is True
+    assert inputs.provider_evidence_registry["provider"] == "deepseek"
+    assert inputs.provider_evidence_registry["model"] == "deepseek-v4-pro"
     assert inputs.prompt_registry["authorized_to_run"] is False
     assert inputs.generation_config_registry["authorized_to_run"] is False
 
@@ -55,12 +60,15 @@ def test_default_summary_is_valid_but_not_ready():
     assert summary["freeze_ready"] is False
     assert summary["authorized_to_run"] is False
     assert summary["validation_errors"] == []
-    assert "provider_unselected" in summary["blockers"]
+    assert "provider_decision_unselected" not in summary["blockers"]
+    assert "provider_freeze_unselected" not in summary["blockers"]
+    assert "api_key_or_runtime_unverified" not in summary["blockers"]
     assert "prompt_versions_unlocked" in summary["blockers"]
     assert "cost_budget_unapproved" in summary["blockers"]
     assert "run_matrix_not_authorized" in summary["blockers"]
     assert "provider_decision_not_authorized" in summary["blockers"]
-    assert "provider_evidence_not_locked" in summary["blockers"]
+    assert "provider_evidence_not_locked" not in summary["blockers"]
+    assert "provider_evidence_provider_unselected" not in summary["blockers"]
     assert "provider_evidence_registry_not_authorized" in summary["blockers"]
     assert "provider_evidence_registry_has_blockers" in summary["blockers"]
     assert "prompt_registry_not_locked" in summary["blockers"]
@@ -360,4 +368,8 @@ def test_cli_require_ready_exits_nonzero_while_blockers_remain():
 
     assert result.returncode == 1
     assert payload["freeze_ready"] is False
-    assert "provider_unselected" in payload["blockers"]
+    assert "provider_unselected" not in payload["blockers"]
+    assert "provider_evidence_not_locked" not in payload["blockers"]
+    assert "cost_budget_unapproved" in payload["blockers"]
+    assert "prompt_versions_unlocked" in payload["blockers"]
+    assert "main_execution_not_authorized" in payload["blockers"]

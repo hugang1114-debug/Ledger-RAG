@@ -1,32 +1,33 @@
 # Gate 8 Provider Evidence Readiness
 
-Gate 8I creates the provider evidence readiness scaffold for the future Gate 8 main comparison. It defines the official evidence that must be recorded and reviewed before any provider or model can be selected and before any main baseline execution can be authorized.
+Gate 8 provider evidence readiness records which provider/model is supported by official sources, local runtime evidence, and budget notes before any main baseline execution can be authorized.
 
-This is a non-executable readiness state. It does not choose a provider, choose a model, check live prices, store API keys, call models, run baselines, compute metrics, create result artifacts, promote source snapshots, or pass Gate 8.
+This remains a non-executable readiness state. It does not authorize main baseline runs, full budget spend, prompt/config freeze, model calls, embedding calls, reranker calls, metric computation, or Gate 8 passage.
 
 ## Current State
 
-The provider evidence registry remains locked out for execution:
+Gate 8R locks provider evidence for:
 
-- `provider_evidence_locked: false`
-- `provider_selected: false`
-- `provider: unset`
-- `model: unset`
+- `provider: deepseek`
+- `model: deepseek-v4-pro`
+- `provider_evidence_locked: true`
+- `provider_selected: true`
 - `authorized_to_run: false`
 
-Gate 8K partially records and reviews candidate evidence for OpenAI `gpt-5.4-mini` official source slots. That candidate state is metadata only: it records the first provider/model candidate and official-source evidence checked on 2026-05-14.
+The lock uses the Gate 8N provider selection, Gate 8O smoke-only authorization, Gate 8P one-question smoke run, and Gate 8Q reviewed smoke summary. The raw smoke response remains ignored under `artifacts/`; the tracked evidence is the hash/cost summary in `configs/gate8/deepseek_smoke_result_summary.yaml`.
 
-Execution evidence remains incomplete because API/runtime availability and cost budget approval are unresolved, final provider selection is unset, and `authorized_to_run` remains `false`. The final provider/model decision fields remain unset even though candidate provider/model metadata is recorded separately as `candidate_provider` and `candidate_model`.
+## Readiness Semantics
 
-## Gate 8K Candidate State
+The checker now distinguishes two states:
 
-The checker now distinguishes candidate readiness from execution readiness. After Gate 8K, default inspection may report `provider_candidate_ready: true`, while strict readiness still reports `provider_evidence_ready: false`.
+- `provider_evidence_locked_ready`: provider/model evidence is locked and internally consistent.
+- `provider_evidence_ready`: strict execution readiness for provider evidence.
 
-This means official candidate evidence exists, but model calls remain blocked by unresolved runtime availability, cost budget approval, final provider selection, prompt/config freeze, and execution authorization.
+After Gate 8R, `provider_evidence_locked_ready` is expected to be `true`, while strict `provider_evidence_ready` remains `false` because `authorized_to_run` and `run_authorized` remain false.
 
-## Required Evidence Slots
+## Evidence Slots
 
-Gate 8I requires these evidence slots before strict readiness can pass:
+The locked DeepSeek registry keeps all required slots reviewed:
 
 - `official_pricing_source`
 - `official_model_docs_source`
@@ -38,26 +39,24 @@ Gate 8I requires these evidence slots before strict readiness can pass:
 - `api_key_or_runtime_availability_note`
 - `cost_budget_approval_note`
 
-Official evidence must come from provider documentation, provider pricing pages, provider terms or privacy pages, official model documentation, or an approved internal availability or budget note. Dynamic pages and report-local links are not sufficient evidence.
+Official model and pricing evidence points to the DeepSeek pricing/model page. Runtime and smoke budget evidence points to the tracked Gate 8Q smoke summary, not to raw artifacts or secrets.
 
 ## CLI Contract
 
-These exact command forms define the local validation contract for the implemented checker. The checker is runnable under Gate 8I for metadata inspection only; it does not authorize model calls, live provider lookup, live pricing lookup, or baseline execution.
-
-Default mode is inspect-only:
+Inspect-only mode:
 
 ```powershell
-python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml
+python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --provider-decision configs/gate8/provider_decision.yaml
 ```
 
-Strict mode is for execution authorization checks:
+Strict execution mode:
 
 ```powershell
-python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --require-ready
+python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --provider-decision configs/gate8/provider_decision.yaml --require-ready
 ```
 
-Strict mode is expected to fail until all official evidence slots are recorded, reviewed, linked to a concrete provider/model decision, and the registry explicitly locks `provider_evidence_locked: true` under an authorized later gate.
+Strict mode is expected to fail until main-run pricing is rechecked, main budget is approved, prompts/configs are frozen, and a main execution card authorizes baseline runs.
 
 ## Execution Boundary
 
-Gate 8I authorizes only non-executing metadata inspection with the implemented checker. It does not authorize live provider lookup, live pricing lookup, provider/model selection, API key storage, model calls, embedding calls, reranker calls, baseline execution, metric computation, or result artifacts.
+Gate 8R locks provider evidence only. It does not approve the main comparison budget or authorize additional provider calls.

@@ -165,15 +165,14 @@ def test_registry_contains_all_required_evidence_slots():
 
     assert {slot["evidence_id"] for slot in inputs.evidence_slots} == EXPECTED_EVIDENCE_IDS
     assert inputs.registry["authorized_to_run"] is False
-    assert inputs.registry["provider_evidence_candidate_locked"] is True
-    assert inputs.registry["provider_candidate_selected"] is True
-    assert inputs.registry["candidate_provider"] == "openai"
-    assert inputs.registry["candidate_model"] == "gpt-5.4-mini"
-    assert inputs.registry["candidate_model_snapshot"] == "gpt-5.4-mini-2026-03-17"
-    assert inputs.registry["provider_evidence_locked"] is False
-    assert inputs.registry["provider_selected"] is False
-    assert inputs.registry["provider"] == "unset"
-    assert inputs.registry["model"] == "unset"
+    assert inputs.registry["provider_evidence_locked"] is True
+    assert inputs.registry["provider_selected"] is True
+    assert inputs.registry["provider"] == "deepseek"
+    assert inputs.registry["model"] == "deepseek-v4-pro"
+    assert inputs.provider_decision["selected"] is True
+    assert inputs.provider_decision["provider"] == "deepseek"
+    assert inputs.provider_decision["model"] == "deepseek-v4-pro"
+    assert inputs.provider_decision["run_authorized"] is False
 
 
 def test_default_summary_is_valid_but_not_ready():
@@ -182,21 +181,21 @@ def test_default_summary_is_valid_but_not_ready():
     )
 
     assert summary["gate"] == "gate8_main_comparison"
-    assert summary["stage"] == "gate8k_openai_provider_evidence_candidate_lock"
-    assert summary["provider_candidate_ready"] is True
+    assert summary["stage"] == "gate8r_deepseek_provider_evidence_lock"
+    assert summary["provider_evidence_locked_ready"] is True
     assert summary["provider_evidence_ready"] is False
     assert summary["authorized_to_run"] is False
-    assert summary["provider_selected"] is False
-    assert summary["candidate_provider"] == "openai"
-    assert summary["candidate_model"] == "gpt-5.4-mini"
-    assert summary["candidate_model_snapshot"] == "gpt-5.4-mini-2026-03-17"
-    assert summary["missing_candidate_evidence_ids"] == []
-    assert summary["missing_evidence_ids"] == [
-        "api_key_or_runtime_availability_note",
-        "cost_budget_approval_note",
-    ]
+    assert summary["provider_selected"] is True
+    assert summary["provider"] == "deepseek"
+    assert summary["model"] == "deepseek-v4-pro"
+    assert summary["provider_decision_selected"] is True
+    assert summary["provider_decision_authorized"] is False
+    assert summary["missing_evidence_ids"] == []
+    assert summary["unreviewed_evidence_ids"] == []
     assert summary["validation_errors"] == []
-    assert "provider_evidence_not_locked" in summary["blockers"]
+    assert "provider_evidence_not_locked" not in summary["blockers"]
+    assert "provider_decision_unselected" not in summary["blockers"]
+    assert "provider_evidence_registry_not_authorized" in summary["blockers"]
     assert "provider_decision_not_authorized" in summary["blockers"]
 
 
@@ -276,7 +275,7 @@ def test_missing_evidence_slot_is_reported(tmp_path):
     assert "provider_evidence_missing_slots" in summary["blockers"]
 
 
-def test_provider_decision_references_registry_but_remains_unselected():
+def test_provider_decision_references_registry_but_remains_execution_locked():
     summary = build_provider_evidence_readiness_summary(
         load_provider_evidence_inputs(REGISTRY, PROVIDER_DECISION)
     )
@@ -284,9 +283,9 @@ def test_provider_decision_references_registry_but_remains_unselected():
     assert summary["checked_configs"]["provider_decision"].replace("\\", "/").endswith(
         "configs/gate8/provider_decision.yaml"
     )
-    assert summary["provider_decision_selected"] is False
+    assert summary["provider_decision_selected"] is True
     assert summary["provider_decision_authorized"] is False
-    assert "provider_decision_unselected" in summary["blockers"]
+    assert "provider_decision_unselected" not in summary["blockers"]
     assert "provider_decision_not_authorized" in summary["blockers"]
 
 
@@ -592,13 +591,11 @@ def test_cli_default_mode_exits_zero_and_reports_not_ready():
     payload = json.loads(result.stdout)
 
     assert payload["provider_evidence_ready"] is False
+    assert payload["provider_evidence_locked_ready"] is True
     assert payload["authorized_to_run"] is False
-    assert payload["provider_candidate_ready"] is True
-    assert payload["missing_candidate_evidence_ids"] == []
-    assert payload["missing_evidence_ids"] == [
-        "api_key_or_runtime_availability_note",
-        "cost_budget_approval_note",
-    ]
+    assert payload["provider"] == "deepseek"
+    assert payload["model"] == "deepseek-v4-pro"
+    assert payload["missing_evidence_ids"] == []
     assert payload["blockers"]
 
 
@@ -623,4 +620,40 @@ def test_cli_require_ready_exits_nonzero_while_blockers_remain():
 
     assert result.returncode == 1
     assert payload["provider_evidence_ready"] is False
-    assert "provider_evidence_not_locked" in payload["blockers"]
+    assert payload["provider_evidence_locked_ready"] is True
+    assert "provider_evidence_not_locked" not in payload["blockers"]
+    assert "provider_decision_not_authorized" in payload["blockers"]
+
+
+def test_locked_deepseek_evidence_requires_smoke_summary_link(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    registry.write_text(REGISTRY.read_text(encoding="utf-8").replace(
+        "official_source_url: configs/gate8/deepseek_smoke_result_summary.yaml",
+        "official_source_url: unset",
+    ), encoding="utf-8")
+    provider_decision.write_text(PROVIDER_DECISION.read_text(encoding="utf-8"), encoding="utf-8")
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_evidence_locked_ready"] is False
+    assert "provider_evidence_missing_sources" in summary["lock_blockers"]
+
+
+def test_locked_deepseek_evidence_fails_on_provider_mismatch(tmp_path):
+    registry = tmp_path / "provider_evidence_registry.yaml"
+    provider_decision = tmp_path / "provider_decision.yaml"
+    registry.write_text(REGISTRY.read_text(encoding="utf-8"), encoding="utf-8")
+    provider_decision.write_text(
+        PROVIDER_DECISION.read_text(encoding="utf-8").replace("provider: deepseek", "provider: openai"),
+        encoding="utf-8",
+    )
+
+    summary = build_provider_evidence_readiness_summary(
+        load_provider_evidence_inputs(registry, provider_decision)
+    )
+
+    assert summary["provider_evidence_locked_ready"] is False
+    assert "provider_decision_provider_mismatch" in summary["lock_blockers"]
