@@ -40,13 +40,18 @@ def test_default_summary_reports_preflight_ready_but_execution_blocked():
     assert summary["selected_candidate_id"] == "deepseek_v4_pro"
     assert summary["candidate_ids"] == ["deepseek_v4_pro", "openai_gpt_5_4"]
     assert summary["candidate_blockers"] == []
+    assert summary["smoke_run_authorized"] is True
+    assert summary["smoke_authorization_blockers"] == []
     assert "execution_not_authorized" in summary["execution_blockers"]
+    assert "smoke_run_not_authorized" not in summary["execution_blockers"]
 
 
 def test_budget_preflight_has_smoke_budget_and_deferred_main_budget():
     inputs = load_provider_budget_preflight_inputs(PROVIDER_CANDIDATES, BUDGET_PREFLIGHT)
 
     assert inputs.budget_preflight["smoke_run_budget_usd"] == 10
+    assert inputs.budget_preflight["smoke_run_authorized"] is True
+    assert inputs.budget_preflight["smoke_budget_owner_approval"] == "approved_for_smoke_run"
     assert inputs.budget_preflight["main_run_budget_usd"] == "unset_requires_later_approval"
     assert inputs.budget_preflight["retry_buffer_fraction"] == "0.30"
     assert inputs.budget_includes
@@ -251,3 +256,53 @@ def test_cli_require_ready_exits_nonzero_while_execution_is_blocked():
     assert result.returncode == 1
     assert payload["provider_budget_preflight_ready"] is True
     assert payload["execution_authorized"] is False
+
+
+def test_cli_require_smoke_authorized_exits_zero_after_gate8o_authorization():
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(CLI),
+            "--provider-candidates",
+            str(PROVIDER_CANDIDATES),
+            "--budget-preflight",
+            str(BUDGET_PREFLIGHT),
+            "--require-smoke-authorized",
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert result.returncode == 0
+    assert payload["provider_budget_preflight_ready"] is True
+    assert payload["smoke_run_authorized"] is True
+    assert payload["execution_authorized"] is False
+
+
+def test_smoke_authorization_requires_deepseek_selection_and_budget_approval(tmp_path):
+    candidates = tmp_path / "provider_candidates.yaml"
+    budget = tmp_path / "budget_preflight.yaml"
+    candidates.write_text(
+        PROVIDER_CANDIDATES.read_text(encoding="utf-8").replace(
+            "selected_provider: deepseek_v4_pro",
+            "selected_provider: openai_gpt_5_4",
+        ),
+        encoding="utf-8",
+    )
+    budget.write_text(
+        BUDGET_PREFLIGHT.read_text(encoding="utf-8").replace(
+            "smoke_budget_owner_approval: approved_for_smoke_run",
+            "smoke_budget_owner_approval: pending",
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_provider_budget_preflight_summary(load_provider_budget_preflight_inputs(candidates, budget))
+
+    assert summary["smoke_run_authorized"] is False
+    assert "smoke_selected_provider_not_deepseek_v4_pro" in summary["smoke_authorization_blockers"]
+    assert "smoke_budget_owner_approval_missing" in summary["smoke_authorization_blockers"]

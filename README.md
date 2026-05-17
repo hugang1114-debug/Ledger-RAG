@@ -25,7 +25,7 @@ This repository is not yet a main experiment runner or model implementation. The
 - Gate 7: Pilot Experiment Passed - completed
 - Gate 8: Main Comparison Passed - readiness in progress
 
-The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, Gate 8L freezes candidate prompt/config artifacts, Gate 8M records GPT-5.4 and DeepSeek-V4-Pro as provider candidates with a 10 USD smoke-run budget preflight, and Gate 8N selects DeepSeek-V4-Pro as the primary provider for the first smoke/main-v1 path. GPT-5.4 remains optional credibility-check evidence. API/runtime availability, run-date pricing, smoke-run authorization, final prompt/config authorization, execution authorization, and main baselines remain unset. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
+The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, Gate 8L freezes candidate prompt/config artifacts, Gate 8M records GPT-5.4 and DeepSeek-V4-Pro as provider candidates with a 10 USD smoke-run budget preflight, Gate 8N selects DeepSeek-V4-Pro as the primary provider for the first smoke/main-v1 path, and Gate 8O authorizes only a DeepSeek smoke run under the existing 10 USD ceiling. GPT-5.4 remains optional credibility-check evidence. API/runtime availability, run-date pricing, final prompt/config authorization, full execution authorization, and main baselines remain unset. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
 
 ## Current Structure
 
@@ -65,6 +65,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `scripts/check_gate8_prompt_config_readiness.py` - local prompt/config registry readiness checker
 - `scripts/check_gate8_provider_evidence_readiness.py` - local provider evidence registry readiness checker
 - `scripts/check_gate8_provider_budget_preflight.py` - local provider/budget preflight readiness checker
+- `experiments/cards/E020-gate8o-deepseek-smoke-run-authorization.md` - smoke-only DeepSeek authorization card
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder

@@ -187,6 +187,25 @@ def _budget_blockers(budget, includes, excludes):
     return _dedupe(blockers)
 
 
+def _smoke_authorization_blockers(provider_registry, budget):
+    blockers = []
+    if provider_registry.get("selected_provider") != "deepseek_v4_pro":
+        blockers.append("smoke_selected_provider_not_deepseek_v4_pro")
+    if provider_registry.get("smoke_run_authorized") is not True:
+        blockers.append("provider_smoke_run_not_authorized")
+    if budget.get("smoke_run_authorized") is not True:
+        blockers.append("budget_smoke_run_not_authorized")
+    if budget.get("smoke_budget_owner_approval") != "approved_for_smoke_run":
+        blockers.append("smoke_budget_owner_approval_missing")
+    if not _is_positive_number(budget.get("smoke_run_budget_usd")):
+        blockers.append("smoke_budget_missing_or_nonpositive")
+    if provider_registry.get("api_key_environment_variable") != "DEEPSEEK_API_KEY":
+        blockers.append("deepseek_api_key_environment_variable_unset")
+    if provider_registry.get("execution_authorized") is True or budget.get("execution_authorized") is True:
+        blockers.append("smoke_authorization_should_not_enable_full_execution")
+    return _dedupe(blockers)
+
+
 def build_provider_budget_preflight_summary(inputs):
     provider_registry = inputs.provider_registry
     budget = inputs.budget_preflight
@@ -200,6 +219,12 @@ def build_provider_budget_preflight_summary(inputs):
     selected_candidate_id = selected_candidate_ids[0] if len(selected_candidate_ids) == 1 else "unset"
     candidate_blockers = _candidate_blockers(inputs.provider_candidates, selected_provider)
     budget_blockers = _budget_blockers(budget, inputs.budget_includes, inputs.budget_excludes)
+    smoke_authorization_blockers = _smoke_authorization_blockers(provider_registry, budget)
+    smoke_run_authorized = (
+        not candidate_blockers
+        and not budget_blockers
+        and not smoke_authorization_blockers
+    )
     execution_authorized = (
         provider_registry.get("authorized_to_run") is True
         and provider_registry.get("execution_authorized") is True
@@ -211,6 +236,8 @@ def build_provider_budget_preflight_summary(inputs):
         execution_blockers.append("selected_provider_unset")
     if not execution_authorized:
         execution_blockers.append("execution_not_authorized")
+    if not smoke_run_authorized:
+        execution_blockers.append("smoke_run_not_authorized")
     if provider_registry.get("pricing_recheck_required_on_run_date") is True:
         execution_blockers.append("run_date_pricing_recheck_required")
     if budget.get("budget_owner_approval") != "approved":
@@ -223,6 +250,7 @@ def build_provider_budget_preflight_summary(inputs):
         "stage": provider_registry.get("stage"),
         "provider_budget_preflight_ready": provider_budget_preflight_ready,
         "execution_authorized": execution_authorized,
+        "smoke_run_authorized": smoke_run_authorized,
         "selected_provider": selected_provider,
         "selected_candidate_id": selected_candidate_id,
         "candidate_ids": sorted(candidate.get("id") for candidate in inputs.provider_candidates),
@@ -231,6 +259,7 @@ def build_provider_budget_preflight_summary(inputs):
         "retry_buffer_fraction": budget.get("retry_buffer_fraction"),
         "candidate_blockers": candidate_blockers,
         "budget_blockers": budget_blockers,
+        "smoke_authorization_blockers": smoke_authorization_blockers,
         "execution_blockers": _dedupe(execution_blockers),
         "checked_configs": {
             "provider_candidates": _summary_path(inputs.provider_candidates_path),

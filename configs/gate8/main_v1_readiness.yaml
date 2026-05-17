@@ -40,8 +40,10 @@ provider_evidence_readiness_check:
 provider_budget_preflight_check:
   command: python scripts/check_gate8_provider_budget_preflight.py --provider-candidates configs/gate8/provider_candidates.yaml --budget-preflight configs/gate8/budget_preflight.yaml
   strict_command: python scripts/check_gate8_provider_budget_preflight.py --provider-candidates configs/gate8/provider_candidates.yaml --budget-preflight configs/gate8/budget_preflight.yaml --require-ready
+  smoke_authorization_command: python scripts/check_gate8_provider_budget_preflight.py --provider-candidates configs/gate8/provider_candidates.yaml --budget-preflight configs/gate8/budget_preflight.yaml --require-smoke-authorized
   preflight_expected_after_gate8m: true
   strict_mode_expected_exit_after_gate8m: 1
+  smoke_authorization_expected_after_gate8o: true
 source_snapshot_builds:
   hotpotqa_dev_distractor:
     command: python scripts/build_hotpotqa_source_snapshot.py --registry snapshots/main_v1/source_snapshots.json --output-root datasets/source_snapshots --split dev_distractor
@@ -141,6 +143,9 @@ provider_candidate:
 provider_selection:
   primary_provider: deepseek_v4_pro
   optional_credibility_provider: openai_gpt_5_4
+  smoke_run_authorized: true
+  smoke_run_scope: deepseek_v4_pro_smoke_only
+  smoke_budget_ceiling_usd: 10
   execution_authorized: false
 
 artifact_paths:
@@ -158,7 +163,6 @@ not_ready:
   - prompt_config_execution_unauthorized
   - provider_decision_unlocked
   - provider_budget_execution_unauthorized
-  - smoke_run_not_yet_authorized
   - provider_evidence_not_locked
   - provider_evidence_registry_non_executable
   - freeze_readiness_unlocked

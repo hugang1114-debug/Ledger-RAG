@@ -24,6 +24,11 @@ def main():
         action="store_true",
         help="Exit nonzero unless execution is authorized as well as preflight-valid.",
     )
+    parser.add_argument(
+        "--require-smoke-authorized",
+        action="store_true",
+        help="Exit nonzero unless the DeepSeek smoke run is authorized while main execution stays locked.",
+    )
     args = parser.parse_args()
 
     inputs = load_provider_budget_preflight_inputs(args.provider_candidates, args.budget_preflight)
@@ -31,6 +36,8 @@ def main():
     print(json.dumps(summary, indent=2, sort_keys=True))
 
     if args.require_ready and not summary["execution_authorized"]:
+        return 1
+    if args.require_smoke_authorized and not summary["smoke_run_authorized"]:
         return 1
     return 0
 

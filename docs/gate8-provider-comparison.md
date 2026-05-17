@@ -34,6 +34,12 @@ DeepSeek-V4-Pro is selected as the primary provider for the first smoke run and 
 
 All six baseline families must use DeepSeek-V4-Pro for the first comparable run unless a later gate explicitly changes the provider decision. Results should be reported as DeepSeek-conditioned until cross-provider checks are completed.
 
+## Gate 8O Smoke Authorization
+
+Gate 8O authorizes only a DeepSeek-V4-Pro smoke run under the existing 10 USD ceiling. This authorization does not permit the full main comparison, GPT-5.4 calls, or cross-provider runs.
+
+The smoke run must still recheck official DeepSeek pricing on the actual run date, read `DEEPSEEK_API_KEY` only from local environment or `.env.local`, and produce inspectable contract-shaped artifacts before any result can support the paper.
+
 ## Execution Boundary
 
-Provider choice affects external validity and must be reported with all results. No provider is authorized for execution by this document.
+Provider choice affects external validity and must be reported with all results. This document records smoke-only authorization, not full Gate 8 execution authorization.
