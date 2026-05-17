@@ -23,7 +23,8 @@ def test_provider_candidates_contain_expected_models():
 
     assert {candidate["id"] for candidate in inputs.provider_candidates} == EXPECTED_PROVIDER_IDS
     assert all(candidate["candidate_locked"] is True for candidate in inputs.provider_candidates)
-    assert all(candidate["final_selected"] is False for candidate in inputs.provider_candidates)
+    selected = [candidate for candidate in inputs.provider_candidates if candidate["final_selected"] is True]
+    assert [candidate["id"] for candidate in selected] == ["deepseek_v4_pro"]
     assert all(candidate["authorized_to_run"] is False for candidate in inputs.provider_candidates)
 
 
@@ -35,7 +36,8 @@ def test_default_summary_reports_preflight_ready_but_execution_blocked():
     assert summary["gate"] == "gate8_main_comparison"
     assert summary["provider_budget_preflight_ready"] is True
     assert summary["execution_authorized"] is False
-    assert summary["selected_provider"] == "unset"
+    assert summary["selected_provider"] == "deepseek_v4_pro"
+    assert summary["selected_candidate_id"] == "deepseek_v4_pro"
     assert summary["candidate_ids"] == ["deepseek_v4_pro", "openai_gpt_5_4"]
     assert summary["candidate_blockers"] == []
     assert "execution_not_authorized" in summary["execution_blockers"]
@@ -155,6 +157,54 @@ def test_accidental_candidate_authorization_blocks_preflight(tmp_path):
     assert "candidate_authorized_openai_gpt_5_4" in summary["candidate_blockers"]
 
 
+def test_selected_provider_must_match_final_selected_candidate(tmp_path):
+    candidates = tmp_path / "provider_candidates.yaml"
+    budget = tmp_path / "budget_preflight.yaml"
+    text = PROVIDER_CANDIDATES.read_text(encoding="utf-8").replace(
+        "selected_provider: deepseek_v4_pro",
+        "selected_provider: openai_gpt_5_4",
+    )
+    candidates.write_text(text, encoding="utf-8")
+    budget.write_text(BUDGET_PREFLIGHT.read_text(encoding="utf-8"), encoding="utf-8")
+
+    summary = build_provider_budget_preflight_summary(load_provider_budget_preflight_inputs(candidates, budget))
+
+    assert summary["provider_budget_preflight_ready"] is False
+    assert "selected_provider_final_selected_mismatch" in summary["candidate_blockers"]
+
+
+def test_multiple_final_selected_candidates_block_preflight(tmp_path):
+    candidates = tmp_path / "provider_candidates.yaml"
+    budget = tmp_path / "budget_preflight.yaml"
+    text = PROVIDER_CANDIDATES.read_text(encoding="utf-8").replace(
+        "\n".join(
+            [
+                "  - id: openai_gpt_5_4",
+                "    provider: openai",
+                "    model: gpt-5.4",
+                "    candidate_locked: true",
+                "    final_selected: false",
+            ]
+        ),
+        "\n".join(
+            [
+                "  - id: openai_gpt_5_4",
+                "    provider: openai",
+                "    model: gpt-5.4",
+                "    candidate_locked: true",
+                "    final_selected: true",
+            ]
+        ),
+    )
+    candidates.write_text(text, encoding="utf-8")
+    budget.write_text(BUDGET_PREFLIGHT.read_text(encoding="utf-8"), encoding="utf-8")
+
+    summary = build_provider_budget_preflight_summary(load_provider_budget_preflight_inputs(candidates, budget))
+
+    assert summary["provider_budget_preflight_ready"] is False
+    assert "multiple_provider_candidates_final_selected" in summary["candidate_blockers"]
+
+
 def test_cli_default_mode_exits_zero_and_reports_preflight_ready():
     result = subprocess.run(
         [
@@ -175,7 +225,8 @@ def test_cli_default_mode_exits_zero_and_reports_preflight_ready():
 
     assert payload["provider_budget_preflight_ready"] is True
     assert payload["execution_authorized"] is False
-    assert payload["selected_provider"] == "unset"
+    assert payload["selected_provider"] == "deepseek_v4_pro"
+    assert payload["selected_candidate_id"] == "deepseek_v4_pro"
 
 
 def test_cli_require_ready_exits_nonzero_while_execution_is_blocked():

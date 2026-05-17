@@ -123,7 +123,7 @@ def _dedupe(items):
     return result
 
 
-def _candidate_blockers(candidates):
+def _candidate_blockers(candidates, selected_provider):
     blockers = []
     ids = {candidate.get("id") for candidate in candidates if candidate.get("id")}
     missing_ids = EXPECTED_PROVIDER_IDS - ids
@@ -134,6 +134,7 @@ def _candidate_blockers(candidates):
         blockers.append("provider_candidates_have_unexpected_ids")
 
     final_selected_count = 0
+    selected_candidate_ids = []
     for candidate in candidates:
         candidate_id = candidate.get("id", "unknown")
         missing_fields = REQUIRED_CANDIDATE_FIELDS - set(candidate)
@@ -144,6 +145,7 @@ def _candidate_blockers(candidates):
             blockers.append(f"candidate_not_locked_{candidate_id}")
         if candidate.get("final_selected") is True:
             final_selected_count += 1
+            selected_candidate_ids.append(candidate_id)
         if candidate.get("authorized_to_run") is True:
             blockers.append(f"candidate_authorized_{candidate_id}")
         for field in ("official_model_url", "official_pricing_url", "pricing_checked_at"):
@@ -159,6 +161,12 @@ def _candidate_blockers(candidates):
 
     if final_selected_count > 1:
         blockers.append("multiple_provider_candidates_final_selected")
+    if final_selected_count == 0:
+        blockers.append("no_provider_candidate_final_selected")
+    if selected_provider not in EXPECTED_PROVIDER_IDS:
+        blockers.append("selected_provider_not_expected_candidate")
+    if final_selected_count == 1 and selected_provider != selected_candidate_ids[0]:
+        blockers.append("selected_provider_final_selected_mismatch")
     return _dedupe(blockers)
 
 
@@ -182,10 +190,16 @@ def _budget_blockers(budget, includes, excludes):
 def build_provider_budget_preflight_summary(inputs):
     provider_registry = inputs.provider_registry
     budget = inputs.budget_preflight
-    candidate_blockers = _candidate_blockers(inputs.provider_candidates)
-    budget_blockers = _budget_blockers(budget, inputs.budget_includes, inputs.budget_excludes)
     execution_blockers = []
     selected_provider = provider_registry.get("selected_provider", "unset")
+    selected_candidate_ids = [
+        candidate.get("id")
+        for candidate in inputs.provider_candidates
+        if candidate.get("final_selected") is True
+    ]
+    selected_candidate_id = selected_candidate_ids[0] if len(selected_candidate_ids) == 1 else "unset"
+    candidate_blockers = _candidate_blockers(inputs.provider_candidates, selected_provider)
+    budget_blockers = _budget_blockers(budget, inputs.budget_includes, inputs.budget_excludes)
     execution_authorized = (
         provider_registry.get("authorized_to_run") is True
         and provider_registry.get("execution_authorized") is True
@@ -210,6 +224,7 @@ def build_provider_budget_preflight_summary(inputs):
         "provider_budget_preflight_ready": provider_budget_preflight_ready,
         "execution_authorized": execution_authorized,
         "selected_provider": selected_provider,
+        "selected_candidate_id": selected_candidate_id,
         "candidate_ids": sorted(candidate.get("id") for candidate in inputs.provider_candidates),
         "smoke_run_budget_usd": budget.get("smoke_run_budget_usd"),
         "main_run_budget_usd": budget.get("main_run_budget_usd"),

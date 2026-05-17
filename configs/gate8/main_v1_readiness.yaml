@@ -138,6 +138,11 @@ provider_candidate:
   execution_authorized: false
   recheck_required_on_run_date: true
 
+provider_selection:
+  primary_provider: deepseek_v4_pro
+  optional_credibility_provider: openai_gpt_5_4
+  execution_authorized: false
+
 artifact_paths:
   root: artifacts/gate8/main_v1
   run_records: artifacts/gate8/main_v1/runs
@@ -152,7 +157,6 @@ not_ready:
   - final_generation_config_unlocked
   - prompt_config_execution_unauthorized
   - provider_decision_unlocked
-  - selected_provider_unset
   - provider_budget_execution_unauthorized
   - smoke_run_not_yet_authorized
   - provider_evidence_not_locked

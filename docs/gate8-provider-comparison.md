@@ -28,7 +28,12 @@ The budget excludes local lexical retrieval index construction, local source sna
 
 Use DeepSeek-V4-Pro as the first smoke-run candidate because it is cheaper and can test JSON, citation, and verifier behavior at low cost. Use GPT-5.4 later as a small-sample credibility comparison if the DeepSeek smoke run is stable.
 
+## Gate 8N Primary Selection
+
+DeepSeek-V4-Pro is selected as the primary provider for the first smoke run and likely main-v1 run. GPT-5.4 remains an optional small-sample credibility check, not a required provider for the first comparable run.
+
+All six baseline families must use DeepSeek-V4-Pro for the first comparable run unless a later gate explicitly changes the provider decision. Results should be reported as DeepSeek-conditioned until cross-provider checks are completed.
+
 ## Execution Boundary
 
 Provider choice affects external validity and must be reported with all results. No provider is authorized for execution by this document.
-

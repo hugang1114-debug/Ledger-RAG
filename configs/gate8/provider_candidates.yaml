@@ -1,10 +1,10 @@
 version: 1
 gate: gate8_main_comparison
-stage: gate8m_provider_budget_preflight
+stage: gate8n_select_deepseek_primary_provider
 status: readiness_in_progress
 authorized_to_run: false
 purpose: non_executable_dual_provider_candidate_registry
-selected_provider: unset
+selected_provider: deepseek_v4_pro
 execution_authorized: false
 pricing_recheck_required_on_run_date: true
 
@@ -27,12 +27,12 @@ provider_candidates:
     tool_call_support: expected_supported_recheck_before_run
     terms_or_data_policy_note: official_terms_and_data_policy_must_be_rechecked_before_run
     risk_notes: higher_cost_better_credibility_candidate
-    recommended_role: small_sample_credibility_comparison
+    recommended_role: optional_small_sample_credibility_check
   - id: deepseek_v4_pro
     provider: deepseek
     model: deepseek-v4-pro
     candidate_locked: true
-    final_selected: false
+    final_selected: true
     authorized_to_run: false
     official_model_url: https://api-docs.deepseek.com/quick_start/pricing
     official_pricing_url: https://api-docs.deepseek.com/quick_start/pricing
@@ -46,10 +46,10 @@ provider_candidates:
     tool_call_support: official_pricing_page_marks_supported_recheck_before_run
     terms_or_data_policy_note: official_terms_and_data_policy_must_be_rechecked_before_run
     risk_notes: discounted_price_window_and_provider_external_validity_require_reporting
-    recommended_role: cost_controlled_smoke_and_possible_main_candidate
+    recommended_role: primary_smoke_and_main_v1_candidate
 
 blockers:
-  - selected_provider_unset
   - execution_not_authorized
   - api_key_or_runtime_unverified
   - run_date_pricing_not_rechecked
+  - smoke_run_not_yet_authorized
