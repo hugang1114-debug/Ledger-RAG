@@ -86,5 +86,4 @@ blockers:
   - provider_decision_not_authorized
   - main_budget_unapproved
   - run_date_pricing_recheck_required
-  - prompt_config_not_frozen
   - main_execution_not_authorized

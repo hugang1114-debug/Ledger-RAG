@@ -24,7 +24,8 @@ def test_freeze_config_has_required_fields():
     assert REQUIRED_FREEZE_FIELDS <= set(config)
     assert config["authorized_to_run"] is False
     assert config["provider_freeze_selected"] is True
-    assert config["prompt_versions_locked"] is False
+    assert config["prompt_versions_locked"] is True
+    assert config["generation_config_locked"] is True
     assert config["cost_budget_approved"] is False
     assert config["execution_authorized"] is False
 
@@ -63,7 +64,11 @@ def test_default_summary_is_valid_but_not_ready():
     assert "provider_decision_unselected" not in summary["blockers"]
     assert "provider_freeze_unselected" not in summary["blockers"]
     assert "api_key_or_runtime_unverified" not in summary["blockers"]
-    assert "prompt_versions_unlocked" in summary["blockers"]
+    assert "prompt_versions_unlocked" not in summary["blockers"]
+    assert "generation_config_unlocked" not in summary["blockers"]
+    assert "prompt_config_not_frozen" not in summary["blockers"]
+    assert "prompt_registry_not_locked" not in summary["blockers"]
+    assert "generation_config_registry_not_locked" not in summary["blockers"]
     assert "cost_budget_unapproved" in summary["blockers"]
     assert "run_matrix_not_authorized" in summary["blockers"]
     assert "provider_decision_not_authorized" in summary["blockers"]
@@ -71,8 +76,6 @@ def test_default_summary_is_valid_but_not_ready():
     assert "provider_evidence_provider_unselected" not in summary["blockers"]
     assert "provider_evidence_registry_not_authorized" in summary["blockers"]
     assert "provider_evidence_registry_has_blockers" in summary["blockers"]
-    assert "prompt_registry_not_locked" in summary["blockers"]
-    assert "generation_config_registry_not_locked" in summary["blockers"]
     assert "prompt_registry_has_blockers" in summary["blockers"]
     assert "generation_config_registry_has_blockers" in summary["blockers"]
     assert "source_snapshots_not_promoted" not in summary["blockers"]
@@ -371,5 +374,7 @@ def test_cli_require_ready_exits_nonzero_while_blockers_remain():
     assert "provider_unselected" not in payload["blockers"]
     assert "provider_evidence_not_locked" not in payload["blockers"]
     assert "cost_budget_unapproved" in payload["blockers"]
-    assert "prompt_versions_unlocked" in payload["blockers"]
+    assert "prompt_versions_unlocked" not in payload["blockers"]
+    assert "generation_config_unlocked" not in payload["blockers"]
+    assert "prompt_config_not_frozen" not in payload["blockers"]
     assert "main_execution_not_authorized" in payload["blockers"]

@@ -162,13 +162,10 @@ artifact_paths:
 
 not_ready:
   - cost_budget_unapproved
-  - final_prompt_versions_unlocked
-  - final_generation_config_unlocked
   - prompt_config_execution_unauthorized
   - provider_budget_execution_unauthorized
   - provider_evidence_registry_non_executable
   - freeze_readiness_unlocked
-  - provider_prompt_budget_not_frozen
   - run_matrix_non_executable
   - run_commands_unauthorized
   - reproducibility_review_unfinished

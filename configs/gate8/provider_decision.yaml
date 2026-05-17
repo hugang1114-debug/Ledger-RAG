@@ -19,8 +19,8 @@ rate_limit_note: account_specific_rate_limits_and_throughput_remain_recheck_requ
 data_retention_note: official_terms_privacy_recorded_but_must_be_rechecked_before_main_execution
 api_key_required: true
 api_key_present: true_for_local_smoke_only_not_tracked
-prompt_versions_locked: false
-generation_config_locked: false
+prompt_versions_locked: true
+generation_config_locked: true
 cost_budget_approved: false
 run_authorized: false
 provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
@@ -29,8 +29,6 @@ smoke_result_summary: configs/gate8/deepseek_smoke_result_summary.yaml
 required_future_evidence:
   - run_date_pricing_recheck
   - main_budget_approval
-  - final_prompt_versions_locked
-  - final_generation_config_locked
   - execution_card_for_main_baselines
   - reproducibility_review_for_main_runs
 
@@ -41,9 +39,9 @@ disallowed_evidence:
   - main_baseline_runs_without_execution_card
 
 prompt_config_requirements:
-  prompt_version_per_baseline_family: required_later
-  generation_config_version: required_later
-  deterministic_settings: required_later
-  shared_answer_style: required_later
-  shared_max_evidence_budget: required_later
+  prompt_version_per_baseline_family: locked_in_configs_gate8_prompt_registry_yaml
+  generation_config_version: locked_in_configs_gate8_generation_config_registry_yaml
+  deterministic_settings: locked_with_provider_seed_support_recheck_required
+  shared_answer_style: locked_global_answer_with_atomic_claims
+  shared_max_evidence_budget: locked_8
   refusal_behavior: must_match_docs_baseline_protocol

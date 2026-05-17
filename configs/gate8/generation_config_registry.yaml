@@ -1,14 +1,14 @@
 version: 1
 gate: gate8_main_comparison
-stage: gate8l_generation_config_candidate_freeze
+stage: gate8s_main_generation_config_freeze
 status: readiness_in_progress
 authorized_to_run: false
-purpose: non_executable_generation_config_candidate_registry
-generation_config_locked: false
+purpose: non_executable_main_generation_config_freeze
+generation_config_locked: true
 candidate_generation_config_locked: true
-shared_answer_style_locked: false
+shared_answer_style_locked: true
 candidate_shared_answer_style_locked: true
-shared_evidence_budget_locked: false
+shared_evidence_budget_locked: true
 candidate_shared_evidence_budget_locked: true
 
 shared_constraints:
@@ -24,44 +24,40 @@ shared_constraints:
 baseline_generation_slots:
   - baseline_family: vanilla_rag
     generation_config_version: gate8l_vanilla_rag_generation_v1
-    config_status: candidate_locked
+    config_status: final_locked
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_generation_config_locked_execution_unauthorized
+    notes: final_generation_config_locked_execution_unauthorized
   - baseline_family: hybrid_rag
     generation_config_version: gate8l_hybrid_rag_generation_v1
-    config_status: candidate_locked
+    config_status: final_locked
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_generation_config_locked_execution_unauthorized
+    notes: final_generation_config_locked_execution_unauthorized
   - baseline_family: citation_only
     generation_config_version: gate8l_citation_only_generation_v1
-    config_status: candidate_locked
+    config_status: final_locked
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_generation_config_locked_execution_unauthorized
+    notes: final_generation_config_locked_execution_unauthorized
   - baseline_family: validator_only
     generation_config_version: gate8l_validator_only_generation_v1
-    config_status: candidate_locked
+    config_status: final_locked
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_generation_config_locked_execution_unauthorized
+    notes: final_generation_config_locked_execution_unauthorized
   - baseline_family: ledger_only
     generation_config_version: gate8l_ledger_only_generation_v1
-    config_status: candidate_locked
+    config_status: final_locked
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_generation_config_locked_execution_unauthorized
+    notes: final_generation_config_locked_execution_unauthorized
   - baseline_family: ledger_validator
     generation_config_version: gate8l_ledger_validator_generation_v1
-    config_status: candidate_locked
+    config_status: final_locked
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_generation_config_locked_execution_unauthorized
+    notes: final_generation_config_locked_execution_unauthorized
 
 blockers:
-  - final_generation_config_unlocked
-  - final_shared_answer_style_unlocked
-  - final_shared_evidence_budget_unlocked
-  - provider_not_finalized
   - execution_not_authorized

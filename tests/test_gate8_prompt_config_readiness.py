@@ -35,8 +35,9 @@ def test_default_summary_is_valid_but_not_ready():
     assert summary["missing_prompt_families"] == []
     assert summary["missing_generation_families"] == []
     assert summary["validation_errors"] == []
-    assert "prompt_versions_unlocked" in summary["blockers"]
-    assert "generation_config_unlocked" in summary["blockers"]
+    assert "prompt_versions_unlocked" not in summary["blockers"]
+    assert "generation_config_unlocked" not in summary["blockers"]
+    assert "execution_not_authorized" in summary["blockers"]
     assert "prompt_registry_not_authorized" in summary["blockers"]
     assert "generation_config_registry_not_authorized" in summary["blockers"]
 
@@ -50,12 +51,31 @@ def test_candidate_prompt_files_exist_for_all_baselines():
 def test_default_summary_reports_candidate_ready_but_final_not_ready():
     summary = build_prompt_config_readiness_summary(load_prompt_config_inputs(PROMPT_REGISTRY, GENERATION_CONFIG))
 
-    assert summary["prompt_config_candidate_ready"] is True
+    assert summary["prompt_config_frozen_ready"] is True
     assert summary["prompt_config_ready"] is False
     assert summary["authorized_to_run"] is False
-    assert summary["candidate_blockers"] == []
+    assert summary["freeze_blockers"] == []
     assert "prompt_registry_not_authorized" in summary["blockers"]
     assert "generation_config_registry_not_authorized" in summary["blockers"]
+
+
+def test_gate8s_freezes_final_prompt_and_generation_slots_without_authorizing_runs():
+    inputs = load_prompt_config_inputs(PROMPT_REGISTRY, GENERATION_CONFIG)
+    summary = build_prompt_config_readiness_summary(inputs)
+
+    assert inputs.prompt_registry["stage"] == "gate8s_main_prompt_config_freeze"
+    assert inputs.generation_config["stage"] == "gate8s_main_generation_config_freeze"
+    assert inputs.prompt_registry["prompt_versions_locked"] is True
+    assert inputs.prompt_registry["prompt_text_frozen"] is True
+    assert inputs.generation_config["generation_config_locked"] is True
+    assert inputs.generation_config["shared_answer_style_locked"] is True
+    assert inputs.generation_config["shared_evidence_budget_locked"] is True
+    assert {slot["prompt_status"] for slot in inputs.prompt_slots} == {"final_locked"}
+    assert {slot["config_status"] for slot in inputs.generation_slots} == {"final_locked"}
+    assert {slot["authorized_to_run"] for slot in inputs.prompt_slots} == {False}
+    assert {slot["authorized_to_run"] for slot in inputs.generation_slots} == {False}
+    assert summary["prompt_config_frozen_ready"] is True
+    assert summary["prompt_config_ready"] is False
 
 
 def test_prompt_hashes_match_registry_entries():
@@ -267,4 +287,7 @@ def test_cli_require_ready_exits_nonzero_while_blockers_remain():
 
     assert result.returncode == 1
     assert payload["prompt_config_ready"] is False
-    assert "prompt_versions_unlocked" in payload["blockers"]
+    assert payload["prompt_config_frozen_ready"] is True
+    assert "prompt_versions_unlocked" not in payload["blockers"]
+    assert "generation_config_unlocked" not in payload["blockers"]
+    assert "execution_not_authorized" in payload["blockers"]

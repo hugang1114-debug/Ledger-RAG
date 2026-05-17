@@ -25,7 +25,7 @@ This repository is not yet a main experiment runner or model implementation. The
 - Gate 7: Pilot Experiment Passed - completed
 - Gate 8: Main Comparison Passed - readiness in progress
 
-The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, Gate 8L freezes candidate prompt/config artifacts, Gate 8M records GPT-5.4 and DeepSeek-V4-Pro as provider candidates with a 10 USD smoke-run budget preflight, Gate 8N selects DeepSeek-V4-Pro as the primary provider for the first smoke/main-v1 path, Gate 8O authorizes only a DeepSeek smoke run under the existing 10 USD ceiling, Gate 8P adds and executes a one-question DeepSeek smoke harness, Gate 8Q reviews the smoke artifacts into a tracked hash/cost summary, and Gate 8R locks DeepSeek provider evidence while keeping main execution blocked. GPT-5.4 remains optional credibility-check evidence. Final prompt/config authorization, full execution authorization, and main baselines remain unset. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
+The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, Gate 8L freezes candidate prompt/config artifacts, Gate 8M records GPT-5.4 and DeepSeek-V4-Pro as provider candidates with a 10 USD smoke-run budget preflight, Gate 8N selects DeepSeek-V4-Pro as the primary provider for the first smoke/main-v1 path, Gate 8O authorizes only a DeepSeek smoke run under the existing 10 USD ceiling, Gate 8P adds and executes a one-question DeepSeek smoke harness, Gate 8Q reviews the smoke artifacts into a tracked hash/cost summary, Gate 8R locks DeepSeek provider evidence while keeping main execution blocked, and Gate 8S freezes final prompt/config metadata while keeping run commands unauthorized. GPT-5.4 remains optional credibility-check evidence. Main budget approval, run-date provider evidence recheck, full execution authorization, and main baselines remain unset. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
 
 ## Current Structure
 
@@ -57,8 +57,8 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `configs/gate8/deepseek_smoke_result_summary.yaml` - tracked summary of reviewed Gate 8P smoke artifacts
 - `configs/gate8/provider_evidence_registry.yaml` - non-executable DeepSeek provider evidence registry
 - `configs/gate8/freeze_readiness.yaml` - non-executable freeze readiness metadata
-- `configs/gate8/prompt_registry.yaml` - non-executable prompt slot registry
-- `configs/gate8/generation_config_registry.yaml` - non-executable generation config slot registry
+- `configs/gate8/prompt_registry.yaml` - non-executable final prompt registry
+- `configs/gate8/generation_config_registry.yaml` - non-executable final generation config registry
 - `snapshots/main_v1/source_snapshots.json` - source snapshot and local retrieval index registry for main v1 datasets
 - `experiments/cards/E016-gate8k-openai-provider-evidence-candidate-lock.md` - Gate 8K non-running provider candidate lock card
 - `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
@@ -68,6 +68,7 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `scripts/check_gate8_provider_budget_preflight.py` - local provider/budget preflight readiness checker
 - `experiments/cards/E020-gate8o-deepseek-smoke-run-authorization.md` - smoke-only DeepSeek authorization card
 - `experiments/cards/E023-gate8r-deepseek-provider-evidence-lock.md` - DeepSeek provider evidence lock card
+- `experiments/cards/E024-gate8s-main-prompt-config-freeze.md` - non-running final prompt/config freeze card
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder

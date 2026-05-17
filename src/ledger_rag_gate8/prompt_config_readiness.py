@@ -268,6 +268,77 @@ def _candidate_blockers(inputs, prompt_families, generation_families):
     return _dedupe(blockers)
 
 
+def _freeze_blockers(inputs, prompt_families, generation_families):
+    prompt_registry = inputs.prompt_registry
+    generation_config = inputs.generation_config
+    blockers = []
+
+    if prompt_registry.get("prompt_versions_locked") is not True:
+        blockers.append("prompt_versions_unlocked")
+    if prompt_registry.get("prompt_text_frozen") is not True:
+        blockers.append("prompt_text_not_frozen")
+    if generation_config.get("generation_config_locked") is not True:
+        blockers.append("generation_config_unlocked")
+    if generation_config.get("shared_answer_style_locked") is not True:
+        blockers.append("shared_answer_style_unlocked")
+    if generation_config.get("shared_evidence_budget_locked") is not True:
+        blockers.append("shared_evidence_budget_unlocked")
+    if EXPECTED_BASELINE_FAMILIES - prompt_families:
+        blockers.append("prompt_registry_missing_baselines")
+    if EXPECTED_BASELINE_FAMILIES - generation_families:
+        blockers.append("generation_config_missing_baselines")
+
+    shared_constraints = parse_mapping_section(inputs.generation_config_path, "shared_constraints")
+    for field in [
+        "answer_style",
+        "citation_granularity",
+        "max_evidence_items",
+        "max_atomic_claims",
+        "temperature",
+        "max_output_tokens",
+    ]:
+        if shared_constraints.get(field) in (None, "unset", ""):
+            blockers.append(f"shared_constraint_unset_{field}")
+
+    for slot in inputs.prompt_slots:
+        family = slot.get("baseline_family", "unknown")
+        missing = REQUIRED_CANDIDATE_PROMPT_SLOT_FIELDS - set(slot)
+        if missing:
+            blockers.append(f"prompt_slot_missing_fields_{family}")
+            continue
+        if slot.get("authorized_to_run") is True:
+            blockers.append(f"prompt_slot_authorized_{family}")
+        if slot.get("prompt_status") != "final_locked":
+            blockers.append(f"prompt_slot_not_final_locked_{family}")
+        prompt_path = _repo_path(slot["prompt_file"])
+        if not prompt_path.is_relative_to(PROMPT_DIR.resolve()):
+            blockers.append(f"prompt_file_outside_prompt_dir_{family}")
+            continue
+        if prompt_path.name != f"{family}.md":
+            blockers.append(f"prompt_file_name_mismatch_{family}")
+            continue
+        if not prompt_path.is_file():
+            blockers.append(f"prompt_file_missing_{family}")
+            continue
+        if _sha256_file(prompt_path) != slot.get("prompt_sha256"):
+            blockers.append(f"prompt_hash_mismatch_{family}")
+        if _contains_disallowed_marker(prompt_path):
+            blockers.append(f"prompt_marker_found_{family}")
+
+    for slot in inputs.generation_slots:
+        family = slot.get("baseline_family", "unknown")
+        missing = REQUIRED_CANDIDATE_GENERATION_SLOT_FIELDS - set(slot)
+        if missing:
+            blockers.append(f"generation_slot_missing_fields_{family}")
+            continue
+        if slot.get("authorized_to_run") is True:
+            blockers.append(f"generation_slot_authorized_{family}")
+        if slot.get("config_status") != "final_locked":
+            blockers.append(f"generation_slot_not_final_locked_{family}")
+
+    return _dedupe(blockers)
+
+
 def build_prompt_config_readiness_summary(inputs):
     prompt_registry = inputs.prompt_registry
     generation_config = inputs.generation_config
@@ -277,6 +348,8 @@ def build_prompt_config_readiness_summary(inputs):
     missing_generation = sorted(EXPECTED_BASELINE_FAMILIES - generation_families)
     candidate_blockers = _candidate_blockers(inputs, prompt_families, generation_families)
     prompt_config_candidate_ready = not candidate_blockers
+    freeze_blockers = _freeze_blockers(inputs, prompt_families, generation_families)
+    prompt_config_frozen_ready = not freeze_blockers
 
     validation_errors = []
     validation_errors.extend(_missing_fields(prompt_registry, REQUIRED_PROMPT_FIELDS, "prompt_registry"))
@@ -315,6 +388,7 @@ def build_prompt_config_readiness_summary(inputs):
         "gate": prompt_registry.get("gate"),
         "stage": prompt_registry.get("stage"),
         "prompt_config_candidate_ready": prompt_config_candidate_ready,
+        "prompt_config_frozen_ready": prompt_config_frozen_ready,
         "prompt_config_ready": prompt_config_ready,
         "authorized_to_run": (
             prompt_registry.get("authorized_to_run") is True
@@ -326,6 +400,7 @@ def build_prompt_config_readiness_summary(inputs):
         "prompt_slot_count": len(inputs.prompt_slots),
         "generation_slot_count": len(inputs.generation_slots),
         "candidate_blockers": candidate_blockers,
+        "freeze_blockers": freeze_blockers,
         "blockers": blockers,
         "checked_configs": {
             "prompt_registry": _summary_path(inputs.prompt_registry_path),

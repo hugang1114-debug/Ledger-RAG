@@ -46,6 +46,12 @@ Gate 8R locks DeepSeek-V4-Pro provider evidence using official DeepSeek source U
 
 The lock is not execution authorization. Main runs still require prompt/config freeze, run-date pricing recheck, main budget approval, and an execution card.
 
+## Gate 8S Prompt Config Freeze
+
+Gate 8S freezes the final prompt and generation config metadata for all six baseline families under the DeepSeek main-v1 path. The prompt/config checker is expected to report `prompt_config_frozen_ready: true`.
+
+This is still not execution authorization. Main runs still require run-date provider evidence recheck, main budget approval, reproducibility review, and explicit run command authorization.
+
 ## Execution Boundary
 
-Provider choice affects external validity and must be reported with all results. This document records DeepSeek provider selection, smoke authorization, and provider evidence lock, not full Gate 8 execution authorization.
+Provider choice affects external validity and must be reported with all results. This document records DeepSeek provider selection, smoke authorization, provider evidence lock, and prompt/config freeze, not full Gate 8 execution authorization.

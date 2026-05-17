@@ -1,66 +1,63 @@
 version: 1
 gate: gate8_main_comparison
-stage: gate8l_prompt_candidate_freeze
+stage: gate8s_main_prompt_config_freeze
 status: readiness_in_progress
 authorized_to_run: false
-purpose: non_executable_prompt_candidate_registry
-prompt_versions_locked: false
-prompt_text_frozen: false
+purpose: non_executable_main_prompt_freeze
+prompt_versions_locked: true
+prompt_text_frozen: true
 candidate_prompt_versions_locked: true
 candidate_prompt_text_frozen: true
 
 baseline_prompt_slots:
   - baseline_family: vanilla_rag
     prompt_version: gate8l_vanilla_rag_v1
-    prompt_status: candidate_locked
+    prompt_status: final_locked
     prompt_file: prompts/gate8/main_v1/vanilla_rag.md
     prompt_sha256: e612f65a72e39b599d2851b097bd52b3df8163f0f0b6559d226235b487217c8a
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_prompt_text_locked_execution_unauthorized
+    notes: final_prompt_text_locked_execution_unauthorized
   - baseline_family: hybrid_rag
     prompt_version: gate8l_hybrid_rag_v1
-    prompt_status: candidate_locked
+    prompt_status: final_locked
     prompt_file: prompts/gate8/main_v1/hybrid_rag.md
     prompt_sha256: 751b5fb36a09a99db9e577ca4d70e5dad3258eea2ca542a6466e7ac4258b1aeb
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_prompt_text_locked_execution_unauthorized
+    notes: final_prompt_text_locked_execution_unauthorized
   - baseline_family: citation_only
     prompt_version: gate8l_citation_only_v1
-    prompt_status: candidate_locked
+    prompt_status: final_locked
     prompt_file: prompts/gate8/main_v1/citation_only.md
     prompt_sha256: d7787853150f787d27e4826d7514eb4615d5d4ab32c6ec26ea3070b33d302e7d
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_prompt_text_locked_execution_unauthorized
+    notes: final_prompt_text_locked_execution_unauthorized
   - baseline_family: validator_only
     prompt_version: gate8l_validator_only_v1
-    prompt_status: candidate_locked
+    prompt_status: final_locked
     prompt_file: prompts/gate8/main_v1/validator_only.md
     prompt_sha256: 05628c10ff2c16f4db0eb30ba6746bce9b1405770f5340eb28661ff51ccfe3f7
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_prompt_text_locked_execution_unauthorized
+    notes: final_prompt_text_locked_execution_unauthorized
   - baseline_family: ledger_only
     prompt_version: gate8l_ledger_only_v1
-    prompt_status: candidate_locked
+    prompt_status: final_locked
     prompt_file: prompts/gate8/main_v1/ledger_only.md
     prompt_sha256: fb681c82826c99d2db5098a31ff5916504aeed5fc8e1308c2aa7679e0347d26a
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_prompt_text_locked_execution_unauthorized
+    notes: final_prompt_text_locked_execution_unauthorized
   - baseline_family: ledger_validator
     prompt_version: gate8l_ledger_validator_v1
-    prompt_status: candidate_locked
+    prompt_status: final_locked
     prompt_file: prompts/gate8/main_v1/ledger_validator.md
     prompt_sha256: 5929a8facb1fcb57e0ca8ab343d22f27fbe30c9dc8b6077704231212ba477e57
     authorized_to_run: false
     requires_provider_freeze: true
-    notes: candidate_prompt_text_locked_execution_unauthorized
+    notes: final_prompt_text_locked_execution_unauthorized
 
 blockers:
-  - final_prompt_versions_unlocked
-  - final_prompt_text_not_frozen
-  - provider_not_finalized
   - execution_not_authorized
