@@ -1,0 +1,25 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8t_hotpotqa_mini_main_run
+status: completed
+run_id: gate8t_hotpotqa_mini_run
+dataset_id: hotpotqa
+split: dev_distractor
+source_snapshot_id: hotpotqa_dev_distractor_official_78487b5e57e5423c
+retrieval_index_path: datasets/retrieval_indexes/main_v1/hotpotqa/dev_distractor/index_manifest.json
+baselines:
+  - vanilla_rag
+  - ledger_validator
+question_count: 10
+attempted_call_count: 20
+success_count: 20
+failure_count: 0
+total_prompt_tokens: 277572
+total_completion_tokens: 3051
+estimated_cost_usd: 0.123398
+pricing_source: https://api-docs.deepseek.com/quick_start/pricing
+started_at: 2026-05-18T04:06:00Z
+completed_at: 2026-05-18T04:09:26Z
+artifact_path: artifacts/gate8/main_v1/mini_run/latest
+not_paper_result: true
+notes: first_real_gate8t_mini_run_completed_not_a_paper_result_raw_artifacts_ignored
