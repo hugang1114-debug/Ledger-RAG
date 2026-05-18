@@ -69,6 +69,9 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `experiments/cards/E020-gate8o-deepseek-smoke-run-authorization.md` - smoke-only DeepSeek authorization card
 - `experiments/cards/E023-gate8r-deepseek-provider-evidence-lock.md` - DeepSeek provider evidence lock card
 - `experiments/cards/E024-gate8s-main-prompt-config-freeze.md` - non-running final prompt/config freeze card
+- `configs/gate8/hotpotqa_mini_run_summary.yaml` - tracked Gate 8T HotpotQA mini-run summary
+- `configs/gate8/hotpotqa_mini_run_review.yaml` - tracked Gate 8U mini-run review summary
+- `experiments/cards/E026-gate8u-mini-run-output-review.md` - mini-run output review card
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
