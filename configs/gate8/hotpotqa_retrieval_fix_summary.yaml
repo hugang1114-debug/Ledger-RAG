@@ -1,0 +1,17 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8v_hotpotqa_retrieval_fix
+status: completed
+fix: question_scoped_hotpotqa_context_filter
+reason: gate8u_review_found_support_hit_rate_0_0_with_global_lexical_retrieval
+dry_run_artifact_path: artifacts/gate8/main_v1/mini_run/retrieval_fix_dry_run
+dataset_id: hotpotqa
+split: dev_distractor
+question_count: 10
+baseline_count: 2
+model_calls: 0
+before_support_hit_rate: 0.0
+after_support_hit_rate: 1.0
+after_refusal_rate: 0.0
+recommendation: rerun_gate8t_mini_run_with_fixed_retrieval_before_scaling
+notes: hotpotqa_distractor_retrieval_should_rank_within_question_context_source_doc_ids_for_this_v1_pipeline

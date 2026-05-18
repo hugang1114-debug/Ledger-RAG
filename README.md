@@ -72,6 +72,8 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `configs/gate8/hotpotqa_mini_run_summary.yaml` - tracked Gate 8T HotpotQA mini-run summary
 - `configs/gate8/hotpotqa_mini_run_review.yaml` - tracked Gate 8U mini-run review summary
 - `experiments/cards/E026-gate8u-mini-run-output-review.md` - mini-run output review card
+- `configs/gate8/hotpotqa_retrieval_fix_summary.yaml` - tracked Gate 8V retrieval repair summary
+- `experiments/cards/E027-gate8v-hotpotqa-retrieval-fix.md` - HotpotQA retrieval repair card
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder

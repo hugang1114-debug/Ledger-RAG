@@ -138,15 +138,26 @@ def _load_corpus(corpus_path):
     return {row["source_doc_id"]: row for row in _read_jsonl(corpus_path)}
 
 
-def rank_evidence(question_text, index_manifest_path, corpus_path, top_k=DEFAULT_TOP_K):
+def rank_evidence(question_text, index_manifest_path, corpus_path, top_k=DEFAULT_TOP_K, allowed_source_doc_ids=None):
     manifest, document_by_internal_id, postings_by_token = _load_index(index_manifest_path)
     corpus_by_source_doc_id = _load_corpus(corpus_path)
+    allowed_source_doc_ids = set(allowed_source_doc_ids or [])
     scores = defaultdict(float)
     for token in tokenize(question_text):
         for posting in postings_by_token.get(token, []):
-            scores[int(posting["internal_doc_id"])] += float(posting.get("term_frequency", 0))
+            internal_doc_id = int(posting["internal_doc_id"])
+            source_doc_id = document_by_internal_id[internal_doc_id]["source_doc_id"]
+            if allowed_source_doc_ids and source_doc_id not in allowed_source_doc_ids:
+                continue
+            scores[internal_doc_id] += float(posting.get("term_frequency", 0))
 
     ranked_ids = sorted(scores, key=lambda doc_id: (-scores[doc_id], str(document_by_internal_id[doc_id]["source_doc_id"])))
+    if allowed_source_doc_ids:
+        scored_source_doc_ids = {document_by_internal_id[doc_id]["source_doc_id"] for doc_id in ranked_ids}
+        for internal_doc_id, document in document_by_internal_id.items():
+            source_doc_id = document["source_doc_id"]
+            if source_doc_id in allowed_source_doc_ids and source_doc_id not in scored_source_doc_ids:
+                ranked_ids.append(internal_doc_id)
     evidence = []
     for rank, internal_doc_id in enumerate(ranked_ids[: int(top_k)], start=1):
         document = document_by_internal_id[internal_doc_id]
@@ -394,7 +405,13 @@ def run_hotpotqa_mini_run(
     json_parse_failures = 0
     provider_failures = 0
     for question in questions:
-        evidence = rank_evidence(question["question_text"], index_manifest_path, corpus_path, top_k=top_k)
+        evidence = rank_evidence(
+            question["question_text"],
+            index_manifest_path,
+            corpus_path,
+            top_k=top_k,
+            allowed_source_doc_ids=question.get("context_source_doc_ids") or [],
+        )
         retrieval_records.append({"question_id": question["question_id"], "evidence": evidence})
         for baseline in baselines:
             per_run_id = f"{run_id}_{baseline}_{question['question_id']}"

@@ -141,6 +141,54 @@ def test_rank_evidence_returns_stable_index_backed_records(tmp_path):
     assert evidence[0]["ledger_span_id"] == "doc_yoruba"
 
 
+def test_rank_evidence_can_filter_to_hotpotqa_question_context(tmp_path):
+    root = _fixture_root(tmp_path)
+    manifest = root / "datasets" / "retrieval_indexes" / "main_v1" / "hotpotqa" / "dev_distractor" / "index_manifest.json"
+    corpus = root / "datasets" / "source_snapshots" / "hotpotqa" / "dev_distractor" / "processed" / "corpus.jsonl"
+
+    evidence = rank_evidence(
+        "Which dialect says spiddekaga?",
+        manifest,
+        corpus,
+        top_k=8,
+        allowed_source_doc_ids=["doc_scanian"],
+    )
+
+    assert [item["source_doc_id"] for item in evidence] == ["doc_scanian"]
+
+
+def test_runner_uses_question_context_filter_for_retrieval(tmp_path):
+    root = _fixture_root(tmp_path)
+    output = tmp_path / "out"
+
+    def fake_transport(_base_url, _api_key, request_payload, _timeout_seconds):
+        content = {
+            "global_answer": "Scanian dialects" if "doc_scanian" in json.dumps(request_payload) else "Yoruba people",
+            "atomic_claims": [{"claim_id": "c1", "text": "Answer from scoped context.", "citations": ["doc_scanian"]}],
+            "citations": [{"claim_id": "c1", "cited_evidence_id": "doc_scanian"}],
+            "refusal": False,
+            "refusal_reason": "",
+        }
+        return {
+            "choices": [{"message": {"content": json.dumps(content)}}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+        }
+
+    run_hotpotqa_mini_run(
+        repo_root=root,
+        output_path=output,
+        sample_count=2,
+        baselines=["vanilla_rag"],
+        api_key="fake-key",
+        base_url="https://api.deepseek.com",
+        transport=fake_transport,
+    )
+    retrieval_records = [json.loads(line) for line in (output / "retrieval_records.jsonl").read_text(encoding="utf-8").splitlines()]
+
+    assert [item["source_doc_id"] for item in retrieval_records[0]["evidence"]] == ["doc_yoruba"]
+    assert [item["source_doc_id"] for item in retrieval_records[1]["evidence"]] == ["doc_scanian"]
+
+
 def test_build_chat_request_includes_frozen_metadata_and_baseline_policy():
     request = build_chat_request(
         baseline_family="ledger_validator",
