@@ -15,6 +15,7 @@ from ledger_rag_main.hotpotqa_mini_run import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "scripts" / "run_gate8t_hotpotqa_mini_run.py"
+BATCH_CLI = ROOT / "scripts" / "run_gate8_main_v1_batch.py"
 
 
 def _write_json(path, payload):
@@ -375,3 +376,40 @@ def test_cli_dry_run_writes_no_raw_response(tmp_path):
     assert result.returncode == 0, result.stderr
     assert (output / "request_manifest.jsonl").is_file()
     assert not (output / "raw_responses.jsonl").exists()
+
+
+def test_main_v1_batch_cli_dry_run_writes_batch_summary(tmp_path):
+    root = _fixture_root(tmp_path)
+    output = tmp_path / "batch"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(BATCH_CLI),
+            "--repo-root",
+            str(root),
+            "--datasets",
+            "hotpotqa",
+            "--sample-count",
+            "1",
+            "--baselines",
+            "vanilla_rag",
+            "ledger_validator",
+            "--output-root",
+            str(output),
+            "--dry-run",
+            "--max-provider-attempts",
+            "3",
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    summary = json.loads((output / "batch_summary.json").read_text(encoding="utf-8"))
+    assert summary["dataset_count"] == 1
+    assert summary["total_success_count"] == 2
+    assert summary["total_failure_count"] == 0
+    assert summary["max_provider_attempts"] == 3
+    assert (output / "hotpotqa" / "run_records.jsonl").is_file()

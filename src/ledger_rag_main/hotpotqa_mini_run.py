@@ -78,12 +78,16 @@ def _resolve_repo_path(repo_root, value):
     return Path(repo_root) / path
 
 
-def _load_hotpotqa_record(repo_root, registry_path=DEFAULT_REGISTRY):
+def _load_snapshot_record(repo_root, dataset_id, registry_path=DEFAULT_REGISTRY):
     registry = json.loads(_resolve_repo_path(repo_root, registry_path).read_text(encoding="utf-8"))
     for record in registry.get("snapshots", []):
-        if record.get("dataset_id") == "hotpotqa":
+        if record.get("dataset_id") == dataset_id:
             return record
-    raise ValueError("hotpotqa snapshot record not found")
+    raise ValueError(f"{dataset_id} snapshot record not found")
+
+
+def _load_hotpotqa_record(repo_root, registry_path=DEFAULT_REGISTRY):
+    return _load_snapshot_record(repo_root, "hotpotqa", registry_path=registry_path)
 
 
 def _load_prompt_versions(repo_root):
@@ -266,13 +270,13 @@ def _normalize_citations(answer_payload, evidence):
     return citations
 
 
-def _build_run_record(run_id, baseline_family, question, evidence, answer_payload, usage, latency_ms, prompt_version, source_snapshot_id):
+def _build_run_record(run_id, baseline_family, question, evidence, answer_payload, usage, latency_ms, prompt_version, source_snapshot_id, dataset_id, split):
     claims = _normalize_claims(answer_payload)
     citations = _normalize_citations(answer_payload, evidence)
     return {
         "input": {
-            "dataset_id": "hotpotqa",
-            "split": "dev_distractor",
+            "dataset_id": dataset_id,
+            "split": split,
             "question_id": question["question_id"],
             "question_text": question["question_text"],
             "corpus_snapshot_id": source_snapshot_id,
@@ -322,7 +326,7 @@ def _build_metric_record(run_record):
     return {
         "metric_record": {
             "run_id": run_record["run_metadata"]["run_id"],
-            "dataset_id": "hotpotqa",
+            "dataset_id": run_record["input"]["dataset_id"],
             "baseline_family": run_record["run_metadata"]["baseline_family"],
             "question_count": 1,
             "refusal_count": 1 if run_record["answer"]["refusal_label"] != "answered" else 0,
@@ -395,11 +399,12 @@ def run_hotpotqa_mini_run(
     dry_run=False,
     max_provider_attempts=DEFAULT_PROVIDER_ATTEMPTS,
     resume_from=None,
+    dataset_id="hotpotqa",
 ):
     repo_root = Path(repo_root)
     output = Path(output_path)
     output.mkdir(parents=True, exist_ok=True)
-    snapshot = _load_hotpotqa_record(repo_root)
+    snapshot = _load_snapshot_record(repo_root, dataset_id)
     dataset_path = _resolve_repo_path(repo_root, snapshot["dataset_path"])
     questions_path = dataset_path / "processed" / "questions.jsonl"
     corpus_path = dataset_path / "processed" / "corpus.jsonl"
@@ -412,7 +417,8 @@ def run_hotpotqa_mini_run(
     max_output_tokens = int(generation_constraints.get("max_output_tokens", DEFAULT_MAX_OUTPUT_TOKENS))
     top_k = int(generation_constraints.get("max_evidence_items", DEFAULT_TOP_K))
     questions = load_questions(questions_path, sample_count)
-    run_id = "gate8t_hotpotqa_mini_run"
+    split = snapshot["split"]
+    run_id = f"gate8_main_v1_{dataset_id}_run"
     started_at = _utc_now()
 
     resumed_run_records, resumed_metric_records = _load_resume_records(resume_from)
@@ -516,6 +522,8 @@ def run_hotpotqa_mini_run(
                 latency_ms,
                 prompt_versions.get(baseline, "unset"),
                 snapshot["source_snapshot_id"],
+                dataset_id,
+                split,
             )
             run_records.append(run_record)
             metric_records.append(_build_metric_record(run_record))
@@ -525,8 +533,8 @@ def run_hotpotqa_mini_run(
     summary = {
         "run_id": run_id,
         "stage": "gate8t_hotpotqa_mini_main_run",
-        "dataset_id": "hotpotqa",
-        "split": "dev_distractor",
+        "dataset_id": dataset_id,
+        "split": split,
         "source_snapshot_id": snapshot["source_snapshot_id"],
         "retrieval_index_path": snapshot["retrieval_index_path"],
         "baselines": list(baselines),
