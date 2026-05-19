@@ -79,6 +79,8 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `experiments/cards/E029-gate8x-provider-retry-resume.md` - provider retry/resume implementation card
 - `configs/gate8/main_v1_launch_command.yaml` - prepared first real main batch command
 - `experiments/cards/E030-gate8-main-v1-launch-prepared.md` - first real main batch launch card
+- `configs/gate8/main_v1_50x2x3_result_summary.yaml` - tracked summary of the first real main batch
+- `experiments/cards/E031-gate8-first-real-main-batch.md` - first real main batch result card
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
