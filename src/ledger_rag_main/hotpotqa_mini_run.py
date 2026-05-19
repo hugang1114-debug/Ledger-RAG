@@ -56,6 +56,20 @@ def _write_yaml(path, payload):
     Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _emit_progress(progress_path, progress_stream, progress):
+    if progress_path:
+        _write_json(progress_path, progress)
+    if progress_stream:
+        line = (
+            f"[{progress['dataset_id']}] {progress['question_index']}/{progress['question_count']} q "
+            f"| baseline={progress['baseline_family']} "
+            f"| ok={progress['success_count']} fail={progress['failure_count']} skipped={progress['skipped_count']} "
+            f"| cost=${progress['estimated_cost_usd']:.6f} | status={progress['status']}"
+        )
+        progress_stream.write(line + "\n")
+        progress_stream.flush()
+
+
 def _read_jsonl(path):
     rows = []
     with Path(path).open("r", encoding="utf-8") as handle:
@@ -400,6 +414,8 @@ def run_hotpotqa_mini_run(
     max_provider_attempts=DEFAULT_PROVIDER_ATTEMPTS,
     resume_from=None,
     dataset_id="hotpotqa",
+    progress_path=None,
+    progress_stream=None,
 ):
     repo_root = Path(repo_root)
     output = Path(output_path)
@@ -420,6 +436,8 @@ def run_hotpotqa_mini_run(
     split = snapshot["split"]
     run_id = f"gate8_main_v1_{dataset_id}_run"
     started_at = _utc_now()
+    baselines = list(baselines)
+    attempted_call_count = len(questions) * len(baselines)
 
     resumed_run_records, resumed_metric_records = _load_resume_records(resume_from)
     completed_run_ids = {record.get("run_metadata", {}).get("run_id") for record in resumed_run_records}
@@ -434,7 +452,8 @@ def run_hotpotqa_mini_run(
 
     json_parse_failures = 0
     provider_failures = 0
-    for question in questions:
+    skipped_count = 0
+    for question_index, question in enumerate(questions, start=1):
         evidence = rank_evidence(
             question["question_text"],
             index_manifest_path,
@@ -446,6 +465,7 @@ def run_hotpotqa_mini_run(
         for baseline in baselines:
             per_run_id = f"{run_id}_{baseline}_{question['question_id']}"
             if per_run_id in completed_run_ids:
+                skipped_count += 1
                 request_manifest.append(
                     {
                         "run_id": per_run_id,
@@ -457,6 +477,27 @@ def run_hotpotqa_mini_run(
                         "provider_attempt_count": 0,
                         "resume_status": "skipped_existing_success",
                     }
+                )
+                _emit_progress(
+                    progress_path,
+                    progress_stream,
+                    {
+                        "dataset_id": dataset_id,
+                        "split": split,
+                        "question_index": question_index,
+                        "question_count": len(questions),
+                        "baseline_family": baseline,
+                        "attempted_call_count": attempted_call_count,
+                        "success_count": len(run_records),
+                        "failure_count": len(failures),
+                        "skipped_count": skipped_count,
+                        "estimated_cost_usd": round(
+                            (total_prompt_tokens / 1_000_000 * INPUT_USD_PER_1M_TOKENS)
+                            + (total_completion_tokens / 1_000_000 * OUTPUT_USD_PER_1M_TOKENS),
+                            6,
+                        ),
+                        "status": "skipped_existing_success",
+                    },
                 )
                 continue
             request_payload = build_chat_request(
@@ -497,6 +538,27 @@ def run_hotpotqa_mini_run(
             except Exception as exc:
                 provider_failures += 1
                 failures.append({"run_id": per_run_id, "error_type": "provider_error", "message": str(exc)})
+                _emit_progress(
+                    progress_path,
+                    progress_stream,
+                    {
+                        "dataset_id": dataset_id,
+                        "split": split,
+                        "question_index": question_index,
+                        "question_count": len(questions),
+                        "baseline_family": baseline,
+                        "attempted_call_count": attempted_call_count,
+                        "success_count": len(run_records),
+                        "failure_count": len(failures),
+                        "skipped_count": skipped_count,
+                        "estimated_cost_usd": round(
+                            (total_prompt_tokens / 1_000_000 * INPUT_USD_PER_1M_TOKENS)
+                            + (total_completion_tokens / 1_000_000 * OUTPUT_USD_PER_1M_TOKENS),
+                            6,
+                        ),
+                        "status": "provider_error",
+                    },
+                )
                 if provider_failures > 2:
                     raise RuntimeError("stopping Gate 8T mini run after repeated provider errors") from exc
                 continue
@@ -505,6 +567,27 @@ def run_hotpotqa_mini_run(
             except Exception as exc:
                 json_parse_failures += 1
                 failures.append({"run_id": per_run_id, "error_type": "json_parse_error", "message": str(exc)})
+                _emit_progress(
+                    progress_path,
+                    progress_stream,
+                    {
+                        "dataset_id": dataset_id,
+                        "split": split,
+                        "question_index": question_index,
+                        "question_count": len(questions),
+                        "baseline_family": baseline,
+                        "attempted_call_count": attempted_call_count,
+                        "success_count": len(run_records),
+                        "failure_count": len(failures),
+                        "skipped_count": skipped_count,
+                        "estimated_cost_usd": round(
+                            (total_prompt_tokens / 1_000_000 * INPUT_USD_PER_1M_TOKENS)
+                            + (total_completion_tokens / 1_000_000 * OUTPUT_USD_PER_1M_TOKENS),
+                            6,
+                        ),
+                        "status": "json_parse_error",
+                    },
+                )
                 if json_parse_failures > 2:
                     raise RuntimeError("stopping Gate 8T mini run after repeated JSON parse failures") from exc
                 continue
@@ -527,6 +610,27 @@ def run_hotpotqa_mini_run(
             )
             run_records.append(run_record)
             metric_records.append(_build_metric_record(run_record))
+            _emit_progress(
+                progress_path,
+                progress_stream,
+                {
+                    "dataset_id": dataset_id,
+                    "split": split,
+                    "question_index": question_index,
+                    "question_count": len(questions),
+                    "baseline_family": baseline,
+                    "attempted_call_count": attempted_call_count,
+                    "success_count": len(run_records),
+                    "failure_count": len(failures),
+                    "skipped_count": skipped_count,
+                    "estimated_cost_usd": round(
+                        (total_prompt_tokens / 1_000_000 * INPUT_USD_PER_1M_TOKENS)
+                        + (total_completion_tokens / 1_000_000 * OUTPUT_USD_PER_1M_TOKENS),
+                        6,
+                    ),
+                    "status": "running",
+                },
+            )
 
     total_cost = round((total_prompt_tokens / 1_000_000 * INPUT_USD_PER_1M_TOKENS) + (total_completion_tokens / 1_000_000 * OUTPUT_USD_PER_1M_TOKENS), 6)
     completed_at = _utc_now()
@@ -539,7 +643,7 @@ def run_hotpotqa_mini_run(
         "retrieval_index_path": snapshot["retrieval_index_path"],
         "baselines": list(baselines),
         "question_count": len(questions),
-        "attempted_call_count": len(questions) * len(list(baselines)),
+        "attempted_call_count": attempted_call_count,
         "success_count": len(run_records),
         "failure_count": len(failures),
         "resumed_record_count": len(resumed_run_records),
@@ -574,4 +678,21 @@ def run_hotpotqa_mini_run(
     _write_yaml(output / "mini_run_summary.yaml", summary)
     if not dry_run:
         _write_jsonl(output / "raw_responses.jsonl", raw_responses)
+    _emit_progress(
+        progress_path,
+        progress_stream,
+        {
+            "dataset_id": dataset_id,
+            "split": split,
+            "question_index": len(questions),
+            "question_count": len(questions),
+            "baseline_family": "complete",
+            "attempted_call_count": attempted_call_count,
+            "success_count": len(run_records),
+            "failure_count": len(failures),
+            "skipped_count": skipped_count,
+            "estimated_cost_usd": total_cost,
+            "status": "completed",
+        },
+    )
     return summary

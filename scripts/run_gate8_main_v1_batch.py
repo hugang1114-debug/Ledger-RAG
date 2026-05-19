@@ -53,6 +53,8 @@ def main():
             max_provider_attempts=args.max_provider_attempts,
             resume_from=resume_from,
             dataset_id=dataset_id,
+            progress_path=output_root / dataset_id / "progress.json",
+            progress_stream=sys.stdout,
         )
         summaries.append(summary)
 

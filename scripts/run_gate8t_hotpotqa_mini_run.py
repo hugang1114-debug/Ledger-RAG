@@ -38,6 +38,8 @@ def main():
         dry_run=args.dry_run,
         max_provider_attempts=args.max_provider_attempts,
         resume_from=args.resume_from,
+        progress_path=Path(args.output) / "progress.json",
+        progress_stream=sys.stdout,
     )
     print(f"gate8t_hotpotqa_mini_run={summary['artifact_path']}")
     print(f"success_count={summary['success_count']}")

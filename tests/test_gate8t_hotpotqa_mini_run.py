@@ -1,4 +1,5 @@
 import json
+import io
 import subprocess
 import sys
 from pathlib import Path
@@ -347,6 +348,48 @@ def test_runner_resume_from_skips_existing_run_records(tmp_path):
     assert summary["total_prompt_tokens"] == 180
     assert summary["total_completion_tokens"] == 90
     assert {record["run_metadata"]["baseline_family"] for record in run_records} == {"vanilla_rag", "ledger_validator"}
+
+
+def test_runner_writes_progress_file_and_console_lines(tmp_path):
+    root = _fixture_root(tmp_path)
+    output = tmp_path / "out"
+    progress_stream = io.StringIO()
+
+    def fake_transport(_base_url, _api_key, _request_payload, _timeout_seconds):
+        content = {
+            "global_answer": "Yoruba people",
+            "atomic_claims": [{"claim_id": "c1", "text": "The Ida was used by Yoruba people."}],
+            "citations": [{"claim_id": "c1", "cited_evidence_id": "doc_yoruba"}],
+            "refusal": False,
+            "refusal_reason": "",
+        }
+        return {
+            "choices": [{"message": {"content": json.dumps(content)}}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+        }
+
+    summary = run_hotpotqa_mini_run(
+        repo_root=root,
+        output_path=output,
+        sample_count=1,
+        baselines=["vanilla_rag", "ledger_validator"],
+        api_key="fake-key",
+        base_url="https://api.deepseek.com",
+        transport=fake_transport,
+        progress_path=output / "progress.json",
+        progress_stream=progress_stream,
+    )
+
+    progress = json.loads((output / "progress.json").read_text(encoding="utf-8"))
+    console_output = progress_stream.getvalue()
+    assert summary["success_count"] == 2
+    assert progress["dataset_id"] == "hotpotqa"
+    assert progress["attempted_call_count"] == 2
+    assert progress["success_count"] == 2
+    assert progress["failure_count"] == 0
+    assert progress["status"] == "completed"
+    assert "[hotpotqa]" in console_output
+    assert "ok=2" in console_output
 
 
 def test_cli_dry_run_writes_no_raw_response(tmp_path):
