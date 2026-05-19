@@ -1,0 +1,93 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8_corrected_50x6x3_result_diagnosis
+status: completed
+source_summary: configs/gate8/main_v1_corrected_50x6x3_result_summary.yaml
+api_calls_made_by_this_step: 0
+overall:
+  run_records: 900
+  datasets: 3
+  baselines: 6
+  support_hit_rate: 0.96
+  refusal_rate: 0.154444
+  claim_to_citation_rate: 0.990119
+  estimated_cost_usd: 1.061699
+baseline_diagnosis:
+  -
+    baseline: vanilla_rag
+    support_hit_rate: 0.96
+    refusal_rate: 0.146667
+    claim_to_citation_rate: 0.909091
+    estimated_cost_usd: 0.176403
+  -
+    baseline: hybrid_rag
+    support_hit_rate: 0.96
+    refusal_rate: 0.1
+    claim_to_citation_rate: 0.964602
+    estimated_cost_usd: 0.176963
+  -
+    baseline: citation_only
+    support_hit_rate: 0.96
+    refusal_rate: 0.146667
+    claim_to_citation_rate: 1.0
+    estimated_cost_usd: 0.177423
+  -
+    baseline: validator_only
+    support_hit_rate: 0.96
+    refusal_rate: 0.16
+    claim_to_citation_rate: 0.97929
+    estimated_cost_usd: 0.175723
+  -
+    baseline: ledger_only
+    support_hit_rate: 0.96
+    refusal_rate: 0.22
+    claim_to_citation_rate: 1.012085
+    estimated_cost_usd: 0.177428
+  -
+    baseline: ledger_validator
+    support_hit_rate: 0.96
+    refusal_rate: 0.153333
+    claim_to_citation_rate: 1.076923
+    estimated_cost_usd: 0.177759
+dataset_diagnosis:
+  -
+    dataset_id: hotpotqa
+    top_k: 8
+    support_hit_rate: 0.9
+    refusal_rate: 0.116667
+    claim_to_citation_rate: 1.013997
+    estimated_cost_usd: 0.30965
+  -
+    dataset_id: 2wikimultihopqa
+    top_k: 8
+    support_hit_rate: 1.0
+    refusal_rate: 0.13
+    claim_to_citation_rate: 0.984456
+    estimated_cost_usd: 0.303964
+  -
+    dataset_id: musique
+    top_k: 16
+    support_hit_rate: 0.98
+    refusal_rate: 0.216667
+    claim_to_citation_rate: 0.972085
+    estimated_cost_usd: 0.448085
+key_findings:
+  - "Retrieval support_hit_rate is identical across baselines because all six baselines use the same dataset-specific retrieval outputs; it should not be interpreted as a baseline quality win."
+  - "hybrid_rag has the lowest refusal_rate overall at 0.10, but this is a prompt-policy slot using the current lexical index, not a true dense-plus-reranker Hybrid RAG implementation."
+  - "ledger_only has the highest refusal_rate overall at 0.22, so ledger formatting alone appears to make the model more conservative in this run."
+  - "ledger_validator has the highest claim_to_citation_rate at 1.076923, but rates above 1 mean multiple citations per claim and do not prove citation faithfulness."
+  - "MuSiQue remains the hardest dataset after the top_k=16 correction, with the highest refusal_rate at 0.216667 and the largest cost share."
+methodology_risks:
+  - "The current validator fields are contract-shape metadata, not a paper-grade independent semantic verifier."
+  - "The current attribution metric counts citation shape and retrieval overlap; it does not prove every cited span supports every atomic claim."
+  - "The current hybrid_rag label should not be reported as a true Hybrid RAG baseline until dense retrieval or reranking is implemented."
+  - "support_hit_rate is any-support-doc overlap, which is too weak for multi-hop sufficiency on MuSiQue and 2WikiMultihopQA."
+recommended_next_steps:
+  - "Do not scale to full split yet; first add claim-to-citation faithfulness auditing on sampled records."
+  - "Treat the current 6-baseline run as an engineering milestone and diagnostic mini-main result, not a paper result."
+  - "Next technical step should be a no-API attribution audit over existing raw artifacts, focusing on whether cited evidence ids actually support the generated atomic claims."
+  - "After audit, decide whether to fix prompts, implement a real verifier, or implement a true hybrid retriever before scaling sample size."
+decision:
+  scale_full_run_now: false
+  reason: current_run_needs_attribution_faithfulness_audit_before_scaling
+  suggested_next_gate_step: gate8_claim_to_citation_audit
