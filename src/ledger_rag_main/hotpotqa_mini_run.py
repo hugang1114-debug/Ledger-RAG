@@ -19,6 +19,14 @@ from ledger_rag_smoke.deepseek_smoke import (
 DEFAULT_REGISTRY = Path("snapshots/main_v1/source_snapshots.json")
 DEFAULT_SAMPLE_COUNT = 10
 DEFAULT_BASELINES = ("vanilla_rag", "ledger_validator")
+SUPPORTED_BASELINES = (
+    "vanilla_rag",
+    "hybrid_rag",
+    "citation_only",
+    "validator_only",
+    "ledger_only",
+    "ledger_validator",
+)
 DEFAULT_TOP_K = 8
 DEFAULT_MAX_OUTPUT_TOKENS = 2048
 DEFAULT_PROVIDER_ATTEMPTS = 2
@@ -211,18 +219,35 @@ def build_chat_request(baseline_family, question_text, evidence, prompt_version,
                 ]
             )
         )
-    if baseline_family == "ledger_validator":
-        baseline_policy = (
-            "This is the ledger_validator baseline. Cite evidence ids as ledger span ids. "
-            "Every factual atomic claim should include citations to provided evidence."
-        )
-    elif baseline_family == "vanilla_rag":
-        baseline_policy = (
+    baseline_policies = {
+        "vanilla_rag": (
             "This is the vanilla_rag baseline. Answer from provided evidence only. "
             "Citations are optional but should be included when clear."
-        )
-    else:
+        ),
+        "hybrid_rag": (
+            "This is the hybrid_rag baseline. Use the retrieved evidence to answer directly. "
+            "Citations may be empty because this baseline tests answer generation without verifier feedback."
+        ),
+        "citation_only": (
+            "This is the citation_only baseline. Every factual atomic claim should cite one or more provided evidence ids. "
+            "Do not cite evidence ids that were not provided."
+        ),
+        "validator_only": (
+            "This is the validator_only baseline. Answer from provided evidence only. "
+            "Citations may reference retrieved evidence ids when available; verifier verdicts are produced after generation."
+        ),
+        "ledger_only": (
+            "This is the ledger_only baseline. Every factual atomic claim should cite one or more provided ledger span ids. "
+            "Do not cite spans outside the current run ledger."
+        ),
+        "ledger_validator": (
+            "This is the ledger_validator baseline. Cite evidence ids as ledger span ids. "
+            "Every factual atomic claim should include citations to provided evidence."
+        ),
+    }
+    if baseline_family not in baseline_policies:
         raise ValueError(f"unsupported baseline_family: {baseline_family}")
+    baseline_policy = baseline_policies[baseline_family]
 
     return {
         "model": MODEL_ID,
@@ -313,7 +338,7 @@ def _build_run_record(run_id, baseline_family, question, evidence, answer_payloa
         "verdicts": [
             {
                 "claim_id": claim["claim_id"],
-                "verifier_enabled": baseline_family == "ledger_validator",
+                "verifier_enabled": baseline_family in {"validator_only", "ledger_validator"},
                 "label": "not_checked" if citations else "insufficient",
                 "score": None,
                 "rationale": "Gate 8T mini run uses provider output shape checks; semantic verifier is not yet a paper-grade verifier.",

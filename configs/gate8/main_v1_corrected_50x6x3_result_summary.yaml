@@ -1,0 +1,477 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8_corrected_main_v1_50x6x3_summary
+status: completed
+merge_type: corrected_artifact_summary_reusing_old_two_baselines_plus_new_four_baselines
+provider: deepseek
+model: deepseek-v4-pro
+datasets:
+  - hotpotqa
+  - 2wikimultihopqa
+  - musique
+baselines:
+  - vanilla_rag
+  - hybrid_rag
+  - citation_only
+  - validator_only
+  - ledger_only
+  - ledger_validator
+sample_count_per_dataset: 50
+total_questions: 150
+total_run_records: 900
+total_provider_calls_reused: 300
+total_provider_calls_new: 600
+total_provider_calls_represented: 900
+total_failure_count: 0
+total_estimated_cost_usd: 1.061699
+total_prompt_tokens: 1998960
+total_completion_tokens: 220858
+overall:
+  record_count: 900
+  support_hit_count: 864
+  support_hit_rate: 0.96
+  refusal_count: 139
+  refusal_rate: 0.154444
+  citation_count: 2004
+  claim_count: 2024
+  claim_to_citation_rate: 0.990119
+  total_prompt_tokens: 1998960
+  total_completion_tokens: 220858
+  estimated_cost_usd: 1.061699
+by_baseline:
+  vanilla_rag:
+    record_count: 150
+    support_hit_count: 144
+    support_hit_rate: 0.96
+    refusal_count: 22
+    refusal_rate: 0.146667
+    citation_count: 310
+    claim_count: 341
+    claim_to_citation_rate: 0.909091
+    total_prompt_tokens: 332660
+    total_completion_tokens: 36432
+    estimated_cost_usd: 0.176403
+  hybrid_rag:
+    record_count: 150
+    support_hit_count: 144
+    support_hit_rate: 0.96
+    refusal_count: 15
+    refusal_rate: 0.1
+    citation_count: 327
+    claim_count: 339
+    claim_to_citation_rate: 0.964602
+    total_prompt_tokens: 333710
+    total_completion_tokens: 36551
+    estimated_cost_usd: 0.176963
+  citation_only:
+    record_count: 150
+    support_hit_count: 144
+    support_hit_rate: 0.96
+    refusal_count: 22
+    refusal_rate: 0.146667
+    citation_count: 337
+    claim_count: 337
+    claim_to_citation_rate: 1.0
+    total_prompt_tokens: 332960
+    total_completion_tokens: 37452
+    estimated_cost_usd: 0.177423
+  validator_only:
+    record_count: 150
+    support_hit_count: 144
+    support_hit_rate: 0.96
+    refusal_count: 24
+    refusal_rate: 0.16
+    citation_count: 331
+    claim_count: 338
+    claim_to_citation_rate: 0.97929
+    total_prompt_tokens: 333110
+    total_completion_tokens: 35424
+    estimated_cost_usd: 0.175723
+  ledger_only:
+    record_count: 150
+    support_hit_count: 144
+    support_hit_rate: 0.96
+    refusal_count: 33
+    refusal_rate: 0.22
+    citation_count: 335
+    claim_count: 331
+    claim_to_citation_rate: 1.012085
+    total_prompt_tokens: 333410
+    total_completion_tokens: 37230
+    estimated_cost_usd: 0.177428
+  ledger_validator:
+    record_count: 150
+    support_hit_count: 144
+    support_hit_rate: 0.96
+    refusal_count: 23
+    refusal_rate: 0.153333
+    citation_count: 364
+    claim_count: 338
+    claim_to_citation_rate: 1.076923
+    total_prompt_tokens: 333110
+    total_completion_tokens: 37769
+    estimated_cost_usd: 0.177759
+dataset_results:
+  -
+    record_count: 300
+    support_hit_count: 270
+    support_hit_rate: 0.9
+    refusal_count: 35
+    refusal_rate: 0.116667
+    citation_count: 652
+    claim_count: 643
+    claim_to_citation_rate: 1.013997
+    total_prompt_tokens: 571066
+    total_completion_tokens: 70381
+    estimated_cost_usd: 0.30965
+    dataset_id: hotpotqa
+    split: dev_distractor
+    top_k: 8
+  -
+    record_count: 300
+    support_hit_count: 300
+    support_hit_rate: 1.0
+    refusal_count: 39
+    refusal_rate: 0.13
+    citation_count: 760
+    claim_count: 772
+    claim_to_citation_rate: 0.984456
+    total_prompt_tokens: 522118
+    total_completion_tokens: 88323
+    estimated_cost_usd: 0.303964
+    dataset_id: 2wikimultihopqa
+    split: dev
+    top_k: 8
+  -
+    record_count: 300
+    support_hit_count: 294
+    support_hit_rate: 0.98
+    refusal_count: 65
+    refusal_rate: 0.216667
+    citation_count: 592
+    claim_count: 609
+    claim_to_citation_rate: 0.972085
+    total_prompt_tokens: 905776
+    total_completion_tokens: 62154
+    estimated_cost_usd: 0.448085
+    dataset_id: musique
+    split: dev
+    top_k: 16
+dataset_baseline_results:
+  -
+    record_count: 50
+    support_hit_count: 45
+    support_hit_rate: 0.9
+    refusal_count: 3
+    refusal_rate: 0.06
+    citation_count: 102
+    claim_count: 105
+    claim_to_citation_rate: 0.971429
+    total_prompt_tokens: 95011
+    total_completion_tokens: 11639
+    estimated_cost_usd: 0.051455
+    dataset_id: hotpotqa
+    baseline: vanilla_rag
+  -
+    record_count: 50
+    support_hit_count: 45
+    support_hit_rate: 0.9
+    refusal_count: 1
+    refusal_rate: 0.02
+    citation_count: 102
+    claim_count: 105
+    claim_to_citation_rate: 0.971429
+    total_prompt_tokens: 95361
+    total_completion_tokens: 11279
+    estimated_cost_usd: 0.051296
+    dataset_id: hotpotqa
+    baseline: hybrid_rag
+  -
+    record_count: 50
+    support_hit_count: 45
+    support_hit_rate: 0.9
+    refusal_count: 8
+    refusal_rate: 0.16
+    citation_count: 104
+    claim_count: 105
+    claim_to_citation_rate: 0.990476
+    total_prompt_tokens: 95111
+    total_completion_tokens: 11772
+    estimated_cost_usd: 0.051617
+    dataset_id: hotpotqa
+    baseline: citation_only
+  -
+    record_count: 50
+    support_hit_count: 45
+    support_hit_rate: 0.9
+    refusal_count: 6
+    refusal_rate: 0.12
+    citation_count: 98
+    claim_count: 97
+    claim_to_citation_rate: 1.010309
+    total_prompt_tokens: 95161
+    total_completion_tokens: 10476
+    estimated_cost_usd: 0.050509
+    dataset_id: hotpotqa
+    baseline: validator_only
+  -
+    record_count: 50
+    support_hit_count: 45
+    support_hit_rate: 0.9
+    refusal_count: 13
+    refusal_rate: 0.26
+    citation_count: 113
+    claim_count: 112
+    claim_to_citation_rate: 1.008929
+    total_prompt_tokens: 95261
+    total_completion_tokens: 12225
+    estimated_cost_usd: 0.052076
+    dataset_id: hotpotqa
+    baseline: ledger_only
+  -
+    record_count: 50
+    support_hit_count: 45
+    support_hit_rate: 0.9
+    refusal_count: 4
+    refusal_rate: 0.08
+    citation_count: 133
+    claim_count: 119
+    claim_to_citation_rate: 1.117647
+    total_prompt_tokens: 95161
+    total_completion_tokens: 12990
+    estimated_cost_usd: 0.052697
+    dataset_id: hotpotqa
+    baseline: ledger_validator
+  -
+    record_count: 50
+    support_hit_count: 50
+    support_hit_rate: 1.0
+    refusal_count: 8
+    refusal_rate: 0.16
+    citation_count: 109
+    claim_count: 127
+    claim_to_citation_rate: 0.858268
+    total_prompt_tokens: 86853
+    total_completion_tokens: 14111
+    estimated_cost_usd: 0.050059
+    dataset_id: 2wikimultihopqa
+    baseline: vanilla_rag
+  -
+    record_count: 50
+    support_hit_count: 50
+    support_hit_rate: 1.0
+    refusal_count: 5
+    refusal_rate: 0.1
+    citation_count: 119
+    claim_count: 123
+    claim_to_citation_rate: 0.96748
+    total_prompt_tokens: 87203
+    total_completion_tokens: 14197
+    estimated_cost_usd: 0.050285
+    dataset_id: 2wikimultihopqa
+    baseline: hybrid_rag
+  -
+    record_count: 50
+    support_hit_count: 50
+    support_hit_rate: 1.0
+    refusal_count: 6
+    refusal_rate: 0.12
+    citation_count: 133
+    claim_count: 132
+    claim_to_citation_rate: 1.007576
+    total_prompt_tokens: 86953
+    total_completion_tokens: 15480
+    estimated_cost_usd: 0.051292
+    dataset_id: 2wikimultihopqa
+    baseline: citation_only
+  -
+    record_count: 50
+    support_hit_count: 50
+    support_hit_rate: 1.0
+    refusal_count: 8
+    refusal_rate: 0.16
+    citation_count: 128
+    claim_count: 134
+    claim_to_citation_rate: 0.955224
+    total_prompt_tokens: 87003
+    total_completion_tokens: 14251
+    estimated_cost_usd: 0.050246
+    dataset_id: 2wikimultihopqa
+    baseline: validator_only
+  -
+    record_count: 50
+    support_hit_count: 50
+    support_hit_rate: 1.0
+    refusal_count: 8
+    refusal_rate: 0.16
+    citation_count: 126
+    claim_count: 123
+    claim_to_citation_rate: 1.02439
+    total_prompt_tokens: 87103
+    total_completion_tokens: 14860
+    estimated_cost_usd: 0.050821
+    dataset_id: 2wikimultihopqa
+    baseline: ledger_only
+  -
+    record_count: 50
+    support_hit_count: 50
+    support_hit_rate: 1.0
+    refusal_count: 4
+    refusal_rate: 0.08
+    citation_count: 145
+    claim_count: 133
+    claim_to_citation_rate: 1.090226
+    total_prompt_tokens: 87003
+    total_completion_tokens: 15424
+    estimated_cost_usd: 0.051261
+    dataset_id: 2wikimultihopqa
+    baseline: ledger_validator
+  -
+    record_count: 50
+    support_hit_count: 49
+    support_hit_rate: 0.98
+    refusal_count: 11
+    refusal_rate: 0.22
+    citation_count: 99
+    claim_count: 109
+    claim_to_citation_rate: 0.908257
+    total_prompt_tokens: 150796
+    total_completion_tokens: 10682
+    estimated_cost_usd: 0.074889
+    dataset_id: musique
+    baseline: vanilla_rag
+  -
+    record_count: 50
+    support_hit_count: 49
+    support_hit_rate: 0.98
+    refusal_count: 9
+    refusal_rate: 0.18
+    citation_count: 106
+    claim_count: 111
+    claim_to_citation_rate: 0.954955
+    total_prompt_tokens: 151146
+    total_completion_tokens: 11075
+    estimated_cost_usd: 0.075382
+    dataset_id: musique
+    baseline: hybrid_rag
+  -
+    record_count: 50
+    support_hit_count: 49
+    support_hit_rate: 0.98
+    refusal_count: 8
+    refusal_rate: 0.16
+    citation_count: 100
+    claim_count: 100
+    claim_to_citation_rate: 1.0
+    total_prompt_tokens: 150896
+    total_completion_tokens: 10200
+    estimated_cost_usd: 0.074514
+    dataset_id: musique
+    baseline: citation_only
+  -
+    record_count: 50
+    support_hit_count: 49
+    support_hit_rate: 0.98
+    refusal_count: 10
+    refusal_rate: 0.2
+    citation_count: 105
+    claim_count: 107
+    claim_to_citation_rate: 0.981308
+    total_prompt_tokens: 150946
+    total_completion_tokens: 10697
+    estimated_cost_usd: 0.074968
+    dataset_id: musique
+    baseline: validator_only
+  -
+    record_count: 50
+    support_hit_count: 49
+    support_hit_rate: 0.98
+    refusal_count: 12
+    refusal_rate: 0.24
+    citation_count: 96
+    claim_count: 96
+    claim_to_citation_rate: 1.0
+    total_prompt_tokens: 151046
+    total_completion_tokens: 10145
+    estimated_cost_usd: 0.074531
+    dataset_id: musique
+    baseline: ledger_only
+  -
+    record_count: 50
+    support_hit_count: 49
+    support_hit_rate: 0.98
+    refusal_count: 15
+    refusal_rate: 0.3
+    citation_count: 86
+    claim_count: 86
+    claim_to_citation_rate: 1.0
+    total_prompt_tokens: 150946
+    total_completion_tokens: 9355
+    estimated_cost_usd: 0.073801
+    dataset_id: musique
+    baseline: ledger_validator
+run_sources:
+  -
+    dataset_id: hotpotqa
+    baselines:
+      - vanilla_rag
+      - ledger_validator
+    artifact_path: artifacts/gate8/main_v1/runs/deepseek_v4_pro_50x2x3/hotpotqa
+    top_k: 8
+    source: reused_corrected_50x2x3
+  -
+    dataset_id: 2wikimultihopqa
+    baselines:
+      - vanilla_rag
+      - ledger_validator
+    artifact_path: artifacts/gate8/main_v1/runs/deepseek_v4_pro_50x2x3/2wikimultihopqa
+    top_k: 8
+    source: reused_corrected_50x2x3
+  -
+    dataset_id: musique
+    baselines:
+      - vanilla_rag
+      - ledger_validator
+    artifact_path: artifacts/gate8/main_v1/runs/musique_topk16_50x2/musique
+    top_k: 16
+    source: reused_musique_topk16_50x2
+  -
+    dataset_id: hotpotqa
+    baselines:
+      - hybrid_rag
+      - citation_only
+      - validator_only
+      - ledger_only
+    artifact_path: artifacts/gate8/main_v1/runs/new4_hotpotqa_2wiki_50x4/hotpotqa
+    top_k: 8
+    source: new4_50x4
+  -
+    dataset_id: 2wikimultihopqa
+    baselines:
+      - hybrid_rag
+      - citation_only
+      - validator_only
+      - ledger_only
+    artifact_path: artifacts/gate8/main_v1/runs/new4_hotpotqa_2wiki_50x4/2wikimultihopqa
+    top_k: 8
+    source: new4_50x4
+  -
+    dataset_id: musique
+    baselines:
+      - hybrid_rag
+      - citation_only
+      - validator_only
+      - ledger_only
+    artifact_path: artifacts/gate8/main_v1/runs/new4_musique_topk16_50x4/musique
+    top_k: 16
+    source: new4_musique_topk16_50x4
+correction_reason: musique_top_k_8_had_incomplete_multihop_support_retrieval_and_high_refusal_rate
+interpretation: corrected_summary_uses_hotpotqa_and_2wiki_top_k_8_and_musique_top_k_16_with_all_six_baseline_families
+methodology_notes:
+  - support_hit_rate_is_any_gold_support_doc_overlap_with_retrieved_docs_not_answer_correctness
+  - hybrid_rag_currently_uses_the_shared_lexical_index_artifacts_and_a_hybrid_prompt_policy_slot_not_a_dense_retriever
+  - validator_only_and_ledger_validator_are_prompt_and_contract_variants_in_this_batch_not_external_semantic_verifier_results
+  - raw_model_answers_and_provider_responses_remain_in_ignored_artifacts_only
+  - summary_is_a_corrected_mini_main_run_summary_not_a_final_paper_result
+not_full_gate8_pass: true
+remaining_scope_gap: main_comparison_acceptance_still_needs_methodology_review_before_paper_claims
