@@ -1,0 +1,26 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8_corrected_result_analysis
+status: completed
+source_summary: configs/gate8/main_v1_corrected_50x2x3_result_summary.yaml
+records_analyzed: 300
+baselines:
+  - vanilla_rag
+  - ledger_validator
+aggregate:
+  refusal_rate: 0.15
+  support_hit_rate: 0.96
+  claim_citation_coverage: 0.94109
+  invalid_citation_rate: 0.120178
+baseline_comparison:
+  vanilla_rag:
+    refusal_rate: 0.146667
+    claim_citation_coverage: 0.88563
+    invalid_citation_rate: 0.193548
+  ledger_validator:
+    refusal_rate: 0.153333
+    claim_citation_coverage: 0.997041
+    invalid_citation_rate: 0.057692
+main_finding: ledger_validator_improves_claim_citation_coverage_and_reduces_invalid_citations_under_same_model_and_snapshots
+main_caution: corrected_results_do_not_establish_universal_answer_accuracy_improvement
+recommended_next_step: add_stricter_attribution_metrics_before_scaling_or_claiming_full_gate8

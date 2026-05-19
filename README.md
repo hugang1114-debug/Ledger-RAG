@@ -86,6 +86,9 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `experiments/cards/E033-musique-topk16-calibration.md` - MuSiQue top-k calibration card
 - `configs/gate8/main_v1_corrected_50x2x3_result_summary.yaml` - corrected first main-result summary reusing HotpotQA, 2Wiki, and MuSiQue top-k calibration artifacts
 - `experiments/cards/E034-corrected-main-v1-result-merge.md` - corrected main-result merge card
+- `docs/gate8-corrected-result-analysis.md` - corrected first main-result analysis
+- `configs/gate8/main_v1_corrected_analysis_summary.yaml` - tracked corrected analysis summary
+- `experiments/cards/E035-corrected-result-analysis.md` - corrected result analysis card
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
