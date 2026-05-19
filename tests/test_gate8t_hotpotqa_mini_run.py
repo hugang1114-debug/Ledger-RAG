@@ -245,6 +245,109 @@ def test_runner_with_fake_transport_writes_required_artifacts(tmp_path):
     assert "fake-key" not in (output / "request_manifest.jsonl").read_text(encoding="utf-8")
 
 
+def test_runner_retries_provider_until_configured_attempt_limit(tmp_path):
+    root = _fixture_root(tmp_path)
+    output = tmp_path / "out"
+    attempts = {"count": 0}
+
+    def flaky_transport(_base_url, _api_key, _request_payload, _timeout_seconds):
+        attempts["count"] += 1
+        if attempts["count"] < 3:
+            raise RuntimeError("temporary provider disconnect")
+        content = {
+            "global_answer": "Yoruba people",
+            "atomic_claims": [{"claim_id": "c1", "text": "The Ida was used by Yoruba people."}],
+            "citations": [{"claim_id": "c1", "cited_evidence_id": "doc_yoruba"}],
+            "refusal": False,
+            "refusal_reason": "",
+        }
+        return {
+            "choices": [{"message": {"content": json.dumps(content)}}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+        }
+
+    summary = run_hotpotqa_mini_run(
+        repo_root=root,
+        output_path=output,
+        sample_count=1,
+        baselines=["vanilla_rag"],
+        api_key="fake-key",
+        base_url="https://api.deepseek.com",
+        transport=flaky_transport,
+        max_provider_attempts=3,
+    )
+
+    request_manifest = [json.loads(line) for line in (output / "request_manifest.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert attempts["count"] == 3
+    assert summary["success_count"] == 1
+    assert summary["failure_count"] == 0
+    assert request_manifest[0]["provider_attempt_count"] == 3
+
+
+def test_runner_resume_from_skips_existing_run_records(tmp_path):
+    root = _fixture_root(tmp_path)
+    first_output = tmp_path / "first"
+    resumed_output = tmp_path / "resumed"
+
+    def first_transport(_base_url, _api_key, _request_payload, _timeout_seconds):
+        content = {
+            "global_answer": "Yoruba people",
+            "atomic_claims": [{"claim_id": "c1", "text": "The Ida was used by Yoruba people."}],
+            "citations": [{"claim_id": "c1", "cited_evidence_id": "doc_yoruba"}],
+            "refusal": False,
+            "refusal_reason": "",
+        }
+        return {
+            "choices": [{"message": {"content": json.dumps(content)}}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+        }
+
+    run_hotpotqa_mini_run(
+        repo_root=root,
+        output_path=first_output,
+        sample_count=1,
+        baselines=["vanilla_rag"],
+        api_key="fake-key",
+        base_url="https://api.deepseek.com",
+        transport=first_transport,
+    )
+    calls = []
+
+    def resume_transport(_base_url, _api_key, request_payload, _timeout_seconds):
+        calls.append(request_payload["messages"][0]["content"])
+        content = {
+            "global_answer": "Yoruba people",
+            "atomic_claims": [{"claim_id": "c1", "text": "The Ida was used by Yoruba people."}],
+            "citations": [{"claim_id": "c1", "cited_evidence_id": "doc_yoruba"}],
+            "refusal": False,
+            "refusal_reason": "",
+        }
+        return {
+            "choices": [{"message": {"content": json.dumps(content)}}],
+            "usage": {"prompt_tokens": 80, "completion_tokens": 40, "total_tokens": 120},
+        }
+
+    summary = run_hotpotqa_mini_run(
+        repo_root=root,
+        output_path=resumed_output,
+        sample_count=1,
+        baselines=["vanilla_rag", "ledger_validator"],
+        api_key="fake-key",
+        base_url="https://api.deepseek.com",
+        transport=resume_transport,
+        resume_from=first_output,
+    )
+
+    run_records = [json.loads(line) for line in (resumed_output / "run_records.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert len(calls) == 1
+    assert "ledger_validator" in calls[0]
+    assert summary["success_count"] == 2
+    assert summary["resumed_record_count"] == 1
+    assert summary["total_prompt_tokens"] == 180
+    assert summary["total_completion_tokens"] == 90
+    assert {record["run_metadata"]["baseline_family"] for record in run_records} == {"vanilla_rag", "ledger_validator"}
+
+
 def test_cli_dry_run_writes_no_raw_response(tmp_path):
     root = _fixture_root(tmp_path)
     output = tmp_path / "dry"

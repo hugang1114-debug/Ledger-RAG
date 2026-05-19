@@ -21,6 +21,7 @@ DEFAULT_SAMPLE_COUNT = 10
 DEFAULT_BASELINES = ("vanilla_rag", "ledger_validator")
 DEFAULT_TOP_K = 8
 DEFAULT_MAX_OUTPUT_TOKENS = 2048
+DEFAULT_PROVIDER_ATTEMPTS = 2
 PRICING_SOURCE = "https://api-docs.deepseek.com/quick_start/pricing"
 
 
@@ -353,15 +354,34 @@ def _dry_answer(evidence):
     }
 
 
-def _call_with_retry(base_url, api_key, request_payload, transport):
+def _call_with_retry(base_url, api_key, request_payload, transport, max_attempts=DEFAULT_PROVIDER_ATTEMPTS):
     last_error = None
-    for _attempt in range(2):
+    for attempt in range(1, int(max_attempts) + 1):
         try:
-            return transport(base_url, api_key, request_payload, 90)
+            return transport(base_url, api_key, request_payload, 90), attempt
         except Exception as exc:  # pragma: no cover - exercised through integration failures.
             last_error = exc
             time.sleep(1)
     raise last_error
+
+
+def _load_resume_records(resume_from):
+    if not resume_from:
+        return [], []
+    resume_path = Path(resume_from)
+    run_records_path = resume_path / "run_records.jsonl"
+    metric_records_path = resume_path / "metric_records.jsonl"
+    run_records = _read_jsonl(run_records_path) if run_records_path.is_file() else []
+    metric_records = _read_jsonl(metric_records_path) if metric_records_path.is_file() else []
+    return run_records, metric_records
+
+
+def _sum_usage_tokens(run_records, token_name):
+    total = 0
+    for record in run_records:
+        usage = record.get("run_metadata", {}).get("usage", {})
+        total += int(usage.get(token_name) or 0)
+    return total
 
 
 def run_hotpotqa_mini_run(
@@ -373,6 +393,8 @@ def run_hotpotqa_mini_run(
     base_url="https://api.deepseek.com",
     transport=post_chat_completion,
     dry_run=False,
+    max_provider_attempts=DEFAULT_PROVIDER_ATTEMPTS,
+    resume_from=None,
 ):
     repo_root = Path(repo_root)
     output = Path(output_path)
@@ -393,14 +415,16 @@ def run_hotpotqa_mini_run(
     run_id = "gate8t_hotpotqa_mini_run"
     started_at = _utc_now()
 
-    run_records = []
-    metric_records = []
+    resumed_run_records, resumed_metric_records = _load_resume_records(resume_from)
+    completed_run_ids = {record.get("run_metadata", {}).get("run_id") for record in resumed_run_records}
+    run_records = list(resumed_run_records)
+    metric_records = list(resumed_metric_records)
     retrieval_records = []
     request_manifest = []
     raw_responses = []
     failures = []
-    total_prompt_tokens = 0
-    total_completion_tokens = 0
+    total_prompt_tokens = _sum_usage_tokens(resumed_run_records, "prompt_tokens")
+    total_completion_tokens = _sum_usage_tokens(resumed_run_records, "completion_tokens")
 
     json_parse_failures = 0
     provider_failures = 0
@@ -415,6 +439,20 @@ def run_hotpotqa_mini_run(
         retrieval_records.append({"question_id": question["question_id"], "evidence": evidence})
         for baseline in baselines:
             per_run_id = f"{run_id}_{baseline}_{question['question_id']}"
+            if per_run_id in completed_run_ids:
+                request_manifest.append(
+                    {
+                        "run_id": per_run_id,
+                        "baseline_family": baseline,
+                        "question_id": question["question_id"],
+                        "model": MODEL_ID,
+                        "prompt_version": prompt_versions.get(baseline, "unset"),
+                        "request_sha256_length": 0,
+                        "provider_attempt_count": 0,
+                        "resume_status": "skipped_existing_success",
+                    }
+                )
+                continue
             request_payload = build_chat_request(
                 baseline_family=baseline,
                 question_text=question["question_text"],
@@ -430,14 +468,25 @@ def run_hotpotqa_mini_run(
                     "model": MODEL_ID,
                     "prompt_version": prompt_versions.get(baseline, "unset"),
                     "request_sha256_length": len(_json_dumps(request_payload)),
+                    "provider_attempt_count": 0,
+                    "resume_status": "new_request",
                 }
             )
+            request_manifest_index = len(request_manifest) - 1
             started = time.perf_counter()
             try:
                 if dry_run:
                     response_payload = {"choices": [{"message": {"content": json.dumps(_dry_answer(evidence))}}], "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}}
+                    provider_attempt_count = 0
                 else:
-                    response_payload = _call_with_retry(base_url, api_key, request_payload, transport)
+                    response_payload, provider_attempt_count = _call_with_retry(
+                        base_url,
+                        api_key,
+                        request_payload,
+                        transport,
+                        max_attempts=max_provider_attempts,
+                    )
+                request_manifest[request_manifest_index]["provider_attempt_count"] = provider_attempt_count
                 latency_ms = round((time.perf_counter() - started) * 1000, 3)
             except Exception as exc:
                 provider_failures += 1
@@ -485,6 +534,9 @@ def run_hotpotqa_mini_run(
         "attempted_call_count": len(questions) * len(list(baselines)),
         "success_count": len(run_records),
         "failure_count": len(failures),
+        "resumed_record_count": len(resumed_run_records),
+        "new_success_count": len(run_records) - len(resumed_run_records),
+        "max_provider_attempts": int(max_provider_attempts),
         "total_prompt_tokens": total_prompt_tokens,
         "total_completion_tokens": total_completion_tokens,
         "estimated_cost_usd": total_cost,

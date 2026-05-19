@@ -20,6 +20,8 @@ def main():
     parser.add_argument("--output", required=True, help="Ignored artifact output directory.")
     parser.add_argument("--env-file", default=".env.local", help="Local env file with DEEPSEEK_API_KEY.")
     parser.add_argument("--dry-run", action="store_true", help="Write request/artifact shape without DeepSeek calls.")
+    parser.add_argument("--max-provider-attempts", type=int, default=2, help="Maximum attempts for each provider call.")
+    parser.add_argument("--resume-from", default=None, help="Existing run artifact directory whose successful run_records should be reused.")
     args = parser.parse_args()
 
     api_key, base_url = resolve_deepseek_settings(args.env_file)
@@ -34,6 +36,8 @@ def main():
         api_key=api_key or "dry-run",
         base_url=base_url,
         dry_run=args.dry_run,
+        max_provider_attempts=args.max_provider_attempts,
+        resume_from=args.resume_from,
     )
     print(f"gate8t_hotpotqa_mini_run={summary['artifact_path']}")
     print(f"success_count={summary['success_count']}")
