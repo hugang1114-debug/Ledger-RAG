@@ -416,6 +416,7 @@ def run_hotpotqa_mini_run(
     dataset_id="hotpotqa",
     progress_path=None,
     progress_stream=None,
+    retrieval_top_k=None,
 ):
     repo_root = Path(repo_root)
     output = Path(output_path)
@@ -431,7 +432,7 @@ def run_hotpotqa_mini_run(
     prompt_versions = _load_prompt_versions(repo_root)
     generation_constraints = _load_generation_constraints(repo_root)
     max_output_tokens = int(generation_constraints.get("max_output_tokens", DEFAULT_MAX_OUTPUT_TOKENS))
-    top_k = int(generation_constraints.get("max_evidence_items", DEFAULT_TOP_K))
+    top_k = int(retrieval_top_k or generation_constraints.get("max_evidence_items", DEFAULT_TOP_K))
     questions = load_questions(questions_path, sample_count)
     split = snapshot["split"]
     run_id = f"gate8_main_v1_{dataset_id}_run"
@@ -649,6 +650,7 @@ def run_hotpotqa_mini_run(
         "resumed_record_count": len(resumed_run_records),
         "new_success_count": len(run_records) - len(resumed_run_records),
         "max_provider_attempts": int(max_provider_attempts),
+        "max_evidence_items": top_k,
         "total_prompt_tokens": total_prompt_tokens,
         "total_completion_tokens": total_completion_tokens,
         "estimated_cost_usd": total_cost,

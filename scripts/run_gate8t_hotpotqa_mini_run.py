@@ -22,6 +22,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Write request/artifact shape without DeepSeek calls.")
     parser.add_argument("--max-provider-attempts", type=int, default=2, help="Maximum attempts for each provider call.")
     parser.add_argument("--resume-from", default=None, help="Existing run artifact directory whose successful run_records should be reused.")
+    parser.add_argument("--top-k", type=int, default=None, help="Override retrieval evidence budget.")
     args = parser.parse_args()
 
     api_key, base_url = resolve_deepseek_settings(args.env_file)
@@ -40,6 +41,7 @@ def main():
         resume_from=args.resume_from,
         progress_path=Path(args.output) / "progress.json",
         progress_stream=sys.stdout,
+        retrieval_top_k=args.top_k,
     )
     print(f"gate8t_hotpotqa_mini_run={summary['artifact_path']}")
     print(f"success_count={summary['success_count']}")

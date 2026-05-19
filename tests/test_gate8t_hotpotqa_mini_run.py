@@ -392,6 +392,26 @@ def test_runner_writes_progress_file_and_console_lines(tmp_path):
     assert "ok=2" in console_output
 
 
+def test_runner_accepts_retrieval_top_k_override(tmp_path):
+    root = _fixture_root(tmp_path)
+    output = tmp_path / "out"
+
+    summary = run_hotpotqa_mini_run(
+        repo_root=root,
+        output_path=output,
+        sample_count=1,
+        baselines=["vanilla_rag"],
+        api_key="fake-key",
+        base_url="https://api.deepseek.com",
+        dry_run=True,
+        retrieval_top_k=16,
+    )
+
+    run_record = json.loads((output / "run_records.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert summary["max_evidence_items"] == 16
+    assert run_record["input"]["retrieval_config"]["top_k"] == 1
+
+
 def test_cli_dry_run_writes_no_raw_response(tmp_path):
     root = _fixture_root(tmp_path)
     output = tmp_path / "dry"

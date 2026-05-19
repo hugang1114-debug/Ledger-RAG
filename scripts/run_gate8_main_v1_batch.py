@@ -31,6 +31,7 @@ def main():
     parser.add_argument("--env-file", default=".env.local", help="Local env file with DEEPSEEK_API_KEY.")
     parser.add_argument("--dry-run", action="store_true", help="Write artifact shape without DeepSeek calls.")
     parser.add_argument("--max-provider-attempts", type=int, default=3, help="Maximum attempts for each provider call.")
+    parser.add_argument("--top-k", type=int, default=None, help="Override retrieval evidence budget.")
     parser.add_argument("--resume-root", default=None, help="Existing batch root whose dataset subdirectories should be reused.")
     args = parser.parse_args()
 
@@ -55,6 +56,7 @@ def main():
             dataset_id=dataset_id,
             progress_path=output_root / dataset_id / "progress.json",
             progress_stream=sys.stdout,
+            retrieval_top_k=args.top_k,
         )
         summaries.append(summary)
 
@@ -66,6 +68,7 @@ def main():
         "sample_count_per_dataset": args.sample_count,
         "dry_run": args.dry_run,
         "max_provider_attempts": args.max_provider_attempts,
+        "max_evidence_items": args.top_k,
         "total_success_count": sum(int(summary["success_count"]) for summary in summaries),
         "total_failure_count": sum(int(summary["failure_count"]) for summary in summaries),
         "total_estimated_cost_usd": round(sum(float(summary["estimated_cost_usd"]) for summary in summaries), 6),

@@ -82,6 +82,8 @@ The next work item is to prepare main comparison readiness: locked source snapsh
 - `configs/gate8/main_v1_50x2x3_result_summary.yaml` - tracked summary of the first real main batch
 - `experiments/cards/E031-gate8-first-real-main-batch.md` - first real main batch result card
 - `experiments/cards/E032-gate8-run-progress-visibility.md` - live progress output and progress file card
+- `configs/gate8/musique_topk16_calibration_summary.yaml` - MuSiQue evidence-budget calibration result
+- `experiments/cards/E033-musique-topk16-calibration.md` - MuSiQue top-k calibration card
 - `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
 - `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
 - `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
