@@ -207,6 +207,7 @@ def rank_evidence(question_text, index_manifest_path, corpus_path, top_k=DEFAULT
 
 
 def build_chat_request(baseline_family, question_text, evidence, prompt_version, max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS):
+    valid_evidence_ids = [item["evidence_id"] for item in evidence]
     evidence_lines = []
     for item in evidence:
         evidence_lines.append(
@@ -238,11 +239,12 @@ def build_chat_request(baseline_family, question_text, evidence, prompt_version,
         ),
         "ledger_only": (
             "This is the ledger_only baseline. Every factual atomic claim should cite one or more provided ledger span ids. "
-            "Do not cite spans outside the current run ledger."
+            "The current run uses ledger_span_id equal to evidence_id. Do not cite titles, ranks, paper names, or invented ids."
         ),
         "ledger_validator": (
             "This is the ledger_validator baseline. Cite evidence ids as ledger span ids. "
-            "Every factual atomic claim should include citations to provided evidence."
+            "Every factual atomic claim should include citations to provided evidence. "
+            "The current run uses ledger_span_id equal to evidence_id. Do not cite titles, ranks, paper names, or invented ids."
         ),
     }
     if baseline_family not in baseline_policies:
@@ -257,6 +259,8 @@ def build_chat_request(baseline_family, question_text, evidence, prompt_version,
                 "content": (
                     f"Gate 8T HotpotQA mini run. baseline_family={baseline_family}. "
                     f"prompt_version={prompt_version}. {baseline_policy} "
+                    "Each cited_evidence_id must exactly copy one id from valid_evidence_ids. "
+                    "Do not invent, shorten, paraphrase, rank-reference, title-reference, or otherwise transform evidence ids. "
                     "Return only JSON with keys: global_answer, atomic_claims, citations, refusal, refusal_reason. "
                     "atomic_claims entries must include claim_id and text. citations entries must include claim_id and cited_evidence_id. "
                     "If evidence is insufficient, set refusal true."
@@ -266,6 +270,8 @@ def build_chat_request(baseline_family, question_text, evidence, prompt_version,
                 "role": "user",
                 "content": "Question:\n"
                 + question_text
+                + "\n\nvalid_evidence_ids:\n"
+                + json.dumps(valid_evidence_ids, ensure_ascii=False)
                 + "\n\nEvidence:\n"
                 + "\n".join(f"- {line}" for line in evidence_lines),
             },
@@ -291,27 +297,56 @@ def _normalize_claims(answer_payload):
     return claims
 
 
+def normalize_citation_id(value):
+    return str(value or "").strip().strip("`'\"")
+
+
 def _normalize_citations(answer_payload, evidence):
     evidence_ids = {item["evidence_id"]: item for item in evidence}
     citations = []
+    invalid_citations = []
     for citation in answer_payload.get("citations") or []:
-        cited_id = str(citation.get("cited_evidence_id") or citation.get("evidence_id") or "")
+        raw_cited_id = str(citation.get("cited_evidence_id") or citation.get("evidence_id") or "")
+        cited_id = normalize_citation_id(raw_cited_id)
         evidence_item = evidence_ids.get(cited_id, {})
+        normalized = {
+            "claim_id": str(citation.get("claim_id") or ""),
+            "cited_evidence_id": cited_id,
+            "cited_ledger_span_id": evidence_item.get("ledger_span_id"),
+            "source_doc_id": evidence_item.get("source_doc_id"),
+            "citation_source": "model_output",
+        }
+        if cited_id not in evidence_ids:
+            invalid_citations.append(
+                {
+                    "claim_id": normalized["claim_id"],
+                    "raw_cited_evidence_id": raw_cited_id,
+                    "normalized_cited_evidence_id": cited_id,
+                    "reason": "cited_evidence_id_not_in_retrieved_evidence",
+                }
+            )
+            continue
         citations.append(
-            {
-                "claim_id": str(citation.get("claim_id") or ""),
-                "cited_evidence_id": cited_id,
-                "cited_ledger_span_id": evidence_item.get("ledger_span_id"),
-                "source_doc_id": evidence_item.get("source_doc_id"),
-                "citation_source": "model_output",
-            }
+            normalized
         )
-    return citations
+    return citations, invalid_citations
+
+
+def _citation_diagnostics(claims, citations, invalid_citations):
+    claim_ids = {claim["claim_id"] for claim in claims}
+    cited_claim_ids = {citation["claim_id"] for citation in citations if citation.get("claim_id")}
+    return {
+        "valid_citation_count": len(citations),
+        "invalid_citation_count": len(invalid_citations),
+        "uncited_claim_count": len(claim_ids - cited_claim_ids),
+        "invalid_citations": invalid_citations,
+    }
 
 
 def _build_run_record(run_id, baseline_family, question, evidence, answer_payload, usage, latency_ms, prompt_version, source_snapshot_id, dataset_id, split):
     claims = _normalize_claims(answer_payload)
-    citations = _normalize_citations(answer_payload, evidence)
+    citations, invalid_citations = _normalize_citations(answer_payload, evidence)
+    citation_diagnostics = _citation_diagnostics(claims, citations, invalid_citations)
     return {
         "input": {
             "dataset_id": dataset_id,
@@ -335,6 +370,7 @@ def _build_run_record(run_id, baseline_family, question, evidence, answer_payloa
             "reference_answer": question.get("answer"),
         },
         "citations": citations,
+        "citation_diagnostics": citation_diagnostics,
         "verdicts": [
             {
                 "claim_id": claim["claim_id"],
@@ -375,6 +411,8 @@ def _build_metric_record(run_record):
         "attribution": {
             "claim_to_span_mapping_completeness": len(cited_claim_ids) / max(len(claims), 1),
             "citation_count": len(citations),
+            "invalid_citation_count": run_record.get("citation_diagnostics", {}).get("invalid_citation_count", 0),
+            "uncited_claim_count": run_record.get("citation_diagnostics", {}).get("uncited_claim_count", 0),
         },
         "system": {
             "latency_ms": run_record["run_metadata"]["latency_ms"],
@@ -502,6 +540,7 @@ def run_hotpotqa_mini_run(
                         "request_sha256_length": 0,
                         "provider_attempt_count": 0,
                         "resume_status": "skipped_existing_success",
+                        "valid_evidence_ids": [item["evidence_id"] for item in evidence],
                     }
                 )
                 _emit_progress(
@@ -543,6 +582,7 @@ def run_hotpotqa_mini_run(
                     "request_sha256_length": len(_json_dumps(request_payload)),
                     "provider_attempt_count": 0,
                     "resume_status": "new_request",
+                    "valid_evidence_ids": [item["evidence_id"] for item in evidence],
                 }
             )
             request_manifest_index = len(request_manifest) - 1
@@ -659,6 +699,14 @@ def run_hotpotqa_mini_run(
             )
 
     total_cost = round((total_prompt_tokens / 1_000_000 * INPUT_USD_PER_1M_TOKENS) + (total_completion_tokens / 1_000_000 * OUTPUT_USD_PER_1M_TOKENS), 6)
+    dropped_invalid_citation_count = sum(
+        int(record.get("citation_diagnostics", {}).get("invalid_citation_count") or 0)
+        for record in run_records
+    )
+    post_sanitizer_uncited_claim_count = sum(
+        int(record.get("citation_diagnostics", {}).get("uncited_claim_count") or 0)
+        for record in run_records
+    )
     completed_at = _utc_now()
     summary = {
         "run_id": run_id,
@@ -679,6 +727,8 @@ def run_hotpotqa_mini_run(
         "total_prompt_tokens": total_prompt_tokens,
         "total_completion_tokens": total_completion_tokens,
         "estimated_cost_usd": total_cost,
+        "dropped_invalid_citation_count": dropped_invalid_citation_count,
+        "post_sanitizer_uncited_claim_count": post_sanitizer_uncited_claim_count,
         "pricing_source": PRICING_SOURCE,
         "started_at": started_at,
         "completed_at": completed_at,

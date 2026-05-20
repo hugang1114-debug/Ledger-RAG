@@ -7,8 +7,11 @@ from pathlib import Path
 import pytest
 
 from ledger_rag_main.hotpotqa_mini_run import (
+    _build_metric_record,
+    _build_run_record,
     build_chat_request,
     load_questions,
+    normalize_citation_id,
     rank_evidence,
     run_hotpotqa_mini_run,
 )
@@ -205,7 +208,95 @@ def test_build_chat_request_includes_frozen_metadata_and_baseline_policy():
     assert request["max_tokens"] == 512
     assert "ledger_validator" in request["messages"][0]["content"]
     assert "gate8l_ledger_validator_v1" in request["messages"][0]["content"]
+    assert "valid_evidence_ids" in request["messages"][0]["content"]
+    assert "valid_evidence_ids" in request["messages"][1]["content"]
     assert "ledger_span_id=doc_yoruba" in request["messages"][1]["content"]
+
+
+def test_citation_id_normalization_is_conservative():
+    assert normalize_citation_id(" `doc_yoruba` ") == "doc_yoruba"
+    assert normalize_citation_id("'doc_yoruba'") == "doc_yoruba"
+    assert normalize_citation_id('"doc_yoruba"') == "doc_yoruba"
+
+
+def test_run_record_sanitizes_invalid_citations_and_records_diagnostics():
+    question = {"question_id": "q1", "question_text": "Who used the Ida sword?", "answer": "Yoruba people"}
+    evidence = [
+        {
+            "evidence_id": "doc_yoruba",
+            "ledger_span_id": "doc_yoruba",
+            "source_doc_id": "doc_yoruba",
+            "text": "The Ida is a sword used by the Yoruba people of West Africa.",
+        }
+    ]
+    answer_payload = {
+        "global_answer": "Yoruba people",
+        "atomic_claims": [
+            {"claim_id": "c1", "text": "The Ida was used by Yoruba people."},
+            {"claim_id": "c2", "text": "An invalid citation should be dropped."},
+        ],
+        "citations": [
+            {"claim_id": "c1", "cited_evidence_id": " `doc_yoruba` "},
+            {"claim_id": "c2", "cited_evidence_id": "not_a_real_evidence_id"},
+        ],
+        "refusal": False,
+    }
+
+    record = _build_run_record(
+        "run1",
+        "ledger_validator",
+        question,
+        evidence,
+        answer_payload,
+        {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+        100,
+        "prompt_v1",
+        "snapshot_v1",
+        "hotpotqa",
+        "dev_distractor",
+    )
+
+    assert [citation["cited_evidence_id"] for citation in record["citations"]] == ["doc_yoruba"]
+    assert record["citation_diagnostics"]["valid_citation_count"] == 1
+    assert record["citation_diagnostics"]["invalid_citation_count"] == 1
+    assert record["citation_diagnostics"]["uncited_claim_count"] == 1
+    assert record["citation_diagnostics"]["invalid_citations"][0]["normalized_cited_evidence_id"] == "not_a_real_evidence_id"
+
+
+def test_metric_record_uses_sanitized_citations_not_raw_invalid_citations():
+    question = {"question_id": "q1", "question_text": "Who used the Ida sword?", "answer": "Yoruba people"}
+    evidence = [
+        {
+            "evidence_id": "doc_yoruba",
+            "ledger_span_id": "doc_yoruba",
+            "source_doc_id": "doc_yoruba",
+            "text": "The Ida is a sword used by the Yoruba people of West Africa.",
+        }
+    ]
+    record = _build_run_record(
+        "run1",
+        "citation_only",
+        question,
+        evidence,
+        {
+            "global_answer": "Yoruba people",
+            "atomic_claims": [{"claim_id": "c1", "text": "The Ida was used by Yoruba people."}],
+            "citations": [{"claim_id": "c1", "cited_evidence_id": "unknown"}],
+            "refusal": False,
+        },
+        {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+        100,
+        "prompt_v1",
+        "snapshot_v1",
+        "hotpotqa",
+        "dev_distractor",
+    )
+    metric = _build_metric_record(record)
+
+    assert record["citations"] == []
+    assert metric["attribution"]["citation_count"] == 0
+    assert metric["attribution"]["invalid_citation_count"] == 1
+    assert metric["attribution"]["uncited_claim_count"] == 1
 
 
 def test_runner_with_fake_transport_writes_required_artifacts(tmp_path):
@@ -245,6 +336,8 @@ def test_runner_with_fake_transport_writes_required_artifacts(tmp_path):
     assert summary["failure_count"] == 0
     assert summary["total_prompt_tokens"] == 200
     assert "fake-key" not in (output / "request_manifest.jsonl").read_text(encoding="utf-8")
+    run_record = json.loads((output / "run_records.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert "citation_diagnostics" in run_record
 
 
 def test_runner_retries_provider_until_configured_attempt_limit(tmp_path):
@@ -284,6 +377,7 @@ def test_runner_retries_provider_until_configured_attempt_limit(tmp_path):
     assert summary["success_count"] == 1
     assert summary["failure_count"] == 0
     assert request_manifest[0]["provider_attempt_count"] == 3
+    assert request_manifest[0]["valid_evidence_ids"] == ["doc_yoruba"]
 
 
 def test_runner_resume_from_skips_existing_run_records(tmp_path):

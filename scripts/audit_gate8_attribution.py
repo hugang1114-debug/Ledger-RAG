@@ -100,6 +100,7 @@ def summarize(records):
     uncited_claim_count = 0
     claim_support_scores = []
     answered_claim_count = 0
+    dropped_invalid_citation_count = 0
 
     for record in records:
         claims = {
@@ -121,6 +122,8 @@ def summarize(records):
             for citation in citations
             if citation.get("cited_evidence_id") not in evidence_ids
         ]
+        diagnostics = record.get("citation_diagnostics", {})
+        dropped_invalid_citation_count += int(diagnostics.get("invalid_citation_count") or 0)
 
         claim_count += len(claims)
         citation_count += len(citations)
@@ -150,9 +153,11 @@ def summarize(records):
         "citation_count": citation_count,
         "claim_to_citation_rate": safe_rate(citation_count, claim_count),
         "claim_citation_coverage": safe_rate(cited_claim_count, claim_count),
+        "post_sanitizer_claim_coverage": safe_rate(cited_claim_count, claim_count),
         "invalid_citation_count": invalid_citation_count,
         "invalid_citation_record_count": invalid_citation_record_count,
         "invalid_citation_rate": safe_rate(invalid_citation_count, citation_count),
+        "dropped_invalid_citation_count": dropped_invalid_citation_count,
         "uncited_claim_count": uncited_claim_count,
         "lexically_supported_claim_count": lexically_supported_claim_count,
         "weakly_supported_claim_count": weakly_supported_claim_count,
@@ -237,13 +242,36 @@ def build_summary(run_paths):
 def main():
     parser = argparse.ArgumentParser(description="Audit structural attribution metrics for Gate 8 run records.")
     parser.add_argument(
+        "--run",
+        action="append",
+        default=[],
+        metavar="DATASET_ID=PATH",
+        help="Run records JSONL to audit. Can be passed multiple times. Defaults to corrected 50x6x3 artifacts.",
+    )
+    parser.add_argument(
+        "--source-label",
+        default="corrected_main_v1_50x6x3",
+        help="Source label stored in the YAML summary.",
+    )
+    parser.add_argument(
         "--output",
         default="configs/gate8/main_v1_corrected_50x6x3_claim_citation_audit.yaml",
         help="YAML summary output path.",
     )
     args = parser.parse_args()
 
-    summary = build_summary(DEFAULT_RUNS)
+    run_paths = {}
+    if args.run:
+        for item in args.run:
+            if "=" not in item:
+                raise SystemExit(f"--run must use DATASET_ID=PATH, got: {item}")
+            dataset_id, path = item.split("=", 1)
+            run_paths[dataset_id] = path
+    else:
+        run_paths = DEFAULT_RUNS
+
+    summary = build_summary(run_paths)
+    summary["source"] = args.source_label
     write_yaml(args.output, summary)
     print(f"claim_citation_audit={args.output}")
     print(f"invalid_citation_rate={summary['overall']['invalid_citation_rate']}")
