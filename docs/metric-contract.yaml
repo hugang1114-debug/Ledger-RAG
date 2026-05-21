@@ -1,83 +1,93 @@
-version: 1
-gate: "Gate 6: Metric Protocol Locked"
-contract_name: "ledger_rag_metric_record"
-description: "Structured metric output contract for future Ledger-RAG baseline runs."
+version: 2
+contract_name: attribution_protocol_metric_record
+description: Structured metric output contract for auditable attribution runs.
 
 metric_record:
   run_id:
     type: string
     required: true
-    description: "Run id from docs/baseline-contract.yaml."
   dataset_id:
     type: string
     required: true
   baseline_family:
     type: string
     required: true
-    allowed_values:
-      - vanilla_rag
-      - hybrid_rag
-      - citation_only
-      - validator_only
-      - ledger_only
-      - ledger_validator
-  split:
-    type: string
-    required: true
   question_count:
+    type: integer
+    required: true
+  audited_claim_count:
+    type: integer
+    required: true
+  emitted_citation_count:
     type: integer
     required: true
   refusal_count:
     type: integer
     required: true
-  refusal_rate:
-    type: number
-    required: true
-
-retrieval:
-  required_when: "gold evidence or supporting facts are available"
-  fields:
-    recall_at_k: "number or not_available"
-    precision_at_k: "number or not_available"
-    mrr: "number or not_available"
-    ndcg: "number or not_available"
-    k: integer
-    oracle_retrieval: boolean
-    missing_reason: "string or null"
-
-answer_quality:
-  required: true
-  fields:
-    exact_match: "number or not_applicable"
-    f1: "number or not_applicable"
-    rouge_l: "number or not_applicable"
-    claim_level_correctness: "number or not_available"
-    factscore: "number or not_available"
-    missing_reason: "string or null"
 
 attribution:
   required: true
   fields:
-    citation_precision: "number or not_applicable"
-    citation_recall: "number or not_applicable"
-    support_rate: "number or not_available"
-    unsupported_claim_rate: "number or not_available"
+    invalid_citation_rate: number
+    citation_id_validity_rate: number
+    claim_citation_coverage: number
+    citation_precision_entailment_support_rate: "number or not_available"
     overclaim_rate: "number or not_available"
-    claim_to_span_mapping_completeness: "number or not_applicable"
-    span_replay_success: "number or not_applicable"
-    verifier_name: "string or null"
+    malformed_citation_count: integer
+    nonexistent_citation_count: integer
+    not_retrieved_citation_count: integer
+    wrong_snapshot_hash_count: integer
+    wrong_span_hash_count: integer
+    semantic_unsupported_count: integer
+    partially_supported_overclaim_count: integer
+    missing_reason: "string or null"
+
+semantic_support:
+  required: true
+  fields:
+    status: "evaluated | skipped | pending | error"
+    semantic_evaluator_name: "string or null"
+    semantic_evaluation_count: integer
+    entailment_support_rate: "number or not_available"
+    unsupported_citation_rate: "number or not_available"
+    partially_supported_rate: "number or not_available"
+    contradictory_rate: "number or not_available"
+    semantic_evaluation_skip_rate: "number or not_available"
+    semantic_evaluation_error_rate: "number or not_available"
+    note: string
+
+replay:
+  required: true
+  fields:
+    span_replay_success_rate: "number or not_applicable"
+    snapshot_replay_success_rate: "number or not_applicable"
+    replay_failure_count: integer
+    missing_reason: "string or null"
+
+refusal:
+  required: true
+  fields:
+    refusal_rate: number
+    refusal_precision: "number or not_available"
+    evidence_insufficient_refusal_count: "integer or not_available"
+    false_refusal_count: "integer or not_available"
     missing_reason: "string or null"
 
 system:
   required: true
   fields:
-    p50_latency_ms: "number or not_available"
-    p95_latency_ms: "number or not_available"
-    cost_per_query_usd: "number or not_available"
-    peak_memory_mb: "number or not_available"
-    index_size_mb: "number or not_applicable"
-    ledger_size_mb: "number or not_applicable"
+    cost_per_audited_claim_usd: "number or not_available"
+    latency_per_audited_claim_ms: "number or not_available"
+    total_estimated_cost_usd: "number or not_available"
+    total_latency_ms: "number or not_available"
     missing_reason: "string or null"
+
+diagnostics:
+  required: true
+  fields:
+    lexical_support_rate: "number or not_applicable"
+    weak_lexical_support_rate: "number or not_applicable"
+    notes: string
 
 aggregation:
   required: true
@@ -89,10 +99,9 @@ aggregation:
     notes: string
 
 non_comparable_conditions:
-  - "metric computed on a different question list"
-  - "refusals omitted from denominator without an explicit metric rule"
-  - "oracle retrieval mixed into main results"
-  - "missing run_id or baseline_family"
-  - "missing attribution metrics for citation-capable baselines"
-  - "system metrics omitted for cost comparisons"
-
+  - metric computed on a different question list
+  - refusals omitted from denominator without an explicit metric rule
+  - oracle retrieval mixed into main results
+  - missing deterministic citation validation
+  - semantic support conflated with citation ID validity
+  - lexical support rate used as a core metric

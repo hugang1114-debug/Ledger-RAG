@@ -9,6 +9,7 @@ import pytest
 from ledger_rag_main.hotpotqa_mini_run import (
     _build_metric_record,
     _build_run_record,
+    build_evidence_citation_id,
     build_chat_request,
     load_questions,
     normalize_citation_id,
@@ -219,6 +220,22 @@ def test_citation_id_normalization_is_conservative():
     assert normalize_citation_id('"doc_yoruba"') == "doc_yoruba"
 
 
+def test_load_questions_supports_offset(tmp_path):
+    path = tmp_path / "questions.jsonl"
+    path.write_text(
+        "\n".join(
+            json.dumps({"question_id": f"q{i}", "question_text": f"Question {i}"})
+            for i in range(1, 6)
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    questions = load_questions(path, sample_count=2, question_offset=2)
+
+    assert [question["question_id"] for question in questions] == ["q3", "q4"]
+
+
 def test_run_record_sanitizes_invalid_citations_and_records_diagnostics():
     question = {"question_id": "q1", "question_text": "Who used the Ida sword?", "answer": "Yoruba people"}
     evidence = [
@@ -297,6 +314,116 @@ def test_metric_record_uses_sanitized_citations_not_raw_invalid_citations():
     assert metric["attribution"]["citation_count"] == 0
     assert metric["attribution"]["invalid_citation_count"] == 1
     assert metric["attribution"]["uncited_claim_count"] == 1
+
+
+def test_run_record_attaches_structural_validation_records_for_emitted_citations():
+    question = {"question_id": "q1", "question_text": "Who used the Ida sword?", "answer": "Yoruba people"}
+    evidence = [
+        {
+            "evidence_id": "doc_yoruba",
+            "ledger_span_id": "doc_yoruba",
+            "source_doc_id": "doc_yoruba",
+            "source_hash": "snap123",
+            "text": "The Ida is a sword used by the Yoruba people of West Africa.",
+        }
+    ]
+    valid_pointer = build_evidence_citation_id("hotpotqa", evidence[0])
+    answer_payload = {
+        "global_answer": "Yoruba people",
+        "atomic_claims": [
+            {"claim_id": "c1", "text": "The Ida was used by Yoruba people."},
+            {"claim_id": "c2", "text": "Malformed citation."},
+            {"claim_id": "c3", "text": "Missing source citation."},
+            {"claim_id": "c4", "text": "Wrong snapshot citation."},
+            {"claim_id": "c5", "text": "Wrong span hash citation."},
+        ],
+        "citations": [
+            {"claim_id": "c1", "cited_evidence_id": valid_pointer},
+            {"claim_id": "c2", "cited_evidence_id": "not/a/full/pointer"},
+            {"claim_id": "c3", "cited_evidence_id": valid_pointer.replace("doc_yoruba", "doc_missing")},
+            {"claim_id": "c4", "cited_evidence_id": valid_pointer.replace("snap123", "wrong_snapshot")},
+            {"claim_id": "c5", "cited_evidence_id": valid_pointer.rsplit("/", 1)[0] + "/bad_hash"},
+        ],
+        "refusal": False,
+    }
+
+    record = _build_run_record(
+        "run1",
+        "ledger_validator",
+        question,
+        evidence,
+        answer_payload,
+        {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+        100,
+        "prompt_v1",
+        "snapshot_v1",
+        "hotpotqa",
+        "dev_distractor",
+    )
+    validations = record["citation_validation"]
+
+    assert [item["validation_error"] for item in validations] == [
+        "none",
+        "malformed_citation_id",
+        "nonexistent_citation_id",
+        "wrong_snapshot_hash",
+        "wrong_span_hash",
+    ]
+    assert validations[0]["structural_validity"] == "valid"
+    assert validations[0]["source_exists"] is True
+    assert validations[0]["snapshot_replay_success"] is True
+    assert validations[0]["span_replay_success"] is True
+    assert validations[0]["span_hash_match"] is True
+    assert validations[0]["in_retrieved_evidence"] is True
+    semantic_records = record["semantic_support"]["records"]
+    assert record["semantic_support"]["status"] == "evaluated"
+    assert semantic_records[0]["verdict"] == "entailed"
+    assert semantic_records[1]["status"] == "skipped"
+    assert semantic_records[1]["verdict"] == "insufficient_evidence"
+
+
+def test_metric_record_reports_structural_validation_rates():
+    question = {"question_id": "q1", "question_text": "Who used the Ida sword?", "answer": "Yoruba people"}
+    evidence = [
+        {
+            "evidence_id": "doc_yoruba",
+            "ledger_span_id": "doc_yoruba",
+            "source_doc_id": "doc_yoruba",
+            "source_hash": "snap123",
+            "text": "The Ida is a sword used by the Yoruba people of West Africa.",
+        }
+    ]
+    valid_pointer = build_evidence_citation_id("hotpotqa", evidence[0])
+    record = _build_run_record(
+        "run1",
+        "ledger_validator",
+        question,
+        evidence,
+        {
+            "global_answer": "Yoruba people",
+            "atomic_claims": [{"claim_id": "c1", "text": "The Ida was used by Yoruba people."}],
+            "citations": [
+                {"claim_id": "c1", "cited_evidence_id": valid_pointer},
+                {"claim_id": "c1", "cited_evidence_id": "bad"},
+            ],
+            "refusal": False,
+        },
+        {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+        100,
+        "prompt_v1",
+        "snapshot_v1",
+        "hotpotqa",
+        "dev_distractor",
+    )
+    metric = _build_metric_record(record)
+
+    assert metric["attribution"]["invalid_citation_rate"] == 0.5
+    assert metric["attribution"]["citation_id_validity_rate"] == 0.5
+    assert metric["replay"]["span_replay_success_rate"] == 0.5
+    assert metric["replay"]["snapshot_replay_success_rate"] == 0.5
+    assert metric["attribution"]["malformed_citation_rate"] == 0.5
+    assert metric["semantic_support"]["entailment_support_rate"] == 0.5
+    assert metric["semantic_support"]["semantic_evaluation_skip_rate"] == 0.5
 
 
 def test_runner_with_fake_transport_writes_required_artifacts(tmp_path):

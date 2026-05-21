@@ -1,6 +1,6 @@
-version: 1
+version: 2
 gate: gate8_main_comparison
-stage: gate8f_run_config_readiness
+stage: attribution_protocol_run_config_readiness
 status: readiness_in_progress
 authorized_to_run: false
 purpose: non_executable_run_matrix
@@ -43,47 +43,81 @@ baseline_families:
     requires_ledger: false
     retrieval_dependency: lexical_index_ready
     authorized_to_run: false
-  - baseline_family: hybrid_rag
-    requires_provider: true
-    requires_generation: true
-    requires_verifier: false
-    requires_ledger: false
-    retrieval_dependency: blocked_until_hybrid_retrieval_locked
-    authorized_to_run: false
-  - baseline_family: citation_only
+  - baseline_family: citation_prompting_only
     requires_provider: true
     requires_generation: true
     requires_verifier: false
     requires_ledger: false
     retrieval_dependency: lexical_index_ready
     authorized_to_run: false
-  - baseline_family: validator_only
+  - baseline_family: prompt_based_verifier
     requires_provider: true
     requires_generation: true
     requires_verifier: true
     requires_ledger: false
     retrieval_dependency: lexical_index_ready
     authorized_to_run: false
-  - baseline_family: ledger_only
+  - baseline_family: posthoc_nli_verifier
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: true
+    requires_ledger: false
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+  - baseline_family: deterministic_citation_validator_only
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: false
+    requires_ledger: false
+    requires_deterministic_validation: true
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+  - baseline_family: ledger_pointer_only
     requires_provider: true
     requires_generation: true
     requires_verifier: false
     requires_ledger: true
     retrieval_dependency: lexical_index_ready
     authorized_to_run: false
-  - baseline_family: ledger_validator
+  - baseline_family: ledger_pointer_validator
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: false
+    requires_ledger: true
+    requires_deterministic_validation: true
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+  - baseline_family: ledger_pointer_validator_semantic
     requires_provider: true
     requires_generation: true
     requires_verifier: true
     requires_ledger: true
+    requires_deterministic_validation: true
     retrieval_dependency: lexical_index_ready
     authorized_to_run: false
+  - baseline_family: ledger_trained_sft_dpo
+    requires_provider: true
+    requires_generation: true
+    requires_verifier: true
+    requires_ledger: true
+    requires_deterministic_validation: true
+    retrieval_dependency: lexical_index_ready
+    authorized_to_run: false
+    status: planned_not_implemented
+
+legacy_diagnostic_aliases:
+  hybrid_rag: prompt_policy_slot_not_dense_hybrid_until_dense_retrieval_or_reranking_exists
+  citation_only: citation_prompting_only
+  validator_only: prompt_based_verifier
+  ledger_only: ledger_pointer_only
+  ledger_validator: ledger_pointer_validator_semantic
 
 metric_groups:
-  - retrieval
-  - answer_quality
   - attribution
+  - replay
+  - refusal
   - system
+  - diagnostics
   - aggregation
 
 shared_run_constraints:
@@ -104,9 +138,9 @@ artifact_paths:
   created_by_this_config: false
 
 blocked_reasons:
-  - provider_unselected
-  - prompt_versions_unlocked
+  - deterministic_pointer_validation_not_fully_integrated
+  - semantic_support_evaluation_not_calibrated
+  - stress_tests_not_completed
+  - human_annotation_set_not_ready
   - cost_budget_unapproved
-  - hybrid_retrieval_not_locked
   - execution_card_missing
-  - reproducibility_review_unfinished

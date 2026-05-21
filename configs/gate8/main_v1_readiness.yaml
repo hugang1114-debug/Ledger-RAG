@@ -1,8 +1,8 @@
-version: 1
+version: 2
 gate: gate8_main_comparison
 status: readiness_in_progress
 authorized_to_run: false
-purpose: non_executable_readiness_matrix
+purpose: non_executable_attribution_protocol_readiness_matrix
 snapshot_registry: snapshots/main_v1/source_snapshots.json
 run_matrix: configs/gate8/main_v1_run_matrix.yaml
 provider_decision: configs/gate8/provider_decision.yaml
@@ -106,22 +106,37 @@ datasets:
 baseline_families:
   - id: vanilla_rag
     name: Vanilla RAG
-  - id: hybrid_rag
-    name: Hybrid RAG
-  - id: citation_only
-    name: Citation-only
-  - id: validator_only
-    name: Validator-only
-  - id: ledger_only
-    name: Ledger-only
-  - id: ledger_validator
-    name: Ledger + Validator
+  - id: citation_prompting_only
+    name: Citation prompting only
+  - id: prompt_based_verifier
+    name: Prompt-based verifier
+  - id: posthoc_nli_verifier
+    name: Post-hoc NLI verifier
+  - id: deterministic_citation_validator_only
+    name: Deterministic citation validator only
+  - id: ledger_pointer_only
+    name: Ledger pointer only
+  - id: ledger_pointer_validator
+    name: Ledger pointer plus deterministic validator
+  - id: ledger_pointer_validator_semantic
+    name: Ledger pointer plus deterministic validator plus semantic verifier
+  - id: ledger_trained_sft_dpo
+    name: Optional ledger-trained model with SFT/DPO
+    status: planned_not_implemented
+
+legacy_diagnostic_aliases:
+  hybrid_rag: prompt_policy_slot_not_dense_hybrid_until_dense_retrieval_or_reranking_exists
+  citation_only: citation_prompting_only
+  validator_only: prompt_based_verifier
+  ledger_only: ledger_pointer_only
+  ledger_validator: ledger_pointer_validator_semantic
 
 metric_groups:
-  - retrieval
-  - answer_quality
   - attribution
+  - replay
+  - refusal
   - system
+  - diagnostics
   - aggregation
 
 model_provider:
@@ -161,6 +176,10 @@ artifact_paths:
   created_by_this_config: false
 
 not_ready:
+  - deterministic_pointer_validation_not_fully_integrated
+  - semantic_support_evaluation_not_calibrated
+  - stress_tests_not_completed
+  - human_annotation_set_not_ready
   - cost_budget_unapproved
   - prompt_config_execution_unauthorized
   - provider_budget_execution_unauthorized

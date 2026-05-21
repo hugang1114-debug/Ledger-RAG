@@ -1,66 +1,51 @@
-# Ledger-RAG Project Agent Rules
+# Project Direction
 
-This file applies to the whole repository.
+This repository is no longer primarily about improving RAG answer accuracy.
 
-## Project Purpose
+The project is now focused on auditable attribution for RAG / deep-research agent workflows.
 
-This repository is the research base for a Ledger-RAG paper project. The current phase is not model training or full system implementation. The priority is to build a reproducible research foundation: verified literature, clear project boundaries, experiment gates, and durable metadata.
+## Core Research Goal
 
-## Non-Negotiable Rules
+Build and evaluate a versioned, replayable evidence ledger with stable span identifiers, deterministic citation validation, and semantic claim-to-span attribution checking.
 
-- Do not trust the feasibility report as a source of truth. Treat it as an initial hypothesis document.
-- Do not use `turn...` links from the report as citations, download URLs, or official sources.
-- Do not run experiments without an experiment card under `experiments/cards/`.
-- Do not add a result to the paper narrative unless the source, code/config, dataset version, model version, and metric definition are recorded.
-- Do not use dynamic web pages, Common Crawl, or high-risk domains as first-version main experiments.
-- Do not claim Ledger-RAG is a universal long-context replacement. The first-version claim is evidence traceability, auditability, and long-task stability.
-- Do not use reported model/API/cloud prices without re-checking official pricing at execution time.
+The system should measure and improve:
+- citation ID validity
+- claim-level citation coverage
+- semantic entailment support
+- replayability of cited spans
+- auditability of generated answers
 
-## Literature Rules
+## Non-Goals
 
-- Prefer official paper sources: ACL Anthology, arXiv, OpenReview, NeurIPS/ICLR proceedings, or the authors' official repository.
-- Store downloaded PDFs in `literature/papers/`.
-- Keep PDF files local by default. They are ignored by git; track provenance in `literature/manifest.yaml`.
-- If a PDF cannot be verified from an official source, record only the landing page and mark the entry as `landing_only`.
-- When adding or replacing a paper, update title, year, official URL, PDF URL, local path, download status, SHA256 if downloaded, and notes.
+Do not claim:
+- this is a new general-purpose RAG architecture
+- this improves final answer accuracy unless explicitly proven
+- this solves hallucination
+- this replaces long-context models
+- this is cryptographically tamper-proof unless cryptographic audit logs are implemented
+- DPO/SFT guarantees citation correctness
 
-## Experiment Gate Rules
+## Engineering Rules
 
-Experiments advance by gates, not dates:
+- Do not trust model-generated citation IDs.
+- Citation IDs must be checked deterministically.
+- Semantic support must be evaluated separately from structural citation validity.
+- Lexical overlap may be used for debugging, but not as a core metric.
+- Preserve old Gate 1-8 artifacts as historical diagnostics.
+- Treat the current Gate 8 mini-main run as diagnostic, not paper-grade evidence.
+- Prefer small, testable changes over broad rewrites.
+- Every new validator or metric must include minimal tests.
 
-1. Project Base Ready
-2. Literature Verified
-3. Research Claim Locked
-4. Dataset Feasibility Locked
-5. Baseline Protocol Locked
-6. Metric Protocol Locked
-7. Pilot Experiment Passed
-8. Main Comparison Passed
-9. Ablation / Stress Passed
-10. Paper Package Ready
+## Required Evaluation Categories
 
-Before running an experiment, create an experiment card that states:
-
-- research question
-- dataset and license status
-- method variants and baselines
-- metrics
-- failure criteria
-- exact command/config to run
-- output paths
-- expected cost class
-
-## Scope Defaults
-
-- First-version attribution granularity: atomic claim or sentence level.
-- First-version evidence source: static, versioned, replayable snapshots.
-- TRACE-style RL or training-level optimization is related work, not a v1 baseline.
-- LOCA-bench is a later agent-context stress test, not a first-batch main experiment.
-- LongBench-Cite, L-CiteEval, and SUnsET toolchains must be feasibility-checked before they become main experiments.
-
-## File Hygiene
-
-- Keep generated datasets, indexes, model weights, run outputs, and downloaded PDFs out of git unless explicitly approved.
-- Keep tracked files focused on protocol, metadata, scripts, and reproducibility notes.
-- Prefer small, auditable changes. Update docs when changing scope or gates.
-
+Core metrics:
+- Invalid Citation Rate
+- Citation ID Validity Rate
+- Claim Citation Coverage
+- Citation Precision / Entailment Support Rate
+- Overclaim Rate
+- Span Replay Success Rate
+- Snapshot Replay Success Rate
+- Refusal Precision
+- Cost per audited claim
+- Latency per audited claim

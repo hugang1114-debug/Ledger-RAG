@@ -1,8 +1,16 @@
 import argparse
 import json
-import re
+import sys
 from collections import defaultdict
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from ledger_rag_attribution.pointers import EvidenceSpan, build_citation_id, validate_citation, validation_record
+from ledger_rag_attribution.semantic import semantic_support_records, summarize_semantic_support
 
 
 DEFAULT_RUNS = {
@@ -12,37 +20,6 @@ DEFAULT_RUNS = {
     "hotpotqa__new4": "artifacts/gate8/main_v1/runs/new4_hotpotqa_2wiki_50x4/hotpotqa/run_records.jsonl",
     "2wikimultihopqa__new4": "artifacts/gate8/main_v1/runs/new4_hotpotqa_2wiki_50x4/2wikimultihopqa/run_records.jsonl",
     "musique__new4": "artifacts/gate8/main_v1/runs/new4_musique_topk16_50x4/musique/run_records.jsonl",
-}
-
-STOPWORDS = {
-    "about",
-    "after",
-    "also",
-    "before",
-    "being",
-    "between",
-    "could",
-    "from",
-    "have",
-    "into",
-    "only",
-    "other",
-    "that",
-    "their",
-    "there",
-    "these",
-    "they",
-    "this",
-    "those",
-    "through",
-    "under",
-    "were",
-    "when",
-    "where",
-    "which",
-    "while",
-    "with",
-    "would",
 }
 
 
@@ -64,111 +41,169 @@ def dataset_id_from_run_key(run_key):
     return run_key.split("__", 1)[0]
 
 
-def tokens(text):
+def _span_from_evidence(dataset_id, evidence):
+    return EvidenceSpan(
+        dataset_id=str(evidence.get("dataset_id") or dataset_id),
+        source_id=str(evidence.get("source_id") or evidence.get("source_doc_id") or evidence.get("evidence_id") or ""),
+        snapshot_hash=str(evidence.get("snapshot_hash") or evidence.get("source_hash") or ""),
+        span_id=str(evidence.get("span_id") or evidence.get("ledger_span_id") or evidence.get("evidence_id") or ""),
+        text=str(evidence.get("text") or ""),
+        span_hash=evidence.get("span_hash"),
+        position=evidence.get("rank"),
+    )
+
+
+def _span_from_ledger_row(dataset_id, row):
+    return EvidenceSpan(
+        dataset_id=str(row.get("dataset_id") or dataset_id),
+        source_id=str(row.get("source_id") or row.get("source_doc_id") or row.get("evidence_id") or ""),
+        snapshot_hash=str(row.get("snapshot_hash") or row.get("source_hash") or ""),
+        span_id=str(row.get("span_id") or row.get("ledger_span_id") or row.get("evidence_id") or ""),
+        text=str(row.get("text") or ""),
+        span_hash=row.get("span_hash"),
+        position=row.get("rank"),
+    )
+
+
+def _retrieved_pointer_maps(dataset_id, retrieved_evidence):
+    pointer_by_legacy_id = {}
+    retrieved_pointers = set()
+    spans = []
+    for evidence in retrieved_evidence:
+        span = _span_from_evidence(dataset_id, evidence)
+        pointer = evidence.get("citation_id") or build_citation_id(span)
+        retrieved_pointers.add(pointer)
+        spans.append(span)
+        if evidence.get("evidence_id"):
+            pointer_by_legacy_id[str(evidence["evidence_id"])] = pointer
+        if evidence.get("ledger_span_id"):
+            pointer_by_legacy_id[str(evidence["ledger_span_id"])] = pointer
+    return pointer_by_legacy_id, retrieved_pointers, spans
+
+
+def citation_validation_records(record):
+    existing = record.get("citation_validation")
+    if existing:
+        return existing
+
+    dataset_id = record.get("input", {}).get("dataset_id") or record.get("_dataset_id") or "unknown_dataset"
+    pointer_by_legacy_id, retrieved_pointers, retrieved_spans = _retrieved_pointer_maps(dataset_id, record.get("retrieved_evidence", []))
+    if record.get("ledger_spans"):
+        ledger_spans = [_span_from_ledger_row(dataset_id, row) for row in record.get("ledger_spans", [])]
+    else:
+        ledger_spans = retrieved_spans
+
+    validations = []
+    for citation in record.get("citations", []):
+        raw_citation_id = str(citation.get("citation_id") or citation.get("cited_evidence_id") or citation.get("evidence_id") or "")
+        normalized = raw_citation_id.strip().strip("`'\"")
+        citation_id = pointer_by_legacy_id.get(normalized, normalized)
+        result = validate_citation(
+            citation_id,
+            ledger_spans=ledger_spans,
+            retrieved_citation_ids=retrieved_pointers,
+        )
+        row = validation_record(result, claim_id=str(citation.get("claim_id") or ""))
+        row["raw_citation_id"] = raw_citation_id
+        validations.append(row)
+    return validations
+
+
+def _claims_by_id(record):
     return {
-        token
-        for token in re.findall(r"[a-z0-9]+", str(text).lower())
-        if len(token) > 3 and token not in STOPWORDS
+        claim.get("claim_id"): claim.get("claim_text") or claim.get("text") or ""
+        for claim in record.get("answer", {}).get("atomic_claims", [])
     }
 
 
-def citation_evidence_text(citation, evidence_by_id):
-    evidence_id = citation.get("cited_evidence_id")
-    evidence = evidence_by_id.get(evidence_id, {})
-    return evidence.get("text", "")
+def _span_text_by_citation_id(record):
+    dataset_id = record.get("input", {}).get("dataset_id") or record.get("_dataset_id") or "unknown_dataset"
+    span_text = {}
+    for evidence in record.get("retrieved_evidence", []):
+        span = _span_from_evidence(dataset_id, evidence)
+        citation_id = evidence.get("citation_id") or build_citation_id(span)
+        span_text[citation_id] = evidence.get("text", "")
+    for row in record.get("ledger_spans", []):
+        span = _span_from_ledger_row(dataset_id, row)
+        span_text[build_citation_id(span)] = row.get("text", "")
+    return span_text
 
 
-def claim_support_score(claim_text, citations, evidence_by_id):
-    claim_tokens = tokens(claim_text)
-    if not claim_tokens:
-        return 0.0
-    evidence_tokens = set()
-    for citation in citations:
-        evidence_tokens |= tokens(citation_evidence_text(citation, evidence_by_id))
-    return safe_rate(len(claim_tokens & evidence_tokens), len(claim_tokens))
+def semantic_support_record_rows(record):
+    existing = record.get("semantic_support", {}).get("records")
+    if existing:
+        return existing
+    return semantic_support_records(
+        claims_by_id=_claims_by_id(record),
+        validation_records=citation_validation_records(record),
+        span_text_by_citation_id=_span_text_by_citation_id(record),
+    )
 
 
 def summarize(records):
     claim_count = 0
     citation_count = 0
-    cited_claim_count = 0
+    valid_citation_count = 0
     invalid_citation_count = 0
-    invalid_citation_record_count = 0
+    malformed_citation_count = 0
+    nonexistent_citation_count = 0
+    not_retrieved_citation_count = 0
+    wrong_snapshot_hash_count = 0
+    wrong_span_hash_count = 0
+    span_replay_success_count = 0
+    snapshot_replay_success_count = 0
+    cited_claim_count = 0
     refusal_count = 0
-    lexically_supported_claim_count = 0
-    weakly_supported_claim_count = 0
-    uncited_claim_count = 0
-    claim_support_scores = []
-    answered_claim_count = 0
-    dropped_invalid_citation_count = 0
+    semantic_records_all = []
 
     for record in records:
         claims = {
             claim["claim_id"]: claim
             for claim in record.get("answer", {}).get("atomic_claims", [])
         }
-        citations = record.get("citations", [])
-        evidence_ids = {evidence["evidence_id"] for evidence in record.get("retrieved_evidence", [])}
-        evidence_by_id = {
-            evidence["evidence_id"]: evidence
-            for evidence in record.get("retrieved_evidence", [])
-        }
-        citations_by_claim = defaultdict(list)
-        for citation in citations:
-            citations_by_claim[citation.get("claim_id")].append(citation)
-        cited_claims = {citation.get("claim_id") for citation in citations if citation.get("claim_id")}
-        invalid_citations = [
-            citation
-            for citation in citations
-            if citation.get("cited_evidence_id") not in evidence_ids
-        ]
-        diagnostics = record.get("citation_diagnostics", {})
-        dropped_invalid_citation_count += int(diagnostics.get("invalid_citation_count") or 0)
+        validations = citation_validation_records(record)
+        semantic_records_all.extend(semantic_support_record_rows(record))
+        cited_claims = {item.get("claim_id") for item in validations if item.get("claim_id")}
 
         claim_count += len(claims)
-        citation_count += len(citations)
+        citation_count += len(validations)
         cited_claim_count += len(set(claims) & cited_claims)
-        invalid_citation_count += len(invalid_citations)
-        invalid_citation_record_count += bool(invalid_citations)
-        is_refusal = record.get("answer", {}).get("refusal_label") != "answered"
-        refusal_count += is_refusal
-        for claim_id, claim in claims.items():
-            claim_citations = citations_by_claim.get(claim_id, [])
-            if not claim_citations:
-                uncited_claim_count += 1
-                continue
-            score = claim_support_score(claim.get("claim_text", ""), claim_citations, evidence_by_id)
-            claim_support_scores.append(score)
-            if score >= 0.5:
-                lexically_supported_claim_count += 1
-            else:
-                weakly_supported_claim_count += 1
-            if not is_refusal:
-                answered_claim_count += 1
+        refusal_count += record.get("answer", {}).get("refusal_label") != "answered"
+        for item in validations:
+            is_valid = item.get("structural_validity") == "valid"
+            valid_citation_count += is_valid
+            invalid_citation_count += not is_valid
+            malformed_citation_count += item.get("validation_error") == "malformed_citation_id"
+            nonexistent_citation_count += item.get("validation_error") == "nonexistent_citation_id"
+            not_retrieved_citation_count += item.get("validation_error") == "not_in_retrieved_evidence"
+            wrong_snapshot_hash_count += item.get("validation_error") == "wrong_snapshot_hash"
+            wrong_span_hash_count += item.get("validation_error") == "wrong_span_hash"
+            span_replay_success_count += item.get("span_replay_success") is True
+            snapshot_replay_success_count += item.get("snapshot_replay_success") is True
 
+    semantic_summary = summarize_semantic_support(semantic_records_all)
     return {
         "record_count": len(records),
         "refusal_rate": safe_rate(refusal_count, len(records)),
         "claim_count": claim_count,
         "citation_count": citation_count,
-        "claim_to_citation_rate": safe_rate(citation_count, claim_count),
-        "claim_citation_coverage": safe_rate(cited_claim_count, claim_count),
-        "post_sanitizer_claim_coverage": safe_rate(cited_claim_count, claim_count),
+        "valid_citation_count": valid_citation_count,
         "invalid_citation_count": invalid_citation_count,
-        "invalid_citation_record_count": invalid_citation_record_count,
+        "claim_citation_coverage": safe_rate(cited_claim_count, claim_count),
         "invalid_citation_rate": safe_rate(invalid_citation_count, citation_count),
-        "dropped_invalid_citation_count": dropped_invalid_citation_count,
-        "uncited_claim_count": uncited_claim_count,
-        "lexically_supported_claim_count": lexically_supported_claim_count,
-        "weakly_supported_claim_count": weakly_supported_claim_count,
-        "lexical_support_rate": safe_rate(lexically_supported_claim_count, cited_claim_count),
-        "weak_support_rate": safe_rate(weakly_supported_claim_count, cited_claim_count),
-        "mean_claim_support_score": round(
-            sum(claim_support_scores) / len(claim_support_scores), 6
-        )
-        if claim_support_scores
-        else 0.0,
-        "answered_claim_count": answered_claim_count,
+        "citation_id_validity_rate": safe_rate(valid_citation_count, citation_count),
+        "span_replay_success_rate": safe_rate(span_replay_success_count, citation_count),
+        "snapshot_replay_success_rate": safe_rate(snapshot_replay_success_count, citation_count),
+        "not_in_retrieved_evidence_rate": safe_rate(not_retrieved_citation_count, citation_count),
+        "malformed_citation_rate": safe_rate(malformed_citation_count, citation_count),
+        "wrong_snapshot_hash_rate": safe_rate(wrong_snapshot_hash_count, citation_count),
+        "wrong_span_hash_rate": safe_rate(wrong_span_hash_count, citation_count),
+        "malformed_citation_count": malformed_citation_count,
+        "nonexistent_citation_count": nonexistent_citation_count,
+        "not_retrieved_citation_count": not_retrieved_citation_count,
+        "wrong_snapshot_hash_count": wrong_snapshot_hash_count,
+        "wrong_span_hash_count": wrong_span_hash_count,
+        **semantic_summary,
     }
 
 
@@ -216,13 +251,27 @@ def build_summary(run_paths):
         by_dataset_baseline[(dataset_id, baseline)].append(record)
 
     return {
-        "version": 1,
-        "stage": "gate8_claim_to_citation_faithfulness_audit",
+        "version": 2,
+        "stage": "gate8_migrated_structural_attribution_audit",
         "source": "corrected_main_v1_50x6x3",
         "api_calls_made_by_this_step": 0,
-        "audit_method": "lexical_claim_keyword_overlap_with_cited_evidence",
-        "lexical_support_threshold": 0.5,
-        "methodology_note": "This is a conservative no-API heuristic audit. It can flag weak citations, but it is not a semantic entailment verifier.",
+        "audit_method": "deterministic_citation_pointer_validation",
+        "structural_citation_validation": {
+            "status": "completed",
+            "validator_name": "ledger_rag_attribution.pointers.validate_citation",
+        },
+        "replayability": {
+            "status": "computed_from_snapshot_and_span_hash_fields",
+        },
+        "semantic_support": {
+            "status": "evaluated",
+            "semantic_verifier": "local_deterministic_claim_span_heuristic_v1",
+            "note": "local deterministic heuristic; replaceable by future LLM judge or NLI model",
+        },
+        "diagnostics": {
+            "lexical_support_rate": "not_computed",
+            "note": "lexical overlap is diagnostic only and is not a core metric in this migrated audit",
+        },
         "overall": summarize(records),
         "by_dataset": {
             dataset_id: summarize(dataset_records)
@@ -240,7 +289,7 @@ def build_summary(run_paths):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Audit structural attribution metrics for Gate 8 run records.")
+    parser = argparse.ArgumentParser(description="Audit deterministic structural citation validity for Gate 8 run records.")
     parser.add_argument(
         "--run",
         action="append",
@@ -255,8 +304,8 @@ def main():
     )
     parser.add_argument(
         "--output",
-        default="configs/gate8/main_v1_corrected_50x6x3_claim_citation_audit.yaml",
-        help="YAML summary output path.",
+        default="configs/gate8/main_v1_migrated_structural_attribution_audit.yaml",
+        help="YAML summary output path. Defaults to a migrated path to preserve historical diagnostics.",
     )
     args = parser.parse_args()
 
@@ -273,10 +322,11 @@ def main():
     summary = build_summary(run_paths)
     summary["source"] = args.source_label
     write_yaml(args.output, summary)
-    print(f"claim_citation_audit={args.output}")
+    print(f"structural_attribution_audit={args.output}")
     print(f"invalid_citation_rate={summary['overall']['invalid_citation_rate']}")
-    print(f"claim_citation_coverage={summary['overall']['claim_citation_coverage']}")
-    print(f"lexical_support_rate={summary['overall']['lexical_support_rate']}")
+    print(f"citation_id_validity_rate={summary['overall']['citation_id_validity_rate']}")
+    print(f"span_replay_success_rate={summary['overall']['span_replay_success_rate']}")
+    print(f"snapshot_replay_success_rate={summary['overall']['snapshot_replay_success_rate']}")
 
 
 if __name__ == "__main__":

@@ -1,126 +1,75 @@
 # Baseline Protocol
 
-Gate 5 locks the comparison protocol. It does not authorize implementation code, dataset downloads, or experiment runs.
+This protocol defines attribution baselines. It does not authorize new provider calls or large-scale execution.
 
-## Shared Comparison Rules
+## Shared Rules
 
-All baseline families must use the same dataset split, question list, corpus snapshot, answer style, maximum evidence budget, and reporting schema. A result is not comparable if one method sees a different corpus, a larger evidence budget, a different answer format, or hidden gold evidence that another method does not receive.
+All baseline families must use the same dataset split, question list, source snapshot, retrieval budget, answer format, and reporting schema. Oracle evidence may be used only in explicitly labeled diagnostics.
 
-All methods may use the question text and the retrieved evidence assigned to that run. A method may use gold supporting facts only in explicitly labeled oracle-retrieval diagnostics. Oracle runs are diagnostic only and cannot be reported as the main comparison.
+Refusals must be recorded. A method cannot improve attribution metrics by silently omitting hard claims or refusing without evidence-insufficiency justification.
 
-Refusal behavior must be recorded for every method. A refusal, insufficient-evidence answer, or empty answer must count as a distinct outcome, not as a silent omission. If a method refuses more often than others, the analysis must report refusal rate alongside support and answer-quality metrics.
+Do not call the current `hybrid_rag` prompt-policy slot a real dense hybrid baseline unless dense retrieval or reranking is implemented and recorded.
+
+## System Components vs Evaluation Judges
+
+Baseline methods are systems under test. They may include answer generation, citation prompting, ledger pointer emission, deterministic validation, or an internal semantic verifier module.
+
+Evaluation judges are scoring tools used offline after system outputs are produced. An LLM-as-a-Judge, including DeepSeek-V4-Pro when used for evaluation, is not a baseline method and must not be listed as a system variant unless it is explicitly part of the system being tested.
+
+- Semantic Verifier: a module inside a system variant that checks or filters generated claims before final system output.
+- LLM-as-a-Judge: an offline evaluator used to score all variants after generation.
+- These roles must not be conflated.
 
 ## Baseline Families
 
 ### Vanilla RAG
 
-Vanilla RAG uses BM25 top-k retrieval plus answer generation. It has no explicit ledger persistence, no required citation format, and no verifier gate. If it outputs citations, they are treated as free-form model output unless they can be mapped back to retrieved evidence ids.
+Answer generation over retrieved evidence without required citations, ledger pointers, deterministic validation, or semantic verifier feedback.
 
-Allowed knowledge:
+### Citation-only Prompting
 
-- question text
-- ranked BM25 evidence for the run
-- answer-style instructions
+The model receives retrieved evidence IDs and is prompted to cite them. Citation IDs are model output and must be audited after generation.
 
-Not allowed:
+### Semantic Verifier Only, No Ledger
 
-- persistent ledger span ids
-- semantic verifier feedback
-- oracle evidence outside a diagnostic run
+Generated claims and citations are checked by a semantic verifier module without ledger pointers or deterministic pointer validation. This baseline tests whether semantic verification alone can handle fake citation IDs, source version drift, span hash mismatch, snapshot replay, and not-in-retrieved-evidence citations. It is expected to detect semantic mismatch but not guarantee citation ID validity or replayability.
 
-### Hybrid RAG
+### Ledger Pointer Only
 
-Hybrid RAG uses BM25 plus dense retrieval and reranking before answer generation. It has no explicit ledger persistence and no verifier gate. It exists to prevent the main result from being explained only by stronger retrieval.
+Retrieved evidence is represented as citation pointers with source snapshot and span hash fields. No deterministic rejection or semantic support verdict is applied after generation.
 
-Allowed knowledge:
+### Ledger + Deterministic Validator
 
-- question text
-- ranked hybrid evidence after reranking
-- answer-style instructions
+Citation pointers are checked for source existence, snapshot hash, span existence, span hash, and retrieved-evidence membership. Semantic support is not judged in this baseline.
 
-Not allowed:
+### Ledger + Deterministic Validator + Semantic Verifier
 
-- persistent ledger span ids
-- semantic verifier feedback
-- extra evidence budget beyond the shared maximum
+The full system variant. It performs deterministic pointer validation first, then uses an internal semantic verifier module to check claim-to-span support separately. Offline LLM-as-a-Judge scoring may still be used to evaluate this variant, but the judge is not part of the method name.
 
-### Citation-only
+### Future Work: Ledger-Trained Model With SFT/DPO
 
-Citation-only receives retrieved evidence with evidence ids and must cite those ids in its output. It does not write evidence into a deterministic ledger, and no external verifier gates its answer.
-
-Allowed knowledge:
-
-- question text
-- retrieved evidence ids and text
-- citation-format instructions
-
-Not allowed:
-
-- semantic verifier feedback
-- changing citation ids after generation
-- claiming support from evidence not included in the retrieved set
-
-### Validator-only
-
-Validator-only first generates an ordinary RAG answer, then decomposes that answer into claims and checks them with a verifier. It does not use deterministic ledger storage or replayable span hashes.
-
-Allowed knowledge:
-
-- question text
-- retrieved evidence text
-- post-generation claim decomposition
-- verifier labels: support, refute, insufficient
-
-Not allowed:
-
-- persistent ledger span ids
-- source hash or replay guarantees
-- using verifier results to retrieve new evidence unless the run is explicitly labeled as an iterative variant
-
-### Ledger-only
-
-Ledger-only stores retrieved evidence as replayable ledger spans and requires answers to cite ledger span ids. It performs deterministic citation checks, but it does not run a semantic support verifier.
-
-Allowed knowledge:
-
-- question text
-- ledger span ids and quote text
-- deterministic checks that cited span ids exist and replay
-
-Not allowed:
-
-- semantic support/refute/insufficient judgments
-- post-hoc citation id substitution
-- citations to spans outside the run ledger
-
-### Ledger + Validator
-
-Ledger + Validator is the full method. It uses replayable ledger span ids, deterministic citation checks, and semantic verifier verdicts for claim support.
-
-Allowed knowledge:
-
-- question text
-- ledger span ids and quote text
-- deterministic id/hash/replay checks
-- verifier labels: support, refute, insufficient
-
-Not allowed:
-
-- hidden gold evidence in main runs
-- dynamic web evidence unless a later gate explicitly authorizes it
-- treating verifier acceptance as answer truth without reporting verifier uncertainty and failure modes
+A later-stage model trained to prefer valid and conservative citation behavior. This is future work unless implemented and evaluated. It cannot replace deterministic validation.
 
 ## Comparison Invariants
 
 Every main run must record:
 
-- dataset id and split
-- question id and question text
-- corpus snapshot id
-- retrieval config and evidence budget
-- generation model and prompt version
-- answer text, atomic claims, citations, and verifier verdicts where applicable
-- latency, cost, seed, code version, and config version
+- dataset ID, split, question ID, and question text
+- source snapshot ID/hash
+- retrieval config and retrieved evidence IDs
+- ledger pointer strings where applicable
+- deterministic validation status per citation
+- internal semantic verifier status per claim-citation pair where applicable
+- offline evaluation judge metadata where semantic metrics are computed by an LLM-as-a-Judge
+- refusal label and refusal rationale
+- latency, cost, seed, code version, prompt version, and config version
 
-The six baseline families are comparable only if these fields are present under the shared contract in `docs/baseline-contract.yaml`.
+## Non-Comparable Conditions
 
+- different question list or source snapshot
+- different evidence budget
+- hidden gold evidence in main runs
+- missing deterministic validation for citation-capable baselines
+- reporting lexical support rate as a core attribution metric
+- calling a lexical prompt-policy baseline dense hybrid retrieval
+- listing an offline judge such as DeepSeek-V4-Pro as a baseline method

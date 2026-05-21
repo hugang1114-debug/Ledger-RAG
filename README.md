@@ -1,110 +1,95 @@
-# Ledger-RAG Paper Base
+# From Citation Strings to Evidence Pointers
 
-This repository is the project base for a Ledger-RAG research paper. The goal is to evaluate whether an external deterministic evidence ledger can improve evidence traceability, auditability, and long-task stability in deep-research agents.
+This repository is now the project base for **a replayable attribution protocol for auditable RAG**. The core question is whether a versioned evidence ledger with stable span identifiers, deterministic citation validation, and semantic claim-to-span checking can reduce invalid citations, improve claim-level attribution coverage, and guarantee offline span replayability in RAG and deep-research agent workflows.
 
-The current phase is project foundation plus readiness planning:
+The contribution is attribution validity, auditability, and replayability. It is not a new general-purpose RAG architecture, not a claim that final answer accuracy improves, and not a claim that hallucination is solved.
 
-- verify and collect core papers
-- define the research boundary
-- define experiment progress gates
-- create agent rules for future work
-- prepare literature metadata
-- validate a synthetic offline pilot for artifact shape
-- prepare Gate 8 readiness without running main baselines
+We do not introduce new model weights. We propose a model-agnostic attribution audit protocol based on replayable evidence pointers, deterministic validation, and calibrated semantic evaluation.
 
-This repository is not yet a main experiment runner or model implementation. The Gate 7 pilot is synthetic and offline; it validates contract-shaped artifacts only.
+## Current Direction
 
-## Gate Status
+- Treat generation and audit as separate layers.
+- Do not trust model-generated citation IDs.
+- Validate citation pointers deterministically against retrieved evidence and ledger spans.
+- Evaluate semantic support separately from structural citation validity.
+- Preserve Gate 1-8 artifacts as historical diagnostics.
+- Treat the current Gate 8 mini-main results as diagnostic evidence only, not paper-grade main comparison evidence.
+- Keep lexical support rate as a debugging diagnostic, not a core paper metric.
 
-- Gate 1: Project Base Ready - completed
-- Gate 2: Literature Verified - completed for the 19-paper core pack
-- Gate 3: Research Claim Locked - completed
-- Gate 4: Dataset Feasibility Locked - completed
-- Gate 5: Baseline Protocol Locked - completed
-- Gate 6: Metric Protocol Locked - completed
-- Gate 7: Pilot Experiment Passed - completed
-- Gate 8: Main Comparison Passed - readiness in progress
+## System Components vs Evaluation Judges
 
-The next work item is to prepare main comparison readiness: locked source snapshot rules, a non-executable run matrix, and checks for dataset snapshots, retrieval indexes, model/provider choice, cost budget, and reproducible execution. Provider candidate evidence is partially locked for OpenAI `gpt-5.4-mini`, Gate 8L freezes candidate prompt/config artifacts, Gate 8M records GPT-5.4 and DeepSeek-V4-Pro as provider candidates with a 10 USD smoke-run budget preflight, Gate 8N selects DeepSeek-V4-Pro as the primary provider for the first smoke/main-v1 path, Gate 8O authorizes only a DeepSeek smoke run under the existing 10 USD ceiling, Gate 8P adds and executes a one-question DeepSeek smoke harness, Gate 8Q reviews the smoke artifacts into a tracked hash/cost summary, Gate 8R locks DeepSeek provider evidence while keeping main execution blocked, and Gate 8S freezes final prompt/config metadata while keeping run commands unauthorized. GPT-5.4 remains optional credibility-check evidence. Main budget approval, run-date provider evidence recheck, full execution authorization, and main baselines remain unset. Gate 8 is not passed until real main baselines run on locked source snapshots and produce comparable run and metric records.
+Baseline methods are systems under test. A semantic verifier is a module inside a system variant when it checks or filters generated claims before final output.
+
+An LLM-as-a-Judge is an offline evaluator used to score outputs from all variants. DeepSeek-V4-Pro is treated as an offline judge unless an experiment explicitly places it inside a system variant. DeepSeek judge labels are machine judge labels, not human gold labels.
+
+Structural metrics are computed deterministically from citation pointers, retrieved evidence, and ledger spans. Semantic metrics are computed offline and separately, currently using the calibrated DeepSeek-V4-Pro LLM-as-a-Judge pipeline for diagnostics.
+
+## Claims We Can Make
+
+- The protocol can improve citation ID validity when deterministic validation is enforced.
+- The protocol can improve offline replayability through source snapshot and span hash checks.
+- The protocol separates structural citation validation from semantic support validation.
+- The protocol is designed to reduce citation laundering compared with citation-only prompting.
+
+## Claims We Cannot Make Yet
+
+- The system improves final answer accuracy.
+- The system solves hallucination.
+- The ledger is cryptographically tamper-proof.
+- DPO or SFT guarantees citation correctness.
+- The ledger alone guarantees semantic faithfulness.
+- The project replaces long-context models.
+
+## Core Metrics
+
+- Invalid Citation Rate
+- Citation ID Validity Rate
+- Claim Citation Coverage
+- Citation Precision / Entailment Support Rate
+- Overclaim Rate
+- Span Replay Success Rate
+- Snapshot Replay Success Rate
+- Refusal Precision
+- Cost per audited claim
+- Latency per audited claim
+
+## Baseline Methods
+
+- Vanilla RAG
+- Citation-only Prompting
+- Semantic Verifier Only, No Ledger
+- Ledger Pointer Only
+- Ledger + Deterministic Validator
+- Ledger + Deterministic Validator + Semantic Verifier
 
 ## Current Structure
 
-- `AGENTS.md` - rules for future agents and contributors
-- `docs/project-boundary.md` - research scope and reality corrections
-- `docs/experiment-flow.md` - progress-gated experiment flow
-- `docs/research-claim.md` - falsifiable main claim and negative scope
+- `AGENTS.md` - contributor rules for the attribution-ledger direction
+- `docs/project-boundary.md` - current scope, non-goals, and boundary rules
+- `docs/research-claim.md` - falsifiable attribution-protocol claim
+- `docs/citation-pointer-schema.md` - formal citation pointer schema and validation checks
 - `docs/claim-to-experiments.md` - mapping from claim components to experiment families
-- `docs/dataset-feasibility.md` - dataset shortlist, deferrals, exclusions, and source notes
-- `docs/dataset-decision-matrix.yaml` - structured dataset feasibility decisions
-- `docs/baseline-protocol.md` - baseline family definitions and comparison rules
-- `docs/baseline-contract.yaml` - shared run input/output contract for future baselines
-- `docs/metric-protocol.md` - metric definitions, applicability, aggregation, and reporting rules
-- `docs/metric-contract.yaml` - structured metric output contract for future runs
-- `docs/main-comparison-readiness.md` - Gate 8 readiness requirements and blockers
-- `docs/source-snapshot-protocol.md` - immutable source snapshot rules for main comparisons
-- `docs/gate8-run-config-readiness.md` - non-executable Gate 8 run matrix rules
-- `docs/model-provider-readiness.md` - provider selection and current-price evidence rules
-- `docs/gate8-freeze-readiness.md` - Gate 8G provider, prompt, budget, and execution freeze rules
-- `docs/gate8-prompt-config-readiness.md` - Gate 8H prompt/config registry rules
-- `docs/gate8-provider-evidence-readiness.md` - Gate 8I provider evidence registry readiness rules
-- `docs/gate8-snapshot-index-promotion.md` - Gate 8J source snapshot and local index promotion rules
-- `docs/gate8-provider-comparison.md` - Gate 8M provider and budget candidate comparison
-- `configs/gate8/main_v1_readiness.yaml` - non-executable Gate 8 readiness matrix
-- `configs/gate8/main_v1_run_matrix.yaml` - non-executable main v1 dataset/baseline matrix
-- `configs/gate8/provider_decision.yaml` - DeepSeek provider decision metadata with execution fields unset
-- `configs/gate8/provider_candidates.yaml` - non-executable GPT-5.4 and DeepSeek-V4-Pro candidate registry
-- `configs/gate8/budget_preflight.yaml` - non-executable smoke and main budget preflight scope
-- `configs/gate8/deepseek_smoke_result_summary.yaml` - tracked summary of reviewed Gate 8P smoke artifacts
-- `configs/gate8/provider_evidence_registry.yaml` - non-executable DeepSeek provider evidence registry
-- `configs/gate8/freeze_readiness.yaml` - non-executable freeze readiness metadata
-- `configs/gate8/prompt_registry.yaml` - non-executable final prompt registry
-- `configs/gate8/generation_config_registry.yaml` - non-executable final generation config registry
-- `snapshots/main_v1/source_snapshots.json` - source snapshot and local retrieval index registry for main v1 datasets
-- `experiments/cards/E016-gate8k-openai-provider-evidence-candidate-lock.md` - Gate 8K non-running provider candidate lock card
-- `scripts/check_gate8_snapshot_readiness.py` - local metadata readiness checker for Gate 8 snapshots
-- `scripts/check_gate8_freeze_readiness.py` - local execution-preflight readiness checker
-- `scripts/check_gate8_prompt_config_readiness.py` - local prompt/config registry readiness checker
-- `scripts/check_gate8_provider_evidence_readiness.py` - local provider evidence registry readiness checker
-- `scripts/check_gate8_provider_budget_preflight.py` - local provider/budget preflight readiness checker
-- `experiments/cards/E020-gate8o-deepseek-smoke-run-authorization.md` - smoke-only DeepSeek authorization card
-- `experiments/cards/E023-gate8r-deepseek-provider-evidence-lock.md` - DeepSeek provider evidence lock card
-- `experiments/cards/E024-gate8s-main-prompt-config-freeze.md` - non-running final prompt/config freeze card
-- `configs/gate8/hotpotqa_mini_run_summary.yaml` - tracked Gate 8T HotpotQA mini-run summary
-- `configs/gate8/hotpotqa_mini_run_review.yaml` - tracked Gate 8U mini-run review summary
-- `experiments/cards/E026-gate8u-mini-run-output-review.md` - mini-run output review card
-- `configs/gate8/hotpotqa_retrieval_fix_summary.yaml` - tracked Gate 8V retrieval repair summary
-- `experiments/cards/E027-gate8v-hotpotqa-retrieval-fix.md` - HotpotQA retrieval repair card
-- `configs/gate8/hotpotqa_fixed_mini_run_summary.yaml` - tracked Gate 8W fixed-retrieval mini-run summary
-- `experiments/cards/E028-gate8w-fixed-hotpotqa-mini-run.md` - fixed-retrieval mini-run card
-- `experiments/cards/E029-gate8x-provider-retry-resume.md` - provider retry/resume implementation card
-- `configs/gate8/main_v1_launch_command.yaml` - prepared first real main batch command
-- `experiments/cards/E030-gate8-main-v1-launch-prepared.md` - first real main batch launch card
-- `configs/gate8/main_v1_50x2x3_result_summary.yaml` - tracked summary of the first real main batch
-- `experiments/cards/E031-gate8-first-real-main-batch.md` - first real main batch result card
-- `experiments/cards/E032-gate8-run-progress-visibility.md` - live progress output and progress file card
-- `configs/gate8/musique_topk16_calibration_summary.yaml` - MuSiQue evidence-budget calibration result
-- `experiments/cards/E033-musique-topk16-calibration.md` - MuSiQue top-k calibration card
-- `configs/gate8/main_v1_corrected_50x2x3_result_summary.yaml` - corrected first main-result summary reusing HotpotQA, 2Wiki, and MuSiQue top-k calibration artifacts
-- `experiments/cards/E034-corrected-main-v1-result-merge.md` - corrected main-result merge card
-- `docs/gate8-corrected-result-analysis.md` - corrected first main-result analysis
-- `configs/gate8/main_v1_corrected_analysis_summary.yaml` - tracked corrected analysis summary
-- `experiments/cards/E035-corrected-result-analysis.md` - corrected result analysis card
-- `scripts/check_gate8_snapshot_index_promotion.py` - local snapshot/index promotion readiness checker
-- `scripts/promote_gate8_snapshot_indexes.py` - metadata-only snapshot/index promotion command
-- `scripts/build_hotpotqa_source_snapshot.py` - official-source HotpotQA dev distractor snapshot builder
-- `scripts/build_2wiki_source_snapshot.py` - official-source 2WikiMultihopQA dev snapshot builder
-- `scripts/build_musique_source_snapshot.py` - official-source MuSiQue answerable dev snapshot builder
-- `scripts/build_gate8_lexical_indexes.py` - local deterministic lexical index builder for Gate 8E readiness
-- `scripts/run_gate8p_deepseek_smoke.py` - one-question DeepSeek smoke-run CLI
-- `scripts/review_gate8p_smoke_result.py` - smoke artifact reviewer and summary writer
-- `fixtures/gate7_offline/pilot.json` - tracked synthetic fixture for the offline pilot
-- `src/ledger_rag_pilot/` - standard-library-only offline pilot modules
-- `src/ledger_rag_smoke/` - standard-library-only DeepSeek smoke-run helpers
-- `literature/manifest.yaml` - verified paper metadata and download records
-- `literature/papers/` - local downloaded PDFs, ignored by git
-- `experiments/README.md` - experiment card requirements
-- `scripts/download_papers.ps1` - official-source paper downloader
+- `docs/baseline-protocol.md` - revised baseline families for attribution protocol evaluation
+- `docs/baseline-contract.yaml` - shared run input/output contract
+- `docs/metric-protocol.md` - core metric definitions and aggregation rules
+- `docs/metric-contract.yaml` - structured metric output contract
+- `docs/ledger-stress-tests.md` - ledger-specific stress-test designs
+- `docs/future-sft-dpo-design.md` - future training plan, intentionally not implemented yet
+- `docs/human-annotation-plan.md` - human evaluation and judge calibration plan
+- `docs/gate8-main-v1-diagnosis.md` - diagnostic Gate 8 result interpretation
+- `docs/gate8-claim-citation-audit.md` - diagnostic citation audit interpretation
+- `src/ledger_rag_attribution/` - deterministic citation pointer helpers
+- `src/ledger_rag_pilot/` - historical standard-library offline pilot modules
+- `src/ledger_rag_main/` - Gate 8 diagnostic mini-run helpers
+- `src/ledger_rag_snapshot/` - source snapshot helpers
+- `configs/gate8/` - Gate 8 readiness and diagnostic result metadata
+- `experiments/cards/` - historical experiment cards
+- `snapshots/main_v1/source_snapshots.json` - source snapshot registry
+
+## Gate Status
+
+Gate 1-8 artifacts remain part of the repository as historical diagnostics. Gate 8 mini-main and corrected runs exposed useful attribution failure modes, especially invalid citation IDs and weak citation support, but they are not paper-grade evidence. The next phase should validate the deterministic attribution protocol on small, inspectable examples before spending on larger model runs.
 
 ## Core Principle
 
-The feasibility report is an input, not a source of truth. Every paper, dataset, benchmark, price, API, and experimental claim must be independently verified before it can support the paper.
+The model may propose citations, but the audit layer decides whether those citations are valid. Citation ID validity, retrieved-evidence membership, replayability, and semantic entailment are separate checks with separate metrics.

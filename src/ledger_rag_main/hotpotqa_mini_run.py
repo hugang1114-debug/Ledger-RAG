@@ -4,6 +4,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+from ledger_rag_attribution.pointers import EvidenceSpan, build_citation_id, validate_citation, validation_record
+from ledger_rag_attribution.semantic import semantic_support_records, summarize_semantic_support
 from ledger_rag_retrieval.lexical_index import tokenize
 from ledger_rag_smoke.deepseek_smoke import (
     INPUT_USD_PER_1M_TOKENS,
@@ -88,9 +90,11 @@ def _read_jsonl(path):
     return rows
 
 
-def load_questions(path, sample_count):
+def load_questions(path, sample_count, question_offset=0):
     rows = _read_jsonl(path)
-    return rows[: int(sample_count)]
+    start = int(question_offset or 0)
+    end = start + int(sample_count)
+    return rows[start:end]
 
 
 def _resolve_repo_path(repo_root, value):
@@ -165,6 +169,47 @@ def _load_corpus(corpus_path):
     return {row["source_doc_id"]: row for row in _read_jsonl(corpus_path)}
 
 
+def build_evidence_citation_id(dataset_id, evidence_item, default_snapshot_hash="snapshot_unknown"):
+    span = EvidenceSpan(
+        dataset_id=str(dataset_id),
+        source_id=str(evidence_item.get("source_doc_id") or evidence_item.get("evidence_id") or ""),
+        snapshot_hash=str(evidence_item.get("source_hash") or evidence_item.get("snapshot_hash") or default_snapshot_hash),
+        span_id=str(evidence_item.get("ledger_span_id") or evidence_item.get("span_id") or evidence_item.get("evidence_id") or ""),
+        text=str(evidence_item.get("text") or ""),
+        span_hash=evidence_item.get("span_hash"),
+        position=evidence_item.get("rank"),
+    )
+    return build_citation_id(span)
+
+
+def _evidence_span(dataset_id, evidence_item, default_snapshot_hash="snapshot_unknown"):
+    return EvidenceSpan(
+        dataset_id=str(dataset_id),
+        source_id=str(evidence_item.get("source_doc_id") or evidence_item.get("evidence_id") or ""),
+        snapshot_hash=str(evidence_item.get("source_hash") or evidence_item.get("snapshot_hash") or default_snapshot_hash),
+        span_id=str(evidence_item.get("ledger_span_id") or evidence_item.get("span_id") or evidence_item.get("evidence_id") or ""),
+        text=str(evidence_item.get("text") or ""),
+        span_hash=evidence_item.get("span_hash"),
+        position=evidence_item.get("rank"),
+    )
+
+
+def _enrich_evidence(dataset_id, evidence, default_snapshot_hash="snapshot_unknown"):
+    enriched = []
+    for item in evidence:
+        copied = dict(item)
+        span = _evidence_span(dataset_id, copied, default_snapshot_hash=default_snapshot_hash)
+        pointer = span.citation_pointer()
+        copied.setdefault("dataset_id", pointer.dataset_id)
+        copied.setdefault("source_id", pointer.source_id)
+        copied.setdefault("snapshot_hash", pointer.snapshot_hash)
+        copied.setdefault("span_id", pointer.span_id)
+        copied.setdefault("span_hash", pointer.span_hash)
+        copied.setdefault("citation_id", pointer.to_id())
+        enriched.append(copied)
+    return enriched
+
+
 def rank_evidence(question_text, index_manifest_path, corpus_path, top_k=DEFAULT_TOP_K, allowed_source_doc_ids=None):
     manifest, document_by_internal_id, postings_by_token = _load_index(index_manifest_path)
     corpus_by_source_doc_id = _load_corpus(corpus_path)
@@ -208,6 +253,7 @@ def rank_evidence(question_text, index_manifest_path, corpus_path, top_k=DEFAULT
 
 def build_chat_request(baseline_family, question_text, evidence, prompt_version, max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS):
     valid_evidence_ids = [item["evidence_id"] for item in evidence]
+    valid_citation_ids = [item.get("citation_id") for item in evidence if item.get("citation_id")]
     evidence_lines = []
     for item in evidence:
         evidence_lines.append(
@@ -215,6 +261,7 @@ def build_chat_request(baseline_family, question_text, evidence, prompt_version,
                 [
                     f"evidence_id={item['evidence_id']}",
                     f"ledger_span_id={item['ledger_span_id']}",
+                    f"citation_id={item.get('citation_id', '')}",
                     f"title={item.get('title', '')}",
                     f"text={item.get('text', '')}",
                 ]
@@ -272,6 +319,8 @@ def build_chat_request(baseline_family, question_text, evidence, prompt_version,
                 + question_text
                 + "\n\nvalid_evidence_ids:\n"
                 + json.dumps(valid_evidence_ids, ensure_ascii=False)
+                + "\n\nvalid_citation_ids:\n"
+                + json.dumps(valid_citation_ids, ensure_ascii=False)
                 + "\n\nEvidence:\n"
                 + "\n".join(f"- {line}" for line in evidence_lines),
             },
@@ -301,52 +350,86 @@ def normalize_citation_id(value):
     return str(value or "").strip().strip("`'\"")
 
 
-def _normalize_citations(answer_payload, evidence):
+def _normalize_citations(answer_payload, evidence, dataset_id, source_snapshot_id="snapshot_unknown"):
+    evidence = _enrich_evidence(dataset_id, evidence, default_snapshot_hash=source_snapshot_id)
     evidence_ids = {item["evidence_id"]: item for item in evidence}
+    evidence_by_pointer = {item["citation_id"]: item for item in evidence}
+    legacy_id_to_pointer = {}
+    for item in evidence:
+        legacy_id_to_pointer[item["evidence_id"]] = item["citation_id"]
+        legacy_id_to_pointer[item.get("ledger_span_id")] = item["citation_id"]
+    ledger_spans = [_evidence_span(dataset_id, item, default_snapshot_hash=source_snapshot_id) for item in evidence]
+    retrieved_citation_ids = {item["citation_id"] for item in evidence}
     citations = []
     invalid_citations = []
+    validation_records = []
     for citation in answer_payload.get("citations") or []:
         raw_cited_id = str(citation.get("cited_evidence_id") or citation.get("evidence_id") or "")
         cited_id = normalize_citation_id(raw_cited_id)
-        evidence_item = evidence_ids.get(cited_id, {})
+        citation_id = legacy_id_to_pointer.get(cited_id, cited_id)
+        result = validate_citation(
+            citation_id,
+            ledger_spans=ledger_spans,
+            retrieved_citation_ids=retrieved_citation_ids,
+        )
+        validation_records.append(validation_record(result, claim_id=str(citation.get("claim_id") or "")))
+        evidence_item = evidence_by_pointer.get(citation_id, evidence_ids.get(cited_id, {}))
         normalized = {
             "claim_id": str(citation.get("claim_id") or ""),
-            "cited_evidence_id": cited_id,
+            "cited_evidence_id": evidence_item.get("evidence_id", cited_id),
+            "citation_id": citation_id,
+            "raw_citation_id": raw_cited_id,
             "cited_ledger_span_id": evidence_item.get("ledger_span_id"),
             "source_doc_id": evidence_item.get("source_doc_id"),
             "citation_source": "model_output",
         }
-        if cited_id not in evidence_ids:
+        if result.structurally_valid is not True:
             invalid_citations.append(
                 {
                     "claim_id": normalized["claim_id"],
                     "raw_cited_evidence_id": raw_cited_id,
-                    "normalized_cited_evidence_id": cited_id,
-                    "reason": "cited_evidence_id_not_in_retrieved_evidence",
+                    "normalized_cited_evidence_id": citation_id,
+                    "reason": validation_records[-1]["validation_error"],
                 }
             )
             continue
         citations.append(
             normalized
         )
-    return citations, invalid_citations
+    return citations, invalid_citations, validation_records
 
 
-def _citation_diagnostics(claims, citations, invalid_citations):
+def _citation_diagnostics(claims, citations, invalid_citations, validation_records=None):
     claim_ids = {claim["claim_id"] for claim in claims}
     cited_claim_ids = {citation["claim_id"] for citation in citations if citation.get("claim_id")}
+    validation_records = validation_records or []
     return {
         "valid_citation_count": len(citations),
         "invalid_citation_count": len(invalid_citations),
         "uncited_claim_count": len(claim_ids - cited_claim_ids),
         "invalid_citations": invalid_citations,
+        "validation_error_counts": _validation_error_counts(validation_records),
     }
 
 
+def _claims_by_id(claims):
+    return {claim.get("claim_id"): claim.get("claim_text", "") for claim in claims}
+
+
+def _span_text_by_citation_id(evidence):
+    return {item.get("citation_id"): item.get("text", "") for item in evidence if item.get("citation_id")}
+
+
 def _build_run_record(run_id, baseline_family, question, evidence, answer_payload, usage, latency_ms, prompt_version, source_snapshot_id, dataset_id, split):
+    evidence = _enrich_evidence(dataset_id, evidence, default_snapshot_hash=source_snapshot_id)
     claims = _normalize_claims(answer_payload)
-    citations, invalid_citations = _normalize_citations(answer_payload, evidence)
-    citation_diagnostics = _citation_diagnostics(claims, citations, invalid_citations)
+    citations, invalid_citations, validation_records = _normalize_citations(answer_payload, evidence, dataset_id, source_snapshot_id=source_snapshot_id)
+    citation_diagnostics = _citation_diagnostics(claims, citations, invalid_citations, validation_records)
+    semantic_records = semantic_support_records(
+        claims_by_id=_claims_by_id(claims),
+        validation_records=validation_records,
+        span_text_by_citation_id=_span_text_by_citation_id(evidence),
+    )
     return {
         "input": {
             "dataset_id": dataset_id,
@@ -363,6 +446,17 @@ def _build_run_record(run_id, baseline_family, question, evidence, answer_payloa
             },
         },
         "retrieved_evidence": evidence,
+        "ledger_spans": [
+            {
+                "dataset_id": item["dataset_id"],
+                "source_id": item["source_id"],
+                "snapshot_hash": item["snapshot_hash"],
+                "span_id": item["span_id"],
+                "span_hash": item["span_hash"],
+                "text": item.get("text", ""),
+            }
+            for item in evidence
+        ],
         "answer": {
             "global_answer": str(answer_payload.get("global_answer") or ""),
             "refusal_label": "insufficient_evidence" if answer_payload.get("refusal") is True else "answered",
@@ -370,6 +464,18 @@ def _build_run_record(run_id, baseline_family, question, evidence, answer_payloa
             "reference_answer": question.get("answer"),
         },
         "citations": citations,
+        "citation_validation": validation_records,
+        "structural_citation_validation": {
+            "status": "completed",
+            "validator_name": "ledger_rag_attribution.pointers.validate_citation",
+        },
+        "semantic_support": {
+            "status": "evaluated" if semantic_records else "pending",
+            "semantic_verifier": "local_deterministic_claim_span_heuristic_v1",
+            "records": semantic_records,
+            "summary": summarize_semantic_support(semantic_records),
+            "note": "local deterministic heuristic; replaceable by future LLM judge or NLI model",
+        },
         "citation_diagnostics": citation_diagnostics,
         "verdicts": [
             {
@@ -398,6 +504,10 @@ def _build_metric_record(run_record):
     claims = run_record["answer"]["atomic_claims"]
     citations = run_record["citations"]
     cited_claim_ids = {citation["claim_id"] for citation in citations}
+    validation_records = run_record.get("citation_validation", [])
+    validation_metrics = _validation_metrics(validation_records)
+    semantic_records = run_record.get("semantic_support", {}).get("records", [])
+    semantic_summary = summarize_semantic_support(semantic_records)
     return {
         "metric_record": {
             "run_id": run_record["run_metadata"]["run_id"],
@@ -413,12 +523,61 @@ def _build_metric_record(run_record):
             "citation_count": len(citations),
             "invalid_citation_count": run_record.get("citation_diagnostics", {}).get("invalid_citation_count", 0),
             "uncited_claim_count": run_record.get("citation_diagnostics", {}).get("uncited_claim_count", 0),
+            **validation_metrics["attribution"],
+        },
+        "replay": {
+            **validation_metrics["replay"],
+        },
+        "semantic_support": {
+            "status": "evaluated" if semantic_records else "pending",
+            **semantic_summary,
+            "note": "local deterministic heuristic; not a paper-grade semantic verifier",
         },
         "system": {
             "latency_ms": run_record["run_metadata"]["latency_ms"],
             "cost_per_query_usd": run_record["run_metadata"]["estimated_cost_usd"],
         },
         "aggregation": {"aggregation_level": "question", "notes": "Gate 8T mini run; not a paper result."},
+    }
+
+
+def _validation_error_counts(validation_records):
+    counts = defaultdict(int)
+    for record in validation_records:
+        counts[record.get("validation_error", "none")] += 1
+    return dict(sorted(counts.items()))
+
+
+def _rate(numerator, denominator):
+    return round(numerator / denominator, 6) if denominator else 0.0
+
+
+def _validation_metrics(validation_records):
+    total = len(validation_records)
+    invalid_count = sum(1 for item in validation_records if item.get("structural_validity") != "valid")
+    valid_count = total - invalid_count
+    not_retrieved_count = sum(1 for item in validation_records if item.get("validation_error") == "not_in_retrieved_evidence")
+    malformed_count = sum(1 for item in validation_records if item.get("validation_error") == "malformed_citation_id")
+    wrong_snapshot_count = sum(1 for item in validation_records if item.get("validation_error") == "wrong_snapshot_hash")
+    wrong_span_count = sum(1 for item in validation_records if item.get("validation_error") == "wrong_span_hash")
+    replay_denominator = total
+    span_replay_success_count = sum(1 for item in validation_records if item.get("span_replay_success") is True)
+    snapshot_replay_success_count = sum(1 for item in validation_records if item.get("snapshot_replay_success") is True)
+    return {
+        "attribution": {
+            "emitted_citation_count": total,
+            "valid_citation_count": valid_count,
+            "invalid_citation_rate": _rate(invalid_count, total),
+            "citation_id_validity_rate": _rate(valid_count, total),
+            "not_in_retrieved_evidence_rate": _rate(not_retrieved_count, total),
+            "malformed_citation_rate": _rate(malformed_count, total),
+            "wrong_snapshot_hash_rate": _rate(wrong_snapshot_count, total),
+            "wrong_span_hash_rate": _rate(wrong_span_count, total),
+        },
+        "replay": {
+            "span_replay_success_rate": _rate(span_replay_success_count, replay_denominator),
+            "snapshot_replay_success_rate": _rate(snapshot_replay_success_count, replay_denominator),
+        },
     }
 
 
@@ -480,6 +639,7 @@ def run_hotpotqa_mini_run(
     progress_path=None,
     progress_stream=None,
     retrieval_top_k=None,
+    question_offset=0,
 ):
     repo_root = Path(repo_root)
     output = Path(output_path)
@@ -496,7 +656,7 @@ def run_hotpotqa_mini_run(
     generation_constraints = _load_generation_constraints(repo_root)
     max_output_tokens = int(generation_constraints.get("max_output_tokens", DEFAULT_MAX_OUTPUT_TOKENS))
     top_k = int(retrieval_top_k or generation_constraints.get("max_evidence_items", DEFAULT_TOP_K))
-    questions = load_questions(questions_path, sample_count)
+    questions = load_questions(questions_path, sample_count, question_offset=question_offset)
     split = snapshot["split"]
     run_id = f"gate8_main_v1_{dataset_id}_run"
     started_at = _utc_now()
@@ -717,6 +877,7 @@ def run_hotpotqa_mini_run(
         "retrieval_index_path": snapshot["retrieval_index_path"],
         "baselines": list(baselines),
         "question_count": len(questions),
+        "question_offset": int(question_offset or 0),
         "attempted_call_count": attempted_call_count,
         "success_count": len(run_records),
         "failure_count": len(failures),

@@ -1,18 +1,17 @@
 # Claim to Experiments Map
 
-This file maps the first-version Ledger-RAG research claim to experiment families. It is a gate document: future experiments should target one or more rows in this table.
+This file maps the attribution-protocol claim to experiment families. Future experiments should target one or more rows in this table.
 
 | Claim component | Experiment family | Primary metrics | Required baselines | Failure interpretation |
 |---|---|---|---|---|
-| evidence traceability | Claim-to-span attribution comparison | citation precision, citation recall, support rate, unsupported-claim rate, overclaim rate | Hybrid RAG, citation-only, Ledger-only, Ledger + Validator | If support rate and unsupported-claim rate do not improve, the ledger is not proving traceability value. |
-| auditability | Replay and provenance checks | span replay success, source hash match rate, claim-to-span mapping completeness, verifier record completeness | Citation-only, Ledger-only, Ledger + Validator | If spans cannot be replayed or hashes do not match, the system is not auditable even if answers look plausible. |
-| long-task stability | Context length and evidence-position stress tests | support rate by context length, support rate by evidence position, answer quality by context bucket | Vanilla RAG, Hybrid RAG, citation-only, Ledger + Validator | If performance degrades similarly when evidence moves to the middle or context grows, the architecture is not mitigating long-task instability. |
-| retrieval isolation | Oracle retrieval and real retrieval comparison | Recall@k, answer quality, support rate under oracle vs real retrieval | Vanilla RAG, Hybrid RAG, Ledger + Validator with oracle evidence | If gains appear only with a better retriever, the experiment does not isolate ledger value. |
-| verifier contribution | Ledger-only vs verifier-only vs full system ablation | support rate, unsupported-claim rate, false insufficient rate, refusal rate | Ledger-only, Validator-only, Ledger + Validator | If the full system is not better than either component alone, the architecture does not justify combining ledger and verifier. |
-| robustness | Noise and conflicting-evidence stress tests | support rate under noise, overclaim rate, conflict handling rate, refusal rate | Hybrid RAG, citation-only, Ledger + Validator | If misleading spans cause unsupported claims at the same rate as baselines, the verifier and ledger controls are insufficient. |
-| engineering cost | System profiling | p50 latency, p95 latency, cost/query, peak memory, ledger size, index size | Hybrid RAG, Ledger-only, Ledger + Validator | If reliability gains require disproportionate latency or cost, the result should be framed as impractical or niche. |
+| Citation pointer validity | Deterministic pointer validation | Invalid Citation Rate, Citation ID Validity Rate | Citation prompting only, Deterministic citation validator only, Ledger pointer + validator | If invalid IDs are not caught or counted, the audit layer is not enforcing citation validity. |
+| Claim-level coverage | Claim-to-citation audit | Claim Citation Coverage, Refusal Precision | Vanilla RAG, Citation prompting only, Ledger pointer + validator | If claims remain uncited or refusals hide missing evidence, attribution coverage is not improved. |
+| Semantic attribution | Claim-to-span entailment evaluation | Citation Precision / Entailment Support Rate, Overclaim Rate | Prompt-based verifier, Post-hoc NLI verifier, Ledger pointer + validator + semantic verifier | If structurally valid citations do not support claims, the protocol only improves citation form. |
+| Replayability | Snapshot and span replay checks | Span Replay Success Rate, Snapshot Replay Success Rate | Ledger pointer only, Ledger pointer + validator | If cited spans cannot be reconstructed from recorded pointers and hashes, the system is not auditable. |
+| Ledger stress behavior | Invalid-ID, re-chunking, drift, position, and conflict stress tests | Validation error categories, replay rates, Overclaim Rate | Citation prompting only, Ledger pointer + validator, Ledger pointer + validator + semantic verifier | If the ledger fails under controlled stress, larger runs should not proceed. |
+| Training contribution | Later SFT/DPO ablation | Invalid Citation Rate, Overclaim Rate, Entailment Support Rate | Ledger pointer + deterministic validator, optional ledger-trained model | If training helps style but not validated correctness, it is not a substitute for deterministic enforcement. |
+| Engineering cost | Audit profiling | Cost per audited claim, Latency per audited claim | All runnable families | If attribution gains require disproportionate cost or latency, the result must be framed as limited. |
 
 ## Gate Rule
 
-No main experiment should be added unless it names the claim component it tests, the baseline family it compares against, and the metric that would falsify the expected contribution.
-
+No main experiment should be added unless it names the claim component it tests, the baseline family it compares against, the metric denominator, and the failure condition that would falsify the expected contribution.
