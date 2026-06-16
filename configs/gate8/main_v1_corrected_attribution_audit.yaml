@@ -1,0 +1,126 @@
+version: 1
+stage: gate8_attribution_audit
+source: corrected_main_v1_50x2x3
+overall:
+  record_count: 300
+  refusal_rate: 0.15
+  claim_count: 679
+  citation_count: 674
+  claim_to_citation_rate: 0.992636
+  claim_citation_coverage: 0.94109
+  invalid_citation_count: 81
+  invalid_citation_record_count: 38
+  invalid_citation_rate: 0.120178
+by_dataset:
+  2wikimultihopqa:
+    record_count: 100
+    refusal_rate: 0.12
+    claim_count: 260
+    citation_count: 254
+    claim_to_citation_rate: 0.976923
+    claim_citation_coverage: 0.926923
+    invalid_citation_count: 49
+    invalid_citation_record_count: 21
+    invalid_citation_rate: 0.192913
+  hotpotqa:
+    record_count: 100
+    refusal_rate: 0.07
+    claim_count: 224
+    citation_count: 235
+    claim_to_citation_rate: 1.049107
+    claim_citation_coverage: 0.955357
+    invalid_citation_count: 18
+    invalid_citation_record_count: 11
+    invalid_citation_rate: 0.076596
+  musique:
+    record_count: 100
+    refusal_rate: 0.26
+    claim_count: 195
+    citation_count: 185
+    claim_to_citation_rate: 0.948718
+    claim_citation_coverage: 0.94359
+    invalid_citation_count: 14
+    invalid_citation_record_count: 6
+    invalid_citation_rate: 0.075676
+by_baseline:
+  ledger_validator:
+    record_count: 150
+    refusal_rate: 0.153333
+    claim_count: 338
+    citation_count: 364
+    claim_to_citation_rate: 1.076923
+    claim_citation_coverage: 0.997041
+    invalid_citation_count: 21
+    invalid_citation_record_count: 10
+    invalid_citation_rate: 0.057692
+  vanilla_rag:
+    record_count: 150
+    refusal_rate: 0.146667
+    claim_count: 341
+    citation_count: 310
+    claim_to_citation_rate: 0.909091
+    claim_citation_coverage: 0.88563
+    invalid_citation_count: 60
+    invalid_citation_record_count: 28
+    invalid_citation_rate: 0.193548
+by_dataset_baseline:
+  2wikimultihopqa__ledger_validator:
+    record_count: 50
+    refusal_rate: 0.08
+    claim_count: 133
+    citation_count: 145
+    claim_to_citation_rate: 1.090226
+    claim_citation_coverage: 1.0
+    invalid_citation_count: 15
+    invalid_citation_record_count: 6
+    invalid_citation_rate: 0.103448
+  2wikimultihopqa__vanilla_rag:
+    record_count: 50
+    refusal_rate: 0.16
+    claim_count: 127
+    citation_count: 109
+    claim_to_citation_rate: 0.858268
+    claim_citation_coverage: 0.850394
+    invalid_citation_count: 34
+    invalid_citation_record_count: 15
+    invalid_citation_rate: 0.311927
+  hotpotqa__ledger_validator:
+    record_count: 50
+    refusal_rate: 0.08
+    claim_count: 119
+    citation_count: 133
+    claim_to_citation_rate: 1.117647
+    claim_citation_coverage: 0.991597
+    invalid_citation_count: 6
+    invalid_citation_record_count: 4
+    invalid_citation_rate: 0.045113
+  hotpotqa__vanilla_rag:
+    record_count: 50
+    refusal_rate: 0.06
+    claim_count: 105
+    citation_count: 102
+    claim_to_citation_rate: 0.971429
+    claim_citation_coverage: 0.914286
+    invalid_citation_count: 12
+    invalid_citation_record_count: 7
+    invalid_citation_rate: 0.117647
+  musique__ledger_validator:
+    record_count: 50
+    refusal_rate: 0.3
+    claim_count: 86
+    citation_count: 86
+    claim_to_citation_rate: 1.0
+    claim_citation_coverage: 1.0
+    invalid_citation_count: 0
+    invalid_citation_record_count: 0
+    invalid_citation_rate: 0.0
+  musique__vanilla_rag:
+    record_count: 50
+    refusal_rate: 0.22
+    claim_count: 109
+    citation_count: 99
+    claim_to_citation_rate: 0.908257
+    claim_citation_coverage: 0.899083
+    invalid_citation_count: 14
+    invalid_citation_record_count: 6
+    invalid_citation_rate: 0.141414

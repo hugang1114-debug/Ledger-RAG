@@ -1,0 +1,41 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8o_deepseek_smoke_run_authorization
+status: readiness_in_progress
+authorized_to_run: false
+execution_authorized: false
+currency: USD
+smoke_run_budget_usd: 10
+smoke_run_authorized: true
+smoke_budget_owner_approval: approved_for_smoke_run
+smoke_authorized_at: 2026-05-17
+smoke_authorized_by: user_confirmation
+smoke_authorized_scope: deepseek_v4_pro_smoke_only
+main_run_budget_usd: unset_requires_later_approval
+retry_buffer_fraction: 0.30
+budget_owner_approval: pending
+pricing_recheck_required_on_run_date: true
+
+budget_includes:
+  - generator_input_tokens
+  - generator_output_tokens
+  - verifier_input_tokens
+  - verifier_output_tokens
+  - repeated_calls_across_six_baseline_families
+  - retry_calls
+  - json_repair_calls
+  - provider_tool_costs_if_enabled_later
+
+budget_excludes:
+  - local_lexical_retrieval_index_construction
+  - local_dataset_source_snapshots
+  - local_result_storage
+  - literature_pdfs
+  - project_docs
+  - ignored_local_caches
+
+blockers:
+  - main_run_budget_unapproved
+  - execution_not_authorized
+  - run_date_pricing_not_rechecked
+  - api_key_or_runtime_unverified

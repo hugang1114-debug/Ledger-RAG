@@ -21,11 +21,11 @@
       "official_url": "https://hotpotqa.github.io/",
       "processed_corpus_hash": "78487b5e57e5423c9ba92afdcac3e0b4c40777aac2ba19123bca0a13d8ab74b6",
       "raw_data_hash": "0e2d7abbc276a013a0a4903faa3c6c3812c9f3d2d5cd888946c586cf5d01970a",
-      "retrieval_index_path": "unset",
+      "retrieval_index_path": "datasets/retrieval_indexes/main_v1/hotpotqa/dev_distractor/index_manifest.json",
       "source_snapshot_id": "hotpotqa_dev_distractor_official_78487b5e57e5423c",
       "split": "dev_distractor",
       "split_hash": "f57ae5989f529466a1d7785637e9fc1b0c913bf9d21baa53f6c134b2b8be46cd",
-      "status": "source_ready",
+      "status": "ready",
       "storage_class": "small"
     },
     {
@@ -49,11 +49,11 @@
       "official_url": "https://github.com/Alab-NII/2wikimultihop",
       "processed_corpus_hash": "4ad66154ea407847829032d395e3acd48e88e42936c0cfe0ec98c4d725610f9e",
       "raw_data_hash": "67f133222b2e59d78dbb6ed5ba31bb148274c9cd865ee8b733753c6e372d53c7",
-      "retrieval_index_path": "unset",
+      "retrieval_index_path": "datasets/retrieval_indexes/main_v1/2wikimultihopqa/dev/index_manifest.json",
       "source_snapshot_id": "2wikimultihopqa_dev_official_4ad66154ea407847",
       "split": "dev",
       "split_hash": "1634e91324a6d71aee77f5779d501bc8f757f73392c219422828c6c4fa3688de",
-      "status": "source_ready",
+      "status": "ready",
       "storage_class": "small"
     },
     {
@@ -78,11 +78,11 @@
       "official_url": "https://github.com/StonyBrookNLP/musique",
       "processed_corpus_hash": "4b485a716c1a4fc65e2dc225321cbcc35e23e7f276017e5a93b69c99255e980e",
       "raw_data_hash": "5bda2833f7d26578d7ada2fdd79cdf72f11ba3955bb70f5d47899237c1791d05",
-      "retrieval_index_path": "unset",
+      "retrieval_index_path": "datasets/retrieval_indexes/main_v1/musique/dev/index_manifest.json",
       "source_snapshot_id": "musique_dev_official_4b485a716c1a4fc6",
       "split": "dev",
       "split_hash": "34223e709831f9cfad9fe84e50ce63a3facf2578192525009da85cd57618a76a",
-      "status": "source_ready",
+      "status": "ready",
       "storage_class": "small"
     }
   ],

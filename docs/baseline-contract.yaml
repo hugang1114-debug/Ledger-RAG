@@ -1,46 +1,31 @@
-version: 1
-gate: "Gate 5: Baseline Protocol Locked"
-contract_name: "ledger_rag_baseline_run_record"
-description: "Shared input/output contract for all v1 baseline families."
+version: 2
+contract_name: attribution_protocol_run_record
+description: Shared input/output contract for auditable attribution baseline runs.
 
 input:
   dataset_id:
     type: string
     required: true
-    description: "Dataset id from docs/dataset-decision-matrix.yaml."
   split:
     type: string
     required: true
-    description: "Dataset split name used for this run."
   question_id:
     type: string
     required: true
-    description: "Stable dataset question id."
   question_text:
     type: string
     required: true
-    description: "Question text shown to the method."
-  corpus_snapshot_id:
+  source_snapshot_id:
     type: string
     required: true
-    description: "Stable id for the corpus snapshot used by retrieval."
   retrieval_config:
     type: object
     required: true
     fields:
-      retriever_family: "bm25 | dense | hybrid | oracle"
+      retriever_family: "bm25 | dense | hybrid | lexical | oracle"
       top_k: integer
       reranker: "none | named_reranker"
       evidence_budget: "maximum evidence items or tokens exposed to generation"
-  generation_config:
-    type: object
-    required: true
-    fields:
-      model_id: string
-      prompt_version: string
-      answer_style: string
-      max_output_tokens: integer
-      temperature: number
 
 retrieved_evidence:
   type: list
@@ -48,14 +33,16 @@ retrieved_evidence:
   item_fields:
     rank: integer
     evidence_id: string
-    source_doc_id: string
+    citation_id: "dataset_id/source_id/snapshot_hash/span_id/span_hash or null"
+    dataset_id: string
+    source_id: string
     source_uri: string
+    snapshot_hash: "string or null"
+    span_id: "string or null"
+    span_hash: "string or null"
     text: string
     score: number
     retriever_name: string
-    ledger_span_id: "string or null"
-    source_hash: "string or null"
-    replay_path: "string or null"
 
 answer:
   type: object
@@ -63,23 +50,33 @@ answer:
   fields:
     global_answer: string
     refusal_label: "answered | insufficient_evidence | refused | empty"
+    refusal_reason: "string or null"
     atomic_claims:
       type: list
       item_fields:
         claim_id: string
         claim_text: string
         answer_order: integer
-        confidence: "number or null"
 
 citations:
   type: list
   required: true
   item_fields:
     claim_id: string
-    cited_evidence_id: string
-    cited_ledger_span_id: "string or null"
-    citation_role: "primary | supporting | contrasting | unknown"
+    raw_citation_id: string
+    normalized_citation_id: string
     citation_source: "model_output | deterministic_mapping | verifier_adjusted"
+
+citation_validation:
+  type: list
+  required: true
+  item_fields:
+    claim_id: string
+    citation_id: string
+    status: "valid_citation | nonexistent_citation_id | citation_id_not_in_retrieved_evidence | wrong_snapshot_hash | wrong_span_hash | malformed_citation_id | structurally_valid_but_semantically_unsupported_citation | overclaim_partially_supported_claim"
+    structurally_valid: boolean
+    semantic_status: "entailed | partially_supported | unsupported | contradictory | insufficient_evidence | not_checked | null"
+    validator_name: string
 
 verdicts:
   type: list
@@ -87,7 +84,7 @@ verdicts:
   item_fields:
     claim_id: string
     verifier_enabled: boolean
-    label: "support | refute | insufficient | not_checked"
+    label: "entailed | partially_supported | unsupported | contradictory | insufficient_evidence | not_checked"
     score: "number or null"
     verifier_name: "string or null"
     rationale: "string or null"
@@ -96,31 +93,38 @@ run_metadata:
   type: object
   required: true
   fields:
-    baseline_family: "vanilla_rag | hybrid_rag | citation_only | validator_only | ledger_only | ledger_validator"
+    baseline_family: "vanilla_rag | citation_prompting_only | prompt_based_verifier | posthoc_nli_verifier | deterministic_citation_validator_only | ledger_pointer_only | ledger_pointer_validator | ledger_pointer_validator_semantic | ledger_trained_sft_dpo"
     run_id: string
     code_version: string
     config_version: string
     seed: integer
-    started_at: string
-    completed_at: string
     latency_ms: number
     estimated_cost_usd: number
-    hardware: string
     notes: string
 
 valid_baseline_families:
   - vanilla_rag
-  - hybrid_rag
-  - citation_only
-  - validator_only
-  - ledger_only
-  - ledger_validator
+  - citation_prompting_only
+  - prompt_based_verifier
+  - posthoc_nli_verifier
+  - deterministic_citation_validator_only
+  - ledger_pointer_only
+  - ledger_pointer_validator
+  - ledger_pointer_validator_semantic
+  - ledger_trained_sft_dpo
+
+legacy_diagnostic_baseline_aliases:
+  hybrid_rag: prompt_policy_slot_not_dense_hybrid_until_dense_retrieval_or_reranking_exists
+  citation_only: citation_prompting_only
+  validator_only: prompt_based_verifier
+  ledger_only: ledger_pointer_only
+  ledger_validator: ledger_pointer_validator_semantic
 
 non_comparable_conditions:
-  - "different dataset split"
-  - "different question list"
-  - "different corpus snapshot"
-  - "different evidence budget"
-  - "hidden gold evidence in main run"
-  - "missing answer, citation, verdict, or run metadata sections"
-
+  - different dataset split
+  - different question list
+  - different source snapshot
+  - different evidence budget
+  - hidden gold evidence in main run
+  - missing citation_validation records for citation-capable baselines
+  - lexical support rate reported as a core metric

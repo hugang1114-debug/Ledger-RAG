@@ -1,0 +1,112 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8_citation_integrity_fix_10x6x3
+status: completed_with_findings
+provider: deepseek
+model: deepseek-v4-pro
+api_calls_made: 180
+sample_count_per_dataset: 10
+datasets:
+  - hotpotqa
+  - 2wikimultihopqa
+  - musique
+baselines:
+  - vanilla_rag
+  - hybrid_rag
+  - citation_only
+  - validator_only
+  - ledger_only
+  - ledger_validator
+artifact_root: artifacts/gate8/main_v1/runs/citation_integrity_fix_10x6x3
+audit_summary: configs/gate8/main_v1_citation_integrity_fix_10x6x3_audit.yaml
+not_paper_result: true
+run_totals:
+  attempted_call_count: 180
+  success_count: 180
+  failure_count: 0
+  total_prompt_tokens: 469956
+  total_completion_tokens: 47249
+  estimated_cost_usd: 0.245537
+  dropped_invalid_citation_count: 15
+  post_sanitizer_uncited_claim_count: 26
+dataset_runs:
+  - dataset_id: hotpotqa
+    split: dev_distractor
+    top_k: 8
+    success_count: 60
+    failure_count: 0
+    estimated_cost_usd: 0.072733
+    dropped_invalid_citation_count: 6
+    post_sanitizer_uncited_claim_count: 9
+  - dataset_id: 2wikimultihopqa
+    split: dev
+    top_k: 8
+    success_count: 60
+    failure_count: 0
+    estimated_cost_usd: 0.068642
+    dropped_invalid_citation_count: 8
+    post_sanitizer_uncited_claim_count: 12
+  - dataset_id: musique
+    split: dev
+    top_k: 16
+    success_count: 60
+    failure_count: 0
+    estimated_cost_usd: 0.104162
+    dropped_invalid_citation_count: 1
+    post_sanitizer_uncited_claim_count: 5
+audit_overall:
+  record_count: 180
+  refusal_rate: 0.077778
+  claim_count: 446
+  citation_count: 470
+  post_sanitizer_claim_coverage: 0.941704
+  invalid_citation_rate: 0.0
+  dropped_invalid_citation_count: 15
+  lexical_support_rate: 0.880952
+  weak_support_rate: 0.119048
+baseline_audit:
+  vanilla_rag:
+    post_sanitizer_claim_coverage: 0.838235
+    invalid_citation_rate: 0.0
+    dropped_invalid_citation_count: 0
+    lexical_support_rate: 0.929825
+    refusal_rate: 0.1
+  hybrid_rag:
+    post_sanitizer_claim_coverage: 0.859155
+    invalid_citation_rate: 0.0
+    dropped_invalid_citation_count: 10
+    lexical_support_rate: 0.885246
+    refusal_rate: 0.066667
+  citation_only:
+    post_sanitizer_claim_coverage: 1.0
+    invalid_citation_rate: 0.0
+    dropped_invalid_citation_count: 0
+    lexical_support_rate: 0.860759
+    refusal_rate: 0.066667
+  validator_only:
+    post_sanitizer_claim_coverage: 0.931507
+    invalid_citation_rate: 0.0
+    dropped_invalid_citation_count: 5
+    lexical_support_rate: 0.867647
+    refusal_rate: 0.1
+  ledger_only:
+    post_sanitizer_claim_coverage: 1.0
+    invalid_citation_rate: 0.0
+    dropped_invalid_citation_count: 0
+    lexical_support_rate: 0.906667
+    refusal_rate: 0.066667
+  ledger_validator:
+    post_sanitizer_claim_coverage: 1.0
+    invalid_citation_rate: 0.0
+    dropped_invalid_citation_count: 0
+    lexical_support_rate: 0.85
+    refusal_rate: 0.066667
+acceptance:
+  invalid_citation_rate_after_sanitizer_zero: pass
+  dropped_invalid_citation_count_reported: pass
+  ledger_validator_lexical_support_materially_stronger_than_ledger_only: fail
+  refusal_rate_not_spiked_more_than_0_10_absolute: pass
+decision:
+  scale_full_run_now: false
+  reason: citation_integrity_mechanics_fixed_but_ledger_validator_did_not_outperform_ledger_only_on_lexical_support_in_10x6x3_validation
+  next_step: inspect_sample_outputs_and_decide_whether_to_update_ledger_validator_prompt_or_add_real_verifier

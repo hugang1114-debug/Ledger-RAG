@@ -1,0 +1,23 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8_main_v1_launch_prepared
+status: ready_for_user_started_main_batch
+provider: deepseek
+model: deepseek-v4-pro
+datasets:
+  - hotpotqa
+  - 2wikimultihopqa
+  - musique
+baselines:
+  - vanilla_rag
+  - ledger_validator
+sample_count_per_dataset: 50
+max_provider_attempts: 3
+output_root: artifacts/gate8/main_v1/runs/deepseek_v4_pro_50x2x3
+command: python scripts/run_gate8_main_v1_batch.py --sample-count 50 --baselines vanilla_rag ledger_validator --output-root artifacts/gate8/main_v1/runs/deepseek_v4_pro_50x2x3 --max-provider-attempts 3
+resume_command: python scripts/run_gate8_main_v1_batch.py --sample-count 50 --baselines vanilla_rag ledger_validator --output-root artifacts/gate8/main_v1/runs/deepseek_v4_pro_50x2x3_resume --resume-root artifacts/gate8/main_v1/runs/deepseek_v4_pro_50x2x3 --max-provider-attempts 3
+dry_run_checked_command: python scripts/run_gate8_main_v1_batch.py --sample-count 1 --baselines vanilla_rag ledger_validator --output-root artifacts/gate8/main_v1/batch_dry_run --dry-run --max-provider-attempts 3
+dry_run_result: passed_3_datasets_6_records
+estimated_provider_calls: 300
+not_full_gate8_pass: true
+notes: first real main batch uses the two implemented and mini-validated baselines across all three main_v1 datasets; six-baseline paper comparison still requires the remaining baseline implementations.

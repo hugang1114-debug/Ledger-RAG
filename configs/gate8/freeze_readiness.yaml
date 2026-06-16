@@ -1,0 +1,39 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8g_freeze_readiness
+status: readiness_in_progress
+authorized_to_run: false
+purpose: execution_preflight_readiness
+run_matrix: configs/gate8/main_v1_run_matrix.yaml
+provider_decision: configs/gate8/provider_decision.yaml
+provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
+prompt_registry: configs/gate8/prompt_registry.yaml
+generation_config_registry: configs/gate8/generation_config_registry.yaml
+source_snapshot_registry: snapshots/main_v1/source_snapshots.json
+
+provider_freeze_selected: true
+provider_pricing_checked_on_run_date: false
+provider_docs_checked_on_run_date: false
+terms_checked_on_run_date: false
+api_key_or_runtime_available: true
+
+prompt_versions_locked: true
+generation_config_locked: true
+
+cost_budget_approved: false
+cost_budget_note: unset
+
+execution_card: unset
+reproducibility_review_complete: false
+execution_authorized: false
+
+blockers:
+  - provider_pricing_not_checked_on_run_date
+  - provider_docs_not_checked_on_run_date
+  - terms_not_checked_on_run_date
+  - cost_budget_unapproved
+  - execution_card_missing
+  - reproducibility_review_unfinished
+  - run_matrix_non_executable
+  - provider_decision_non_executable
+  - provider_evidence_registry_non_executable

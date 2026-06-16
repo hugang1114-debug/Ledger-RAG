@@ -1,0 +1,41 @@
+answer_present: true
+answer_sha256: f399f9243d8a7d2c8c18f2f288049ba4e72cebe51c69c7fd1f9be151ccb0bf6a
+artifact_dir: artifacts/gate8/smoke/deepseek/latest
+artifact_hashes:
+  cost_estimate.json: a76dc4283afad83a13482a040e5f22b84301a8806720ff476f8192707934531a
+  metric_record.json: 06eaf246c7a13cd43e9ff97576647fd692b3e3a06961408ea1624bf8050854e6
+  request.json: d64c21df2cdb97b012179695570547d91bf1d269ad1f84a9af734908f2f0fa44
+  response.json: b864260cde2d2a5d7de91835babb6f8a7ad251b021b84ddb7d7dcdf989501aa9
+  run_record.json: f67db1dfeefaf3ad11cd3d4ec37fd17fef665f9de8ab359fb9d268061fc01675
+artifact_sizes:
+  cost_estimate.json: 605
+  metric_record.json: 1769
+  request.json: 1103
+  response.json: 1100
+  run_record.json: 3283
+blockers:
+budget_ceiling_usd: 10.0
+citation_count: 1
+claim_count: 1
+dataset_id: gate7_offline
+estimated_cost_usd: 0.00019
+full_gate8_execution_authorized: false
+gate: gate8q_smoke_result_review
+model: deepseek-v4-pro
+not_paper_result: true
+provider: deepseek
+question_id: q_traceability
+review_status: passed
+run_id: gate8p_deepseek_smoke_q_traceability
+secret_scan_artifact_hits:
+secret_scan_passed: true
+split: pilot
+usage:
+  completion_tokens: 114
+  prompt_cache_hit_tokens: 0
+  prompt_cache_miss_tokens: 208
+  prompt_tokens: 208
+  prompt_tokens_details:
+    cached_tokens: 0
+  total_tokens: 322
+within_budget: true

@@ -1,0 +1,47 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8r_deepseek_provider_evidence_lock
+status: readiness_in_progress
+selected: true
+provider: deepseek
+model: deepseek-v4-pro
+model_version_or_date: 2026-05-17_pricing_page_identity
+pricing_checked_at: 2026-05-17
+pricing_source: https://api-docs.deepseek.com/quick_start/pricing
+pricing_recheck_required_on_main_run_date: true
+model_docs_checked_at: 2026-05-17
+model_docs_source: https://api-docs.deepseek.com/quick_start/pricing
+terms_checked_at: 2026-05-17
+terms_source: https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html
+context_window: 1000000
+max_output_tokens: 384000
+rate_limit_note: account_specific_rate_limits_and_throughput_remain_recheck_required_before_main_execution
+data_retention_note: official_terms_privacy_recorded_but_must_be_rechecked_before_main_execution
+api_key_required: true
+api_key_present: true_for_local_smoke_only_not_tracked
+prompt_versions_locked: true
+generation_config_locked: true
+cost_budget_approved: false
+run_authorized: false
+provider_evidence_registry: configs/gate8/provider_evidence_registry.yaml
+smoke_result_summary: configs/gate8/deepseek_smoke_result_summary.yaml
+
+required_future_evidence:
+  - run_date_pricing_recheck
+  - main_budget_approval
+  - execution_card_for_main_baselines
+  - reproducibility_review_for_main_runs
+
+disallowed_evidence:
+  - tracked_api_keys_or_secrets
+  - raw_provider_responses_in_git
+  - stale_prices_from_reports_or_old_notes
+  - main_baseline_runs_without_execution_card
+
+prompt_config_requirements:
+  prompt_version_per_baseline_family: locked_in_configs_gate8_prompt_registry_yaml
+  generation_config_version: locked_in_configs_gate8_generation_config_registry_yaml
+  deterministic_settings: locked_with_provider_seed_support_recheck_required
+  shared_answer_style: locked_global_answer_with_atomic_claims
+  shared_max_evidence_budget: locked_8
+  refusal_behavior: must_match_docs_baseline_protocol

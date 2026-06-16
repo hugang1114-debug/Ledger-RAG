@@ -1,45 +1,48 @@
-# Ledger-RAG Project Boundary
+# Project Boundary
 
 ## Research Claim
 
 The first-version paper should test this claim:
 
-> In deep-research agent workflows, moving evidence into a versioned, replayable ledger with stable span identifiers and independent claim verification can improve evidence traceability, auditability, and long-task stability at acceptable engineering cost.
+> In RAG and deep-research agent workflows, moving from free-form citation strings to versioned evidence pointers with deterministic validation and semantic attribution checks can reduce invalid citations, improve claim-level citation coverage, and guarantee offline replay of cited spans.
 
-This project should not claim that Ledger-RAG is a universal replacement for long-context models or that it always improves answer accuracy.
+This is an attribution protocol claim. It is not a claim that final answer accuracy improves, that hallucination is solved, or that the ledger replaces long-context models.
 
 ## In Scope
 
-- Deterministic evidence ledger design: documents, chunks, spans, claims, citations, verdicts.
-- Atomic-claim or sentence-level attribution.
-- Static, replayable source snapshots.
-- Baselines that isolate retrieval, citation generation, ledger storage, and verification effects.
-- Metrics split by retrieval quality, answer quality, attribution quality, and system cost.
-- Reproducible metadata: dataset versions, model versions, prompts, configs, seeds, and output paths.
+- Evidence ledger design for datasets, sources, snapshots, spans, claims, citations, and verdicts.
+- Stable citation pointers with dataset, source, snapshot, span, and span-hash fields.
+- Deterministic checks for source existence, snapshot replay, span existence, span hash consistency, and retrieved-evidence membership.
+- Semantic claim-to-span support evaluation as a separate layer after structural validation.
+- Stress tests for invalid IDs, re-chunking, source version drift, evidence position shift, and conflicting evidence.
+- Cost and latency per audited claim.
+- Historical Gate 1-8 artifacts as diagnostics.
 
 ## Out of Scope for v1
 
+- Claims that Ledger-RAG is a new general-purpose RAG architecture.
+- Claims that the protocol improves final answer accuracy unless later experiments prove it.
+- Claims that the protocol solves hallucination.
+- Claims that the ledger is cryptographically tamper-proof without cryptographic audit logs.
+- Training-based guarantees of citation correctness.
 - Token-level attribution.
-- Training or RL optimization for traceability.
 - Dynamic web browsing as a main experiment source.
 - High-risk medical, legal, or financial domains.
 - Product UI or production-grade agent orchestration.
-- Claims based only on the original feasibility report.
 
-## Reality Corrections
+## Boundary Rules
 
-- The project should advance by experiment gates, not by a fixed 24-week timeline.
-- TRACE is relevant related work but should not be a v1 executable baseline unless its training and reproduction cost is explicitly accepted.
-- LOCA-bench is valuable for later agent-context stress testing, but it is not the first main experiment.
-- LongBench-Cite, L-CiteEval, and SUnsET may have non-trivial tooling and data assumptions; they require feasibility checks before becoming main experiments.
-- Budget estimates must be checked against official pricing at execution time.
-- PDF/HTML parsing drift is a core risk. Any span identity design must record source hashes, parser versions, and local span hashes.
-- The first reproducible corpus should prefer official static datasets and snapshots over live web data.
+- Treat generation and audit as separate layers.
+- Do not trust model-generated citation IDs.
+- Reject, sanitize, or explicitly count invalid citation IDs.
+- Keep structural citation validity separate from semantic support.
+- Use lexical overlap only as a debugging diagnostic.
+- Treat current Gate 8 mini-main results as diagnostic only.
+- Do not scale Gate 8 by sample size alone before fixing attribution mechanics.
 
-## Success Criteria for the Foundation Phase
+## Foundation Success Criteria
 
-- Repository contains clear agent rules and project boundaries.
-- Core literature is downloaded or marked with a verified official landing page.
-- Paper metadata records official provenance.
-- Later contributors can see exactly what gate is next before writing code or running experiments.
-
+- The repository documents the attribution protocol and non-goals clearly.
+- Citation pointers can be parsed and checked deterministically.
+- Minimal validator tests cover invalid IDs, retrieved-evidence membership, hash mismatch, replay behavior, and semantic failure labels.
+- Future experiments name the attribution metric they test and the failure condition that would falsify the claim.

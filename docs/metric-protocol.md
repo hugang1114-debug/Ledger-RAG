@@ -1,81 +1,84 @@
 # Metric Protocol
 
-Gate 6 locks metric definitions before any baseline comparison is run. This gate does not authorize implementation code, dataset downloads, or model runs.
+This protocol defines core metrics for the auditable attribution direction. It does not authorize experiment execution.
 
 ## Reporting Principles
 
-Report metrics by group. Do not collapse retrieval, answer quality, attribution, and system cost into one score. Ledger-RAG's core claim is about traceability, auditability, long-task stability, and acceptable cost; average answer quality alone cannot support that claim.
+Report structural citation validity, semantic support, replayability, refusal behavior, and system cost separately. Do not collapse them into one score.
 
-All metrics must be computed on the same run records defined in `docs/baseline-contract.yaml`. If a metric cannot be computed for a baseline family, the output must record `not_applicable` or `not_available` with a reason. Missing values must not be silently dropped.
+Structural citation validity must be computed deterministically from run records, retrieved evidence IDs, and ledger spans. Semantic support must be evaluated separately from pointer validity.
 
-Refusals must be included in denominators unless a metric definition explicitly states otherwise. Report refusal rate next to support and answer-quality metrics so a method cannot improve support by refusing most questions.
+For current diagnostic experiments, structural metrics are computed deterministically and semantic metrics are computed offline using the calibrated DeepSeek-V4-Pro LLM-as-a-Judge pipeline. DeepSeek judge labels are machine judge labels, not gold labels.
 
-## Retrieval Metrics
+Refusals must be included in denominators unless a metric explicitly says otherwise. Report refusal precision so conservative systems cannot hide attribution failures by refusing too often.
 
-Use these when gold evidence, supporting facts, or oracle evidence ids are available.
+## System Components vs Evaluation Judges
 
-| Metric | Definition | Applies to | Failure signal |
-|---|---|---|---|
-| Recall@k | Fraction of gold evidence items appearing in the top-k retrieved evidence list. | Vanilla RAG, Hybrid RAG, Citation-only, Validator-only, Ledger-only, Ledger + Validator | Low recall means downstream attribution failure may be retrieval failure, not ledger failure. |
-| Precision@k | Fraction of top-k retrieved evidence items that match gold evidence. | All retrieval variants | Low precision increases noise and tests robustness of ledger/verifier controls. |
-| MRR | Reciprocal rank of the first gold evidence item, averaged over questions. | Retrieval variants with ranked evidence | Low MRR indicates correct evidence is buried. |
-| nDCG | Discounted ranking quality using graded or binary relevance labels. | Datasets with ranked or mapped evidence relevance | Low nDCG indicates poor evidence ordering even if recall is acceptable. |
+Semantic Verifier refers to a module inside a system variant. It can influence generated outputs, refusals, or citation filtering.
 
-Retrieval metrics must be reported separately for real retrieval and oracle retrieval diagnostics.
+LLM-as-a-Judge refers to an offline evaluator used to score all system variants after outputs are produced. DeepSeek-V4-Pro is used in this role unless a future experiment explicitly inserts it into a system variant.
 
-## Answer-Quality Metrics
+These roles must not be conflated. A method name should describe the system under test, not the offline judge used to score it.
 
-Use exact-match and F1 for short-answer datasets. Use ROUGE-L only where the dataset or benchmark expects summary-style comparison. Use claim-level correctness when answers are decomposed into atomic claims. Use FActScore only when its dependencies, knowledge source, and cost are explicitly recorded.
+## Core Metrics
 
-| Metric | Definition | Applies to | Failure signal |
-|---|---|---|---|
-| EM | Exact normalized answer match. | Short-answer QA | Shows task accuracy but not evidence support. |
-| F1 | Token-level answer overlap with gold answer. | Short-answer QA | Useful for QA comparability, insufficient for Ledger-RAG claim alone. |
-| ROUGE-L | Longest common subsequence overlap. | Long-form or summarization-style answers | Weak factual proxy; must not be the only long-answer metric. |
-| Claim-level correctness | Fraction of atomic claims judged correct against gold answer/evidence. | Claim-decomposed outputs | Separates answer content from citation support. |
-| FActScore | Fraction of supported atomic facts under a fixed factuality evaluator. | Long-form answers where feasible | Requires evaluator/version/cost recording. |
+| Metric | Definition | Denominator | Failure signal |
+|---|---|---:|---|
+| Invalid Citation Rate | Fraction of emitted citation IDs with malformed, nonexistent, not-retrieved, wrong-snapshot, or wrong-span-hash status. | emitted citations | Model or protocol emits citation strings that cannot be audited. |
+| Citation ID Validity Rate | Fraction of emitted citation IDs that pass deterministic structural validation. | emitted citations | Low value means citation IDs are not reliable evidence pointers. |
+| Claim Citation Coverage | Fraction of answer claims with at least one structurally valid citation. | answer claims requiring evidence | Low value means claims are under-attributed. |
+| Citation Precision / Entailment Support Rate | Fraction of structurally valid cited claim-span pairs judged entailed. | structurally valid claim-citation pairs | Low value means valid pointers are being used to launder unsupported claims. |
+| Overclaim Rate | Fraction of claims that are only partially supported, contradictory, or stronger than cited evidence. | answer claims requiring evidence | Captures claims that cite relevant but insufficient evidence. |
+| Span Replay Success Rate | Fraction of cited spans reconstructable from the ledger with matching span hash. | cited ledger spans | Low value means cited evidence is not replayable. |
+| Snapshot Replay Success Rate | Fraction of cited source snapshots reconstructable with matching snapshot hash. | cited source snapshots | Low value means source version drift breaks auditability. |
+| Refusal Precision | Fraction of refusals judged evidence-insufficient by gold labels, human labels, or calibrated verifier. | refusals | Low value means the system refuses instead of auditing hard claims. |
+| Cost per audited claim | Total model/API/compute cost divided by audited claims. | audited claims | Reliability gain may be impractical. |
+| Latency per audited claim | End-to-end audit latency divided by audited claims. | audited claims | Attribution protocol may be too slow for target workflows. |
 
-If answer quality improves while attribution metrics do not improve, the result does not support the main Ledger-RAG claim.
+## Semantic Support Metrics
 
-## Attribution Metrics
+Semantic-layer diagnostics are separate from structural citation validity. In current migrated diagnostics, DeepSeek-V4-Pro judge v2 can populate these fields offline:
 
-Attribution metrics are the primary evidence for the research claim.
+- `entailment_support_rate`
+- `unsupported_citation_rate`
+- `partially_supported_rate`
+- `contradictory_rate`
+- `insufficient_evidence_rate`
+- `semantic_evaluation_skip_rate`
 
-| Metric | Definition | Applies to | Failure signal |
-|---|---|---|---|
-| Citation precision | Fraction of cited evidence items that support the associated claim. | Citation-capable baselines | Low precision indicates citation laundering or weak citation grounding. |
-| Citation recall | Fraction of claims requiring evidence that cite at least one supporting evidence item. | Citation-capable baselines | Low recall indicates unsupported or under-cited claims. |
-| Support rate | Fraction of atomic claims labeled `support` by the verifier or gold attribution mapping. | Validator-capable and ledger variants | Main traceability indicator. |
-| Unsupported-claim rate | Fraction of atomic claims labeled `insufficient`, `refute`, or uncited when citation is required. | All claim-decomposed variants | Core failure metric for evidence traceability. |
-| Overclaim rate | Fraction of claims whose strength exceeds cited evidence support. | Verifier-capable variants | Captures citations that are relevant but too weak. |
-| Claim-to-span mapping completeness | Fraction of atomic claims with at least one valid evidence or ledger span id. | Citation-only and ledger variants | Auditability failure if incomplete. |
-| Span replay success | Fraction of cited ledger spans that can be replayed from recorded source metadata. | Ledger-only and Ledger + Validator | Auditability failure if spans cannot be replayed. |
+Skipped semantic evaluations occur when structural validation failed or span text cannot be resolved. These semantic fields must identify `judge_model` and `judge_prompt_version` when an LLM-as-a-Judge is used. They must not be treated as human-calibrated paper-grade entailment until validated against human annotation.
 
-For methods without ledger spans, replay metrics are `not_applicable`; citation mapping metrics still apply when evidence ids exist.
+DeepSeek v1 vs v2 comparisons are prompt stability diagnostics only. They are not judge reliability validation.
 
-## System Metrics
+## Judge Reliability Plan
 
-System metrics define acceptable engineering cost.
+Judge reliability requires a separate human calibration study:
 
-| Metric | Definition | Applies to | Failure signal |
-|---|---|---|---|
-| p50 latency | Median end-to-end latency per question. | All baselines | Cost of practical use. |
-| p95 latency | 95th percentile end-to-end latency per question. | All baselines | Tail latency risk. |
-| Cost/query | Estimated model/API/GPU cost per question. | All baselines | Reliability gain may be impractical if cost dominates. |
-| Peak memory | Maximum memory used during run. | Implemented systems | Identifies scaling limits. |
-| Index size | Size of retrieval index. | Retrieval variants | Separates retriever footprint from ledger footprint. |
-| Ledger size | Size of ledger storage for run/corpus. | Ledger variants | Measures auditability storage overhead. |
+- sample 200-250 claim-citation pairs
+- collect human labels using the allowed semantic support labels
+- compute Human-DeepSeek accuracy, macro-F1, per-class precision/recall, and confusion matrix
+- compute Cohen's kappa between human labels and DeepSeek labels
+- if two human annotators are available, compute Human-Human Cohen's kappa
+- if only one human annotator is available, do not claim Human-Human agreement
+
+## Diagnostic Metrics
+
+Lexical support rate may be used for debugging and triage only. It must not be reported as a core paper metric because token overlap is not semantic entailment.
+
+Other diagnostics may include citation count per claim, weak lexical overlap examples, parser drift counts, and verifier disagreement examples.
+
+## Retrieval and Answer-Quality Metrics
+
+Retrieval metrics such as Recall@k, Precision@k, MRR, and nDCG remain useful for diagnosing whether attribution failures are caused by missing evidence. Answer-quality metrics such as EM and F1 may be reported for comparability, but they do not support the core attribution claim by themselves.
 
 ## Aggregation Rules
 
-- Report macro averages across questions.
-- Also report dataset-level results; do not pool datasets without per-dataset tables.
-- Report confidence intervals or bootstrap intervals when sample size supports it.
-- Report refusal rate next to answer and attribution metrics.
+- Report macro averages across questions and dataset-level breakdowns.
+- Keep diagnostic Gate 8 mini-main results separate from future paper-grade results.
+- Report confidence intervals when sample size supports them.
 - Keep oracle retrieval diagnostics separate from main results.
-- Keep long-context stress results separate from main multi-hop QA tables.
+- Record `not_applicable` or `not_available` with reasons instead of silently dropping missing metrics.
 
 ## Metric Gate Rule
 
-A future experiment card is runnable only if it lists the metric groups it will compute, the denominator for each metric, and how missing or non-applicable values are recorded.
-
+A runnable experiment card must list the exact metric denominators, missing-value handling, and whether the metric is structural, semantic, replay, refusal, cost, or diagnostic.

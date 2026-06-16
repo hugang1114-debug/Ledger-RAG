@@ -50,6 +50,8 @@ Gate 8 cannot run while any blocker remains:
 - run reproducibility review has not confirmed paths, seeds, commands, and artifact destinations
 - evaluation scripts or metric plans are not pinned for each dataset
 
+Gate 8K locks an OpenAI `gpt-5.4-mini` candidate, but Gate 8 remains blocked until the candidate is rechecked on the run date and promoted through the execution freeze.
+
 ## Ready-To-Run Conditions
 
 Before authorizing main baseline execution, the project must have:
@@ -104,10 +106,82 @@ python scripts/build_musique_source_snapshot.py --registry snapshots/main_v1/sou
 
 This command may set MuSiQue to `source_ready`, but it does not build a retrieval index and does not pass Gate 8.
 
+Gate 8E builds local lexical retrieval index artifacts for all three source-ready datasets:
+
+```powershell
+python scripts/build_gate8_lexical_indexes.py --registry snapshots/main_v1/source_snapshots.json --index-root datasets/retrieval_indexes/main_v1
+```
+
+This command may set `retrieval_index_path` for HotpotQA, 2WikiMultihopQA, and MuSiQue, but it does not run retrieval evaluation, does not run baselines, and does not pass Gate 8.
+
+Gate 8J promotes snapshot/index metadata after local validation:
+
+```powershell
+python scripts/check_gate8_snapshot_index_promotion.py --registry snapshots/main_v1/source_snapshots.json --readiness-config configs/gate8/main_v1_readiness.yaml
+python scripts/promote_gate8_snapshot_indexes.py --registry snapshots/main_v1/source_snapshots.json --readiness-config configs/gate8/main_v1_readiness.yaml
+```
+
+This promotion may make strict snapshot readiness pass, but it does not run baselines, call models, compute metrics, create result artifacts, or pass Gate 8.
+
+Gate 8F locks non-executable run matrix and provider-readiness metadata:
+
+```powershell
+configs/gate8/main_v1_run_matrix.yaml
+configs/gate8/provider_decision.yaml
+```
+
+These files may define the future dataset/baseline matrix and provider evidence requirements, but they do not select a provider, freeze prompts, approve budget, run baselines, or pass Gate 8.
+
+Gate 8G adds an execution-preflight freeze readiness check:
+
+```powershell
+python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml
+```
+
+Strict mode remains blocked until provider, prompt, budget, execution card, and reproducibility metadata are locked:
+
+```powershell
+python scripts/check_gate8_freeze_readiness.py --freeze-config configs/gate8/freeze_readiness.yaml --require-ready
+```
+
+This check is metadata-only. It does not select a provider, check live prices, write prompts, run baselines, compute metrics, create result artifacts, or pass Gate 8.
+
+Gate 8H adds prompt and generation config registry readiness checks:
+
+```powershell
+python scripts/check_gate8_prompt_config_readiness.py --prompt-registry configs/gate8/prompt_registry.yaml --generation-config configs/gate8/generation_config_registry.yaml
+```
+
+Strict mode remains blocked until prompt versions, prompt files, shared generation config, provider assumptions, and execution metadata are locked:
+
+```powershell
+python scripts/check_gate8_prompt_config_readiness.py --prompt-registry configs/gate8/prompt_registry.yaml --generation-config configs/gate8/generation_config_registry.yaml --require-ready
+```
+
+This check reserves prompt/config slots only. It does not write final prompt text, select a provider, check live prices, run baselines, compute metrics, create result artifacts, or pass Gate 8.
+
+## Provider Evidence Registry
+
+Gate 8I adds `configs/gate8/provider_evidence_registry.yaml` as the tracked registry for official provider evidence. Gate 8 cannot run until this registry is locked with reviewed official evidence for pricing, model docs, terms/privacy, model id/version, context window, output limits, rate limits/throughput, runtime availability, and approved budget.
+
+Default mode is metadata inspection only:
+
+```powershell
+python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml
+```
+
+Strict mode is for future execution authorization checks:
+
+```powershell
+python scripts/check_gate8_provider_evidence_readiness.py --registry configs/gate8/provider_evidence_registry.yaml --require-ready
+```
+
+Strict mode fails until a future execution gate records reviewed official evidence and authorizes model calls.
+
 ## Prohibited Actions In This Layer
 
 - do not download datasets except through explicitly authorized source snapshot builders
-- do not build retrieval indexes
+- do not build retrieval indexes except through the approved Gate 8E local lexical index builder
 - do not call model or embedding providers
 - do not run main baselines
 - do not create result files

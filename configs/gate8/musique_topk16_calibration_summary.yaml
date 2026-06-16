@@ -1,0 +1,42 @@
+version: 1
+gate: gate8_main_comparison
+stage: gate8_musique_evidence_budget_calibration
+status: completed
+provider: deepseek
+model: deepseek-v4-pro
+dataset_id: musique
+split: dev
+source_snapshot_id: musique_dev_official_4b485a716c1a4fc6
+baseline_families:
+  - vanilla_rag
+  - ledger_validator
+sample_count: 50
+provider_calls: 100
+failure_count: 0
+artifact_path: artifacts/gate8/main_v1/runs/musique_topk16_50x2/musique
+review_artifact_path: artifacts/gate8/main_v1/runs/musique_topk16_50x2/musique/review.yaml
+comparison:
+  previous_top_k: 8
+  previous_support_hit_rate_any: 0.84
+  previous_support_hit_rate_all: 0.24
+  previous_refusal_rate: 0.49
+  previous_estimated_cost_usd: 0.093574
+  calibrated_top_k: 16
+  calibrated_support_hit_rate_any: 0.98
+  calibrated_support_hit_rate_all: 0.76
+  calibrated_refusal_rate: 0.26
+  calibrated_estimated_cost_usd: 0.14869
+by_baseline_top_k_16:
+  vanilla_rag:
+    support_hit_rate_any: 0.98
+    support_hit_rate_all: 0.76
+    refusal_rate: 0.22
+    estimated_cost_usd: 0.074889
+  ledger_validator:
+    support_hit_rate_any: 0.98
+    support_hit_rate_all: 0.76
+    refusal_rate: 0.30
+    estimated_cost_usd: 0.073801
+interpretation: top_k_16_substantially_reduces_musique_refusals_by_retrieving_more_complete_multihop_support
+recommendation: use_musique_top_k_16_for_next_main_batch_or_test_top_k_20_if_lower_refusal_is_required
+not_full_gate8_pass: true
